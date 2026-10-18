@@ -1,0 +1,24 @@
+{
+  "name": "@strike-everywhere/widget",
+  "version": "0.1.0",
+  "description": "<strike-trade> — a drop-in Strike perps trade ticket for any website.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/strike-everywhere.js",
+  "files": ["dist"],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@strike-everywhere/core": "0.1.0",
+    "preact": "10.24.3"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "2.9.1",
+    "typescript": "5.6.3",
+    "vite": "5.4.10"
+  }
+}
