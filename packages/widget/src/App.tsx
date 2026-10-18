@@ -153,7 +153,7 @@ export function App({ config }: { config: WidgetConfig }) {
     let alive = true;
     const load = () =>
       client.market
-        .klines(symbol, "1h", 48)
+        .klines(symbol, "1h", 48, "mark")
         .then((k) => alive && setSpark(k.map((c) => c.close)))
         .catch(() => {});
     load();
@@ -201,7 +201,8 @@ export function App({ config }: { config: WidgetConfig }) {
   const raw = client.raw(symbol);
   const lv = live[symbol];
   const mark = lv?.mark ?? 0;
-  const chg = lv && lv.open > 0 ? ((mark - lv.open) / lv.open) * 100 : 0;
+  const ref24 = spark.length >= 25 ? spark[spark.length - 25] : lv?.open ?? 0;
+  const chg = ref24 > 0 && mark > 0 ? ((mark - ref24) / ref24) * 100 : 0;
   const base = spec?.baseAsset ?? symbol.split("-")[0];
   const tick = spec?.tickSize;
   const ticks = useMemo(() => Object.fromEntries(markets.map((m) => [m.symbol, m.tickSize])), [markets]);

@@ -56,8 +56,8 @@ export class MarketData {
     return this.http.request<PremiumIndex>("GET", `/v2/premiumIndex${query({ symbol })}`, { base: "price", auth: false });
   }
 
-  async klines(symbol: string, interval = "1h", limit = 48): Promise<Kline[]> {
-    const rows = await this.http.request<any[][]>("GET", `/v2/klines${query({ symbol, interval, limit })}`, { base: "price", auth: false });
+  async klines(symbol: string, interval = "1h", limit = 48, priceType: "last" | "mark" | "index" = "last"): Promise<Kline[]> {
+    const rows = await this.http.request<any[][]>("GET", `/v2/klines${query({ symbol, interval, limit, priceType: priceType === "last" ? undefined : priceType })}`, { base: "price", auth: false });
     return rows.map((r) => ({ openTime: Number(r[0]), open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5] }));
   }
 
