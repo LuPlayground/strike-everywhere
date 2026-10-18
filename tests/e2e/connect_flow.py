@@ -18,6 +18,14 @@ with sync_playwright() as p:
     pg.on("console", lambda m: logs.append(f"[{m.type}] {m.text}"))
     pg.on("pageerror", lambda e: logs.append(f"[pageerror] {e}"))
     pg.on("response", lambda r: logs.append(f"[http {r.status}] {r.request.method} {r.url}") if "strikefinance" in r.url and ("/auth/" in r.url or "/v2/account" in r.url or r.status >= 400) else None)
+    ws_frames = []
+
+    def on_ws(ws):
+        if "user-api" in ws.url:
+            ws.on("framereceived", lambda f: ws_frames.append(("in", str(f)[:300])))
+            ws.on("framesent", lambda f: ws_frames.append(("out", str(f)[:160])))
+
+    pg.on("websocket", on_ws)
     pg.add_init_script(mock)
     pg.goto(url, wait_until="domcontentloaded", timeout=60000)
     pg.wait_for_timeout(5000)
@@ -47,3 +55,7 @@ if sheet_err:
     print("sheet errors:", sheet_err)
 for line in logs[-25:]:
     print(line)
+print("user websocket frames:")
+for d, f in ws_frames[:8]:
+    print(" ", d, f)
+print("USER WS AUTHENTICATED" if any('"authenticated":true' in f.replace(" ", "") for d, f in ws_frames if d == "in") else "USER WS NOT AUTHENTICATED")

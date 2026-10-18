@@ -93,7 +93,6 @@
         { sym: "NIGHT", name: "Midnight", bal: 60000, color: "#a5b4fc", strike: "NIGHT-USD" },
         { sym: "BTC", name: "Bitcoin (wrapped)", bal: 0.045, color: "#fbbf24", strike: "BTC-USD" },
       ];
-      var api = network === "testnet" ? "https://api-v2-testnet.strikefinance.org" : "https://api.strikefinance.org";
       var priceApi = "https://api.strikefinance.org";
       var fmt = function (v, d) { return v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
       function render(marks, changes) {

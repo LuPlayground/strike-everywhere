@@ -196,7 +196,9 @@ export class StrikeEverywhere {
 
   async placeOrder(input: PlaceOrderInput & { leverage?: number }): Promise<OrderHistoryEntry> {
     const spec = this.spec(input.symbol);
-    if (input.leverage) await this.trading.setLeverage(input.symbol, input.leverage);
+    if (input.leverage) {
+      await this.trading.setLeverage(input.symbol, input.leverage).catch((e) => console.warn("[strike-everywhere] leverage not changed:", e?.message || e));
+    }
     const placed = await this.trading.placeOrder(spec, input, this.feeBps);
     const price = input.price ?? Number(this.raw(input.symbol)?.mark_price ?? 0);
     try {
