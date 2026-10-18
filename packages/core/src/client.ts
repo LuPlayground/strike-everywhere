@@ -3,6 +3,7 @@ import { builderConnect, type BuilderSession } from "./builderConnect.js";
 import { CardanoWallet, detectWallets, type WalletInfo } from "./cardano/wallet.js";
 import { MAX_BUILDER_FEE_BPS, NETWORKS, NEW_ACCOUNT_MIN_DEPOSIT_USD, type Network, type NetworkConfig } from "./config.js";
 import { Deposits, type PreparedDeposit } from "./deposit.js";
+import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
@@ -44,6 +45,7 @@ export class StrikeEverywhere {
   readonly account: AccountApi;
   readonly trading: Trading;
   readonly deposits: Deposits;
+  readonly withdrawals: Withdrawals;
   readonly feeBps: number;
   readonly maxFeeBps: number;
 
@@ -64,6 +66,7 @@ export class StrikeEverywhere {
     this.account = new AccountApi(this.http);
     this.trading = new Trading(this.http, this.account);
     this.deposits = new Deposits(this.http);
+    this.withdrawals = new Withdrawals(this.http);
     this.maxFeeBps = clampBps(opts.maxFeeBps ?? opts.feeBps ?? 5);
     this.feeBps = Math.min(clampBps(opts.feeBps ?? 5), this.maxFeeBps);
     this.store = new SessionStore(opts.persist ?? "memory", `strike-everywhere:${this.net.network}:${opts.builderCode}`, opts.sessionTtlMs ?? 12 * 3600_000);
@@ -228,6 +231,16 @@ export class StrikeEverywhere {
     const r = await this.deposits.signAndSubmit(this.wallet, prepared);
     this.beacon({ type: "deposit", usd: prepared.usdValue, txHash: r.txHash });
     return r;
+  }
+
+
+  async prepareWithdrawal(usd: number): Promise<PreparedWithdrawal> {
+    return this.withdrawals.prepareAda(usd);
+  }
+
+  async confirmWithdrawal(prepared: PreparedWithdrawal): Promise<{ status: string; requestId: string }> {
+    if (!this.wallet) throw new Error("Connect a wallet first.");
+    return this.withdrawals.signAndSubmit(this.wallet, prepared);
   }
 
   appUrl(path = ""): string {

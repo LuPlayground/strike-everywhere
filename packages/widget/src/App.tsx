@@ -19,6 +19,7 @@ import {
 import { Check, Chevron, CoinIcon, KV, PctSlider, Sparkline, Spinner } from "./parts";
 import { ConnectSheet } from "./ConnectSheet";
 import { DepositSheet } from "./DepositSheet";
+import { WithdrawSheet } from "./WithdrawSheet";
 import { OrdersList, PositionsList } from "./Lists";
 
 export interface WidgetConfig extends StrikeEverywhereOptions {
@@ -63,7 +64,7 @@ export function App({ config }: { config: WidgetConfig }) {
   const [sl, setSl] = useState("");
   const [placing, setPlacing] = useState(false);
 
-  const [sheet, setSheet] = useState<null | "connect" | "deposit">(null);
+  const [sheet, setSheet] = useState<null | "connect" | "deposit" | "withdraw">(null);
   const [menu, setMenu] = useState<null | "market" | "leverage">(null);
   const [query, setQuery] = useState("");
   const [lowerTab, setLowerTab] = useState<"positions" | "orders" | "account">("positions");
@@ -297,14 +298,15 @@ export function App({ config }: { config: WidgetConfig }) {
     }
   };
 
-  const openDeposit = async () => {
+  const openWalletSheet = async (which: "deposit" | "withdraw") => {
     if (!client.wallet) {
       const id = sessionStorage.getItem("strike-everywhere:wallet");
       if (id) await client.ensureWallet(id).catch(() => {});
     }
     if (!client.wallet) return setSheet("connect");
-    setSheet("deposit");
+    setSheet(which);
   };
+  const openDeposit = () => openWalletSheet("deposit");
 
   const setPct = (v: number) => {
     if (buyingPower <= 0) return;
@@ -483,10 +485,13 @@ export function App({ config }: { config: WidgetConfig }) {
                 <KV k="Unrealized PnL" v={<span class={`num ${Number(account?.unrealized_pnl ?? 0) >= 0 ? "pos" : "neg"}`}>{formatUsd(Number(account?.unrealized_pnl ?? 0), { sign: true })}</span>} />
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "4px" }}>
                   <button class="cta" style={{ height: "34px", fontSize: "13px" }} onClick={openDeposit}>Deposit ADA</button>
-                  <a class="cta ghost" style={{ height: "34px", fontSize: "13px", display: "grid", placeItems: "center", textDecoration: "none" }} href={client.appUrl("/portfolio")} target="_blank" rel="noopener">
-                    Withdraw ↗
-                  </a>
+                  <button class="cta ghost" style={{ height: "34px", fontSize: "13px" }} disabled={available < 5} onClick={() => openWalletSheet("withdraw")}>
+                    Withdraw
+                  </button>
                 </div>
+                <a class="linkbtn" style={{ fontSize: "12px", justifySelf: "end" }} href={client.appUrl("/portfolio")} target="_blank" rel="noopener">
+                  Full account on Strike ↗
+                </a>
               </>
             )}
           </div>
@@ -534,6 +539,16 @@ export function App({ config }: { config: WidgetConfig }) {
           startBalance={Number(account?.wallet_balance ?? 0)}
           onClose={() => setSheet(null)}
           onCredited={() => (refresh(), notify("ok", "Deposit credited"))}
+        />
+      )}
+      {sheet === "withdraw" && (
+        <WithdrawSheet
+          client={client}
+          available={available}
+          adaPrice={live["ADA-USD"]?.mark ?? 0}
+          startBalance={Number(account?.wallet_balance ?? 0)}
+          onClose={() => setSheet(null)}
+          onDone={() => (refresh(), notify("ok", "Withdrawal processed"))}
         />
       )}
     </div>
