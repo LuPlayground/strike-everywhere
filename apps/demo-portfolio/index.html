@@ -123,11 +123,12 @@
       function load() {
         Promise.all([
           fetch(priceApi + "/v2/markets").then(function (r) { return r.json(); }),
-          fetch(priceApi + "/price/v2/ticker/24hr").then(function (r) { return r.json(); }),
+          fetch(priceApi + "/price/v2/klines?symbol=ADA-USD&interval=1h&limit=25&priceType=mark").then(function (r) { return r.json(); }),
         ]).then(function (res) {
           var marks = {}, changes = {};
           Object.values(res[0].markets || {}).forEach(function (m) { marks[m.symbol] = Number(m.mark_price); });
-          (res[1] || []).forEach(function (t) { changes[t.symbol] = Number(t.priceChangePercent); });
+          var k = res[1] || [];
+          if (k.length && marks["ADA-USD"]) changes["ADA-USD"] = ((marks["ADA-USD"] - Number(k[0][4])) / Number(k[0][4])) * 100;
           render(marks, changes);
         }).catch(function () {});
       }

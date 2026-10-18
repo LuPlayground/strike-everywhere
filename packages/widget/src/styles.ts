@@ -133,7 +133,8 @@ button:disabled { cursor: not-allowed; }
 .mini { height: 26px; padding: 0 10px; border-radius: var(--se-radius-sm); background: var(--se-raised); font-weight: 600; font-size: 12px; margin-left: auto; }
 .mini:hover:not(:disabled) { background: #303030; }
 
-.foot { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--se-border); font-size: 11.5px; color: var(--se-text-2); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 8px 14px; border-top: 1px solid var(--se-border); font-size: 11.5px; color: var(--se-text-2); }
+.foot > * { white-space: nowrap; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--se-accent); box-shadow: 0 0 0 3px rgba(var(--se-accent-rgb), .15); }
 .dot.test { background: var(--se-gold); box-shadow: 0 0 0 3px rgba(248,147,26,.15); }
 .foot .brand { margin-left: auto; }

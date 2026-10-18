@@ -494,11 +494,13 @@ export function App({ config }: { config: WidgetConfig }) {
       )}
 
       <div class="foot">
-        <span class={`dot${client.net.network === "testnet" ? " test" : ""}`} />
-        {client.net.network === "testnet" ? "Testnet" : "Mainnet"}
+        <span class="acct">
+          <span class={`dot${client.net.network === "testnet" ? " test" : ""}`} />
+          {client.net.network === "testnet" ? "Testnet" : "Mainnet"}
+        </span>
         {session && (
           <span class="acct">
-            · <span class="num">{shortAddress(session.address, 9, 5)}</span>
+            · <span class="num" title={session.address}>{shortAddress(session.address, 9, 4)}</span>
             <button class="linkbtn" onClick={() => (client.disconnect(), notify("ok", "Disconnected"))}>Disconnect</button>
           </span>
         )}

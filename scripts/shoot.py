@@ -28,6 +28,11 @@ with sync_playwright() as p:
         elif kind == "shadowclick":
             host, inner = arg.split("::")
             pg.locator(host).first.locator(inner).first.click()
+        elif kind == "shadowfill":
+            host, inner, text = arg.split("::")
+            pg.locator(host).first.locator(inner).first.fill(text)
+        elif kind == "clip":
+            pass
         pg.wait_for_timeout(700)
     pg.screenshot(path=out, full_page=True)
     b.close()
