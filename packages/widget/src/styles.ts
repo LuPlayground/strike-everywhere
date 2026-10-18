@@ -26,8 +26,8 @@ export const css =  `:host {
   --se-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   display: block;
-  width: 100%;
-  max-width: var(--se-width, 380px);
+  width: var(--se-width, 380px);
+  max-width: 100%;
   min-width: 300px;
   color: var(--se-text);
   font: 400 13px/1.45 var(--se-font);
