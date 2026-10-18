@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Strike Everywhere</title>
+<meta name="description" content="Embed Strike perps in any Cardano app with one HTML tag. Users connect once with their wallet; the host earns Strike builder fees on every fill." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #0a0a0a; --surface: #111; --line: #252525; --ink: #fff; --ink-2: #b8b8b8; --accent: #4efab0; --mono: "IBM Plex Mono", ui-monospace, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+  nav { display: flex; align-items: center; gap: 22px; padding: 18px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .02em; }
+  .logo i { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); }
+  nav a { color: var(--ink-2); text-decoration: none; font-size: 14px; }
+  nav a:hover { color: var(--ink); }
+  nav .sp { flex: 1; }
+  .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; padding: 48px 0 56px; }
+  h1 { font-size: 46px; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 18px; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lede { color: var(--ink-2); font-size: 18px; margin: 0 0 26px; max-width: 560px; }
+  .cta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; height: 42px; padding: 0 18px; border-radius: 6px; font-weight: 600; text-decoration: none; }
+  .btn.p { background: var(--accent); color: #04120c; }
+  .btn.s { background: #1d1d1d; color: var(--ink); border: 1px solid var(--line); }
+  pre { margin: 22px 0 0; background: #050505; border: 1px solid var(--line); border-radius: 8px; padding: 14px; font: 13px/1.55 var(--mono); color: #d0d0d0; white-space: pre-wrap; word-break: break-all; }
+  .hero-w { justify-self: end; }
+  section { padding: 44px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 26px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 0 0 26px; max-width: 720px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+  .card a { color: var(--accent); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block; margin-top: 10px; }
+  .steps { counter-reset: s; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .step { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; font-size: 14.5px; color: var(--ink-2); }
+  .step::before { content: counter(s); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(78,250,176,.15); color: var(--accent); font-weight: 700; font-size: 12px; margin-bottom: 10px; }
+  .step b { color: var(--ink); display: block; margin-bottom: 4px; }
+  footer { border-top: 1px solid var(--line); color: var(--ink-2); font-size: 13px; padding: 24px 0 48px; }
+  @media (max-width: 960px) { .hero { grid-template-columns: 1fr; } .hero-w { justify-self: start; } .cards, .steps { grid-template-columns: 1fr 1fr; } h1 { font-size: 36px; } }
+  @media (max-width: 560px) { .cards, .steps { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="logo"><i></i>Strike Everywhere</div>
+    <span class="sp"></span>
+    <a href="demo/blog/">Blog demo</a><a href="demo/portfolio/">Portfolio demo</a><a href="dashboard/">Dashboard</a><a href="https://github.com/LuPlayground/strike-everywhere">GitHub</a>
+  </nav>
+  <div class="hero">
+    <div>
+      <h1>Strike perps, <em>anywhere</em> Cardano lives.</h1>
+      <p class="lede">One HTML tag puts a Strike trade ticket inside any wallet, dApp or community site. Users connect the wallet they already have with one signature; the host earns Strike builder fees on every fill, and a dashboard shows exactly what each site brought in.</p>
+      <div class="cta"><a class="btn p" href="demo/portfolio/">See it in an app</a><a class="btn s" href="dashboard/">Partner dashboard</a></div>
+      <pre id="snip"></pre>
+    </div>
+    <div class="hero-w"><strike-trade id="w" builder-code="Playground101" network="testnet" market="ADA-USD" partner-id="landing" fee-bps="5" max-fee-bps="10"></strike-trade></div>
+  </div>
+</div>
+<section><div class="wrap">
+  <h2>How it works</h2>
+  <p class="sub">Built entirely on Strike's own Builder Connect API. The widget calls Strike directly from the user's browser; no server holds trading keys.</p>
+  <div class="steps">
+    <div class="step"><b>Embed</b>Add the script and a <span style="font-family:var(--mono)">&lt;strike-trade&gt;</span> tag with your Strike builder code.</div>
+    <div class="step"><b>Connect</b>Users pick their CIP-30 wallet (Lace, Eternl, …) and sign once. Strike creates the account and a trading key that cannot withdraw.</div>
+    <div class="step"><b>Deposit &amp; trade</b>ADA deposits are built by Strike, checked in the widget, signed in the wallet. Orders carry your builder fee.</div>
+    <div class="step"><b>Get paid</b>Strike credits builder fees on every fill. The dashboard verifies volume against Strike's public fill history.</div>
+  </div>
+</div></section>
+<section><div class="wrap">
+  <h2>Live demos</h2>
+  <p class="sub">Two fictional host sites, both running the same one-tag widget against Strike.</p>
+  <div class="cards">
+    <div class="card"><h3>Community newsletter</h3><p>A light-themed publication with a trading box beside the article. Shows the widget in a host design it doesn't control.</p><a href="demo/blog/">Open demo →</a></div>
+    <div class="card"><h3>Portfolio tracker</h3><p>A Cardano portfolio app that suggests hedging ADA exposure, with the ticket pre-set to Short.</p><a href="demo/portfolio/">Open demo →</a></div>
+    <div class="card"><h3>Partner dashboard</h3><p>Wallets connected, funded and trading accounts, verified volume and builder fees, by partner site.</p><a href="dashboard/">Open dashboard →</a></div>
+  </div>
+</div></section>
+<footer><div class="wrap">Strike Everywhere is an independent hackathon project built on Strike's public Builder API. Not affiliated with or endorsed by Strike Finance. Perpetual futures are leveraged and risky; Strike is unavailable in restricted regions.</div></footer>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search), el = document.getElementById("w");
+    if (q.get("network")) el.setAttribute("network", q.get("network"));
+    if (q.get("builder")) el.setAttribute("builder-code", q.get("builder"));
+    el.setAttribute("partner-api", "https://strike-everywhere-api.strike-everywhere.workers.dev");
+    var src = new URL("widget/strike-everywhere.iife.js", location.href).href;
+    document.getElementById("snip").textContent = '<script src="' + src + '" defer><\/script>\n<strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD"></strike-trade>';
+  })();
+</script>
+<script src="widget/strike-everywhere.iife.js" defer></script>
+</body>
+</html>

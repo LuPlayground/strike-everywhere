@@ -24,6 +24,7 @@ import { OrdersList, PositionsList } from "./Lists";
 export interface WidgetConfig extends StrikeEverywhereOptions {
   market: string;
   maxLeverage: number;
+  side?: "buy" | "sell";
 }
 
 interface Live {
@@ -51,7 +52,7 @@ export function App({ config }: { config: WidgetConfig }) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [orders, setOrders] = useState<OrderHistoryEntry[]>([]);
 
-  const [side, setSide] = useState<"buy" | "sell">("buy");
+  const [side, setSide] = useState<"buy" | "sell">(config.side ?? "buy");
   const [orderType, setOrderType] = useState<"market" | "limit">("market");
   const [sizeUsd, setSizeUsd] = useState("");
   const [limitPrice, setLimitPrice] = useState("");

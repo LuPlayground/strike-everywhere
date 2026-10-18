@@ -20,6 +20,7 @@ export interface PlaceOrderInput {
 export interface PlacedOrder {
   clientOrderId: string;
   strategyId?: string;
+  legClientOrderIds?: string[];
 }
 
 export class OrderRejectedError extends Error {
@@ -68,10 +69,19 @@ export class Trading {
       const strategyId = uuid();
       const exitSize = base.size as string;
       const body: Record<string, unknown> = { ...base, strategy_id: strategyId };
-      if (input.takeProfit) body.tp_order = { type: "take_profit", size: exitSize, stop_price: roundToStep(input.takeProfit, spec.tickSize), working_type: "mark_price" };
-      if (input.stopLoss) body.sl_order = { type: "stop", size: exitSize, stop_price: roundToStep(input.stopLoss, spec.tickSize), working_type: "mark_price" };
+      const legClientOrderIds: string[] = [];
+      if (input.takeProfit) {
+        const id = uuid();
+        legClientOrderIds.push(id);
+        body.tp_order = { client_order_id: id, type: "take_profit", size: exitSize, stop_price: roundToStep(input.takeProfit, spec.tickSize), working_type: "mark_price" };
+      }
+      if (input.stopLoss) {
+        const id = uuid();
+        legClientOrderIds.push(id);
+        body.sl_order = { client_order_id: id, type: "stop", size: exitSize, stop_price: roundToStep(input.stopLoss, spec.tickSize), working_type: "mark_price" };
+      }
       await this.http.request("POST", "/v2/order/strategy", { body, builderFeeBps });
-      return { clientOrderId, strategyId };
+      return { clientOrderId, strategyId, legClientOrderIds };
     }
 
     await this.http.request("POST", "/v2/order", { body: base, builderFeeBps });

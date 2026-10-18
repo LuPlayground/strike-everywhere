@@ -198,7 +198,7 @@ export class StrikeEverywhere {
     const price = input.price ?? Number(this.raw(input.symbol)?.mark_price ?? 0);
     try {
       const order = await this.trading.waitForOrder(input.symbol, placed.clientOrderId);
-      this.beacon({ type: "order", clientOrderId: placed.clientOrderId, orderId: order.id, symbol: input.symbol, side: input.side, notional: input.size * price, status: order.status });
+      this.beacon({ type: "order", clientOrderId: placed.clientOrderId, legClientOrderIds: placed.legClientOrderIds, orderId: order.id, symbol: input.symbol, side: input.side, notional: input.size * price, status: order.status });
       this.emit({ type: "order", order });
       return order;
     } catch (e) {

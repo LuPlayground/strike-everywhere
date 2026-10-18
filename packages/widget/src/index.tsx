@@ -5,7 +5,7 @@ import { FONT_HREF, css } from "./styles";
 
 export const VERSION = "0.1.0";
 
-const ATTRS = ["builder-code", "fee-bps", "max-fee-bps", "market", "network", "partner-id", "partner-api", "max-leverage", "persist", "referral-code", "width"] as const;
+const ATTRS = ["builder-code", "fee-bps", "max-fee-bps", "market", "network", "partner-id", "partner-api", "max-leverage", "persist", "referral-code", "width", "side"] as const;
 
 function ensureFont(): void {
   if (document.querySelector(`link[data-strike-everywhere-font]`)) return;
@@ -62,6 +62,7 @@ export class StrikeTradeElement extends HTMLElement {
       referralCode: this.getAttribute("referral-code") || undefined,
       maxLeverage: Math.max(1, num("max-leverage", 10)),
       persist: this.getAttribute("persist") === "session" ? "session" : "memory",
+      side: this.getAttribute("side") === "sell" ? "sell" : "buy",
     };
   }
 

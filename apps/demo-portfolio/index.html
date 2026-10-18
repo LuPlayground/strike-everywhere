@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tessera · Demo portfolio tracker</title>
+<meta name="description" content="A fictional Cardano portfolio tracker that lets users hedge ADA with Strike perps in-app (Strike Everywhere demo)." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #0b0e14; --panel: #121722; --line: #1f2633; --ink: #e8ecf3; --muted: #8b95a7; --brand: #8b7cff; --up: #34d399; --down: #f87171; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 "Space Grotesk", system-ui, sans-serif; }
+  .demo-banner { background: #1b1640; color: #d9d4ff; font-size: 13px; text-align: center; padding: 8px 16px; }
+  .demo-banner a { color: #fff; }
+  .top { display: flex; align-items: center; gap: 14px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  .mark { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #8b7cff, #3dd6c6); }
+  .brand { font-weight: 700; font-size: 18px; letter-spacing: .01em; }
+  .top nav { margin-left: 28px; display: flex; gap: 20px; color: var(--muted); font-size: 14px; }
+  .top nav .on { color: var(--ink); }
+  .addr { margin-left: auto; font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 22px; padding: 22px 24px 48px; max-width: 1280px; margin: 0 auto; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+  .kpi .k { color: var(--muted); font-size: 13px; }
+  .kpi .v { font-size: 26px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .s { font-size: 13px; margin-top: 2px; }
+  h3 { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 11px 6px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  th:first-child, td:first-child { text-align: left; }
+  .tok { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #0b0e14; }
+  .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--brand); }
+  .hedge { margin-top: 18px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; }
+  .hedge p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .pill { font-size: 12px; color: #b9b1ff; border: 1px solid #3a3470; border-radius: 999px; padding: 3px 10px; }
+  .side { display: grid; gap: 12px; align-self: start; position: sticky; top: 16px; }
+  .side .label { color: var(--muted); font-size: 13px; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .side { position: static; } .kpis { grid-template-columns: 1fr; } .top nav { display: none; } }
+</style>
+</head>
+<body>
+  <div class="demo-banner">Demo app: <b>Tessera</b> is a fictional portfolio tracker built to show <a href="../../">Strike Everywhere</a>. Holdings are sample data; the hedge panel is live Strike.</div>
+  <div class="top">
+    <div class="mark"></div><div class="brand">Tessera</div>
+    <nav><span class="on">Portfolio</span><span>Activity</span><span>Staking</span><span>Hedge</span></nav>
+    <div class="addr">addr1…sample</div>
+  </div>
+  <div class="layout">
+    <main>
+      <div class="kpis">
+        <div class="card kpi"><div class="k">Net worth (sample)</div><div class="v" id="nw">—</div><div class="s" id="nwChg">&nbsp;</div></div>
+        <div class="card kpi"><div class="k">ADA exposure</div><div class="v" id="exp">—</div><div class="s" style="color:var(--muted)">of portfolio value</div></div>
+        <div class="card kpi"><div class="k">ADA price · Strike mark</div><div class="v" id="px">—</div><div class="s" id="pxChg">&nbsp;</div></div>
+      </div>
+      <div class="card">
+        <h3>Holdings <span class="pill">sample portfolio</span></h3>
+        <table>
+          <thead><tr><th>Asset</th><th>Balance</th><th>Price</th><th>Value</th><th style="width:22%">Allocation</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="hedge">
+          <div>
+            <h3 style="margin:0">Worried about an ADA drawdown?</h3>
+            <p id="hedgeText">Short ADA-USD perps on Strike to offset part of your exposure, without selling your staked ADA.</p>
+          </div>
+        </div>
+        <div class="note">Hedging with perps carries its own risks (funding costs, liquidation if ADA rallies hard). The panel shows fees and an estimated liquidation price before you confirm.</div>
+      </div>
+    </main>
+    <div class="side">
+      <div class="label">Hedge in-app · powered by Strike</div>
+      <strike-trade id="w" builder-code="Playground101" network="testnet" market="ADA-USD" side="sell" fee-bps="5" max-fee-bps="10" partner-id="tessera" max-leverage="3"></strike-trade>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var el = document.getElementById("w");
+      var network = q.get("network") || el.getAttribute("network");
+      el.setAttribute("network", network);
+      if (q.get("builder")) el.setAttribute("builder-code", q.get("builder"));
+      el.setAttribute("partner-api", q.get("api") || "https://strike-everywhere-api.strike-everywhere.workers.dev");
+
+      var holdings = [
+        { sym: "ADA", name: "Cardano (staked)", bal: 42000, color: "#4efab0", strike: "ADA-USD" },
+        { sym: "USDM", name: "Moneta Dollar", bal: 3200, color: "#c7f9cc", fixed: 1 },
+        { sym: "NIGHT", name: "Midnight", bal: 60000, color: "#a5b4fc", strike: "NIGHT-USD" },
+        { sym: "BTC", name: "Bitcoin (wrapped)", bal: 0.045, color: "#fbbf24", strike: "BTC-USD" },
+      ];
+      var api = network === "testnet" ? "https://api-v2-testnet.strikefinance.org" : "https://api.strikefinance.org";
+      var priceApi = "https://api.strikefinance.org";
+      var fmt = function (v, d) { return v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+      function render(marks, changes) {
+        var total = 0;
+        holdings.forEach(function (h) { h.price = h.fixed || marks[h.strike] || 0; h.value = h.bal * h.price; total += h.value; });
+        var rows = holdings.map(function (h) {
+          var pct = total ? (h.value / total) * 100 : 0;
+          return '<tr><td><div class="tok"><span class="dot" style="background:' + h.color + '">' + h.sym.slice(0, 2) + '</span>' + h.sym + ' <span style="color:var(--muted);font-weight:400">' + h.name + '</span></div></td>' +
+            '<td>' + fmt(h.bal, h.bal < 1 ? 4 : 0) + '</td><td>$' + fmt(h.price, h.price < 1 ? 4 : 2) + '</td><td>$' + fmt(h.value, 0) + '</td>' +
+            '<td><div class="bar"><i style="width:' + pct.toFixed(1) + '%"></i></div></td></tr>';
+        }).join("");
+        document.getElementById("rows").innerHTML = rows;
+        var ada = holdings[0];
+        document.getElementById("nw").textContent = "$" + fmt(total, 0);
+        document.getElementById("exp").textContent = total ? ((ada.value / total) * 100).toFixed(0) + "%" : "—";
+        document.getElementById("px").textContent = ada.price ? "$" + fmt(ada.price, 4) : "—";
+        var c = changes["ADA-USD"];
+        if (c !== undefined) {
+          var e = document.getElementById("pxChg");
+          e.textContent = (c >= 0 ? "+" : "") + c.toFixed(2) + "% 24h";
+          e.className = "s " + (c >= 0 ? "up" : "down");
+        }
+        var hedgeUsd = ada.value * 0.25;
+        document.getElementById("hedgeText").textContent =
+          "Shorting about $" + fmt(hedgeUsd, 0) + " of ADA-USD would offset ~25% of your ADA exposure without unstaking. The panel on the right is set to Short.";
+      }
+      function load() {
+        Promise.all([
+          fetch(priceApi + "/v2/markets").then(function (r) { return r.json(); }),
+          fetch(priceApi + "/price/v2/ticker/24hr").then(function (r) { return r.json(); }),
+        ]).then(function (res) {
+          var marks = {}, changes = {};
+          Object.values(res[0].markets || {}).forEach(function (m) { marks[m.symbol] = Number(m.mark_price); });
+          (res[1] || []).forEach(function (t) { changes[t.symbol] = Number(t.priceChangePercent); });
+          render(marks, changes);
+        }).catch(function () {});
+      }
+      load();
+      setInterval(load, 20000);
+    })();
+  </script>
+  <script src="../../widget/strike-everywhere.iife.js" defer></script>
+</body>
+</html>

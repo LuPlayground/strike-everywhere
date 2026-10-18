@@ -1,0 +1,11 @@
+name = "strike-everywhere-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[triggers]
+crons = ["*/10 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "strike-everywhere"
+database_id = "342720d8-b00f-4be8-ab8b-9824083dc939"

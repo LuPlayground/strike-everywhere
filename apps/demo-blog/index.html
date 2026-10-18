@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lovelace Letters · Demo community site</title>
+<meta name="description" content="A fictional Cardano newsletter embedding Strike perps with one HTML tag (Strike Everywhere demo)." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink: #1d1a16; --muted: #6b645a; --paper: #fbf8f2; --rule: #e7e0d3; --accent: #2f5bd3; --code: #f1ece2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.65 Inter, system-ui, sans-serif; }
+  .demo-banner { background: #1d1a16; color: #f6f1e7; font-size: 13px; text-align: center; padding: 8px 16px; }
+  .demo-banner a { color: #9fb6ff; }
+  header { border-bottom: 1px solid var(--rule); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+  .mast { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 22px 0 16px; flex-wrap: wrap; }
+  .logo { font: 700 28px/1 Fraunces, Georgia, serif; letter-spacing: -0.01em; }
+  .logo span { color: var(--accent); }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 48px; padding: 40px 0 64px; }
+  article h1 { font: 700 40px/1.15 Fraunces, Georgia, serif; margin: 6px 0 12px; letter-spacing: -0.015em; }
+  .kicker { color: var(--accent); font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+  .byline { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  article h2 { font: 700 24px/1.3 Fraunces, Georgia, serif; margin: 36px 0 10px; }
+  article p { margin: 0 0 18px; }
+  blockquote { margin: 24px 0; padding: 4px 0 4px 18px; border-left: 3px solid var(--accent); color: #3d372f; font-style: italic; }
+  aside { position: sticky; top: 20px; align-self: start; display: grid; gap: 14px; }
+  .aside-h { font: 600 13px/1.3 Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .embed { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; font-size: 14px; }
+  .embed b { display: block; margin-bottom: 6px; }
+  pre { margin: 0; background: var(--code); border-radius: 8px; padding: 10px 12px; font: 12.5px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; word-break: break-all; color: #3a342b; }
+  footer { border-top: 1px solid var(--rule); color: var(--muted); font-size: 13px; padding: 20px 0 40px; }
+  @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } aside { position: static; } article h1 { font-size: 32px; } }
+</style>
+</head>
+<body>
+  <div class="demo-banner">Demo site: <b>Lovelace Letters</b> is a fictional publication built to show <a href="../../">Strike Everywhere</a>. The trading box on the right is live Strike.</div>
+  <header>
+    <div class="wrap mast">
+      <div class="logo">Lovelace <span>Letters</span></div>
+      <nav><a href="#">Ecosystem</a><a href="#">DeFi</a><a href="#">Governance</a><a href="#">Subscribe</a></nav>
+    </div>
+  </header>
+  <main class="wrap grid">
+    <article>
+      <div class="kicker">Markets · Weekly</div>
+      <h1>Perps come home: trading Strike without leaving the page you're reading</h1>
+      <div class="byline">Demo article · 4 min read</div>
+      <p>Most readers of a newsletter like this one hold ADA. Until now, acting on a market view meant opening another site, connecting a wallet again and learning a new interface. The box beside this article changes that: it is Strike's order book, embedded here with a single HTML tag.</p>
+      <p>You connect the Cardano wallet you already use. Strike creates your account with one signature, you deposit ADA and you trade. Funds sit in your Strike account, not with this site; the trading key the widget creates cannot withdraw anywhere but back to your own wallet.</p>
+      <h2>Why a publication would embed an exchange</h2>
+      <p>Strike runs a builder program. Any site can register a builder code and add a small fee to trades its readers make, credited by Strike on every fill. For a community, that turns attention into a sustainable income stream without ads or paywalls. For Strike, every embedding site becomes a new front door.</p>
+      <blockquote>"The best trading interface is the one already in front of you."</blockquote>
+      <h2>Risk, plainly</h2>
+      <p>Perpetual futures are leveraged. Prices can move against you quickly and positions can be liquidated. The widget shows an estimated liquidation price and warns you when it is close, but it cannot make leverage safe. Strike is not available in restricted regions; check Strike's terms before trading.</p>
+      <p>The ticket defaults to modest leverage and shows every fee before you confirm: Strike's own trading fee plus this site's builder fee. Nothing is hidden in the spread.</p>
+    </article>
+    <aside>
+      <div class="aside-h">Trade ADA perps · live</div>
+      <strike-trade id="w" builder-code="Playground101" network="testnet" market="ADA-USD" fee-bps="5" max-fee-bps="10" partner-id="lovelace-letters" max-leverage="5"></strike-trade>
+      <div class="embed">
+        <b>This box is one line of HTML</b>
+        <pre id="snippet"></pre>
+      </div>
+    </aside>
+  </main>
+  <footer><div class="wrap">Lovelace Letters is a fictional demo publication. Trading on Strike involves risk of loss.</div></footer>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var el = document.getElementById("w");
+      if (q.get("network")) el.setAttribute("network", q.get("network"));
+      if (q.get("builder")) el.setAttribute("builder-code", q.get("builder"));
+      el.setAttribute("partner-api", q.get("api") || "https://strike-everywhere-api.strike-everywhere.workers.dev");
+      var src = new URL("../../widget/strike-everywhere.iife.js", location.href).href;
+      document.getElementById("snippet").textContent =
+        '<script src="' + src + '"><\/script>\n<strike-trade builder-code="' + el.getAttribute("builder-code") + '" fee-bps="5"></strike-trade>';
+    })();
+  </script>
+  <script src="../../widget/strike-everywhere.iife.js" defer></script>
+</body>
+</html>

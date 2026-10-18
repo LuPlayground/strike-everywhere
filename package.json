@@ -11,7 +11,10 @@
     "build": "npm run build -w @strike-everywhere/core && npm run build -w @strike-everywhere/widget",
     "test": "npm test -w @strike-everywhere/core",
     "typecheck": "npm run typecheck -w @strike-everywhere/core && npm run typecheck -w @strike-everywhere/widget",
-    "dev": "npm run dev -w @strike-everywhere/widget"
+    "dev": "npm run dev -w @strike-everywhere/widget",
+    "site": "npm run build -w @strike-everywhere/widget && node scripts/build-site.mjs",
+    "deploy:site": "npm run site && npx --yes wrangler@3.84.1 pages deploy site --project-name strike-everywhere --branch main --commit-dirty=true",
+    "deploy:api": "cd workers/partner-api && npx --yes wrangler@3.84.1 deploy"
   },
   "engines": {
     "node": ">=20"
