@@ -58,8 +58,10 @@ export function DepositSheet({
     }
   };
 
+  const [slow, setSlow] = useState(false);
   useEffect(() => {
     if (phase !== "crediting") return;
+    const slowTimer = setTimeout(() => setSlow(true), 15 * 60_000);
     const t = setInterval(async () => {
       try {
         const a = await client.account.account();
@@ -70,7 +72,7 @@ export function DepositSheet({
       } catch {
       }
     }, 8000);
-    return () => clearInterval(t);
+    return () => (clearInterval(t), clearTimeout(slowTimer));
   }, [phase]);
 
   return (
@@ -122,7 +124,13 @@ export function DepositSheet({
               <Step n={3} state={phase === "done" ? "done" : "todo"}>Credited to your Strike balance</Step>
             </div>
             {phase === "review" && <button class="cta" onClick={sign}>Sign deposit</button>}
-            {phase === "crediting" && <p>This usually takes 3–6 minutes. You can close this; the balance updates on its own.</p>}
+            {phase === "crediting" && !slow && <p>This usually takes 3–6 minutes. You can close this; the balance updates on its own.</p>}
+            {phase === "crediting" && slow && (
+              <div class="warn">
+                <b>Strike hasn't credited this deposit yet.</b> Your transaction is on-chain; crediting is handled by Strike. If it doesn't appear soon, contact Strike support with this transaction:{" "}
+                <a class="linkbtn" target="_blank" rel="noopener" href={explorer + txHash}>{txHash.slice(0, 16)}…</a>
+              </div>
+            )}
             {phase === "done" && <button class="cta" onClick={onClose}>Start trading</button>}
           </>
         )}
