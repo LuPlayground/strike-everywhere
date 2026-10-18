@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strike Everywhere: built bundle preview</title>
+    <style>
+      body { margin: 0; background: #0f0f10; color: #ddd; font: 14px system-ui, sans-serif; }
+      main { display: flex; flex-wrap: wrap; gap: 28px; padding: 28px; align-items: flex-start; }
+      h2 { font-size: 12px; font-weight: 600; color: #888; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; }
+    </style>
+    <script src="./dist/strike-everywhere.iife.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <section id="a">
+        <h2>Mainnet · ADA-USD</h2>
+        <strike-trade builder-code="Playground101" network="mainnet" market="ADA-USD"></strike-trade>
+      </section>
+      <section id="b">
+        <h2>Mainnet · BTC-USD · 320px</h2>
+        <strike-trade builder-code="Playground101" network="mainnet" market="BTC-USD" width="320"></strike-trade>
+      </section>
+      <section id="c">
+        <h2>Testnet</h2>
+        <strike-trade builder-code="Playground101" network="testnet" market="ADA-USD"></strike-trade>
+      </section>
+    </main>
+  </body>
+</html>

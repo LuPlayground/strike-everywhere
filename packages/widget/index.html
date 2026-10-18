@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strike Everywhere: widget dev</title>
+    <style>
+      body { margin: 0; background: #111; color: #ddd; font: 14px system-ui, sans-serif; }
+      main { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; align-items: flex-start; }
+      h2 { font-size: 12px; font-weight: 600; color: #888; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h2>Testnet · Playground101</h2>
+        <strike-trade builder-code="Playground101" network="testnet" market="ADA-USD" fee-bps="5" max-fee-bps="10"></strike-trade>
+      </section>
+      <section>
+        <h2>Mainnet (read-only preview)</h2>
+        <strike-trade builder-code="Playground101" network="mainnet" market="BTC-USD"></strike-trade>
+      </section>
+    </main>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>
