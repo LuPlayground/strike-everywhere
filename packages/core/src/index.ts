@@ -13,7 +13,7 @@ export { Deposits, DepositSafetyError, DepositRegistrationError, checkDepositTx,
 export { Withdrawals, MIN_WITHDRAW_USD, WithdrawalSafetyError, checkFundingTx, normalizeWithdrawMessage, type PreparedWithdrawal } from "./withdraw.js";
 export { PriceStream, UserStream } from "./ws.js";
 export { SessionStore, type PersistMode } from "./session.js";
-export { CardanoWallet, detectWallets, WalletNetworkMismatchError, type WalletInfo, type Cip30Api } from "./cardano/wallet.js";
+export { CardanoWallet, detectWallets, walletErrorMessage, WalletNetworkMismatchError, type WalletInfo, type Cip30Api } from "./cardano/wallet.js";
 export { previewTransaction, lovelaceToAda, type TxPreview, type TxOutputPreview } from "./cardano/txPreview.js";
 export { spliceWitnessSet, mergeWitnessSets, decode as decodeCbor } from "./cardano/cbor.js";
 export { addressHexToBech32, bech32ToAddressHex, shortAddress } from "./cardano/address.js";

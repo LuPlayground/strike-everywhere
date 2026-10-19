@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { DepositRegistrationError, DepositSafetyError, StrikeEverywhere, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
+import { DepositRegistrationError, DepositSafetyError, StrikeEverywhere, walletErrorMessage, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
 import { KV, Spinner, Step, decimalInput } from "./parts";
 
 type Phase = "amount" | "preparing" | "review" | "signing" | "registering" | "crediting" | "done";
@@ -59,7 +59,7 @@ export function DepositSheet({
         return;
       }
       const msg = String(e?.info || e?.message || e);
-      setError(e instanceof DepositSafetyError ? `Safety check failed: ${msg}` : /declin|reject|cancel/i.test(msg) ? "Transaction was declined in the wallet." : msg);
+      setError(e instanceof DepositSafetyError ? `Safety check failed: ${msg}` : walletErrorMessage(e));
       setPhase("review");
     }
   };

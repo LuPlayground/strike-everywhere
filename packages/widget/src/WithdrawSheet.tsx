@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { MIN_WITHDRAW_USD, StrikeEverywhere, WithdrawalSafetyError, formatUsd, lovelaceToAda, shortAddress, type PreparedWithdrawal } from "@strike-everywhere/core";
+import { MIN_WITHDRAW_USD, StrikeEverywhere, WithdrawalSafetyError, formatUsd, walletErrorMessage, lovelaceToAda, shortAddress, type PreparedWithdrawal } from "@strike-everywhere/core";
 import { KV, Spinner, Step, decimalInput } from "./parts";
 
 type Phase = "amount" | "quoting" | "review" | "signing" | "pending" | "done";
@@ -24,7 +24,12 @@ export function WithdrawSheet({
   const [prepared, setPrepared] = useState<PreparedWithdrawal | null>(null);
   const [error, setError] = useState("");
   const amount = Number(usd) || 0;
-  const max = Math.floor(available * 100) / 100;
+  const [limits, setLimits] = useState<{ maxUsd: number | null; minUsd: number | null }>({ maxUsd: null, minUsd: null });
+  useEffect(() => {
+    client.withdrawLimits().then(setLimits).catch(() => {});
+  }, [client]);
+  const max = Math.floor((limits.maxUsd !== null ? Math.min(limits.maxUsd, available) : available) * 100) / 100;
+  const minUsd = Math.max(MIN_WITHDRAW_USD, limits.minUsd ?? 0);
   const receiveAda = adaPrice > 0 ? Math.max(0, amount - 1) / adaPrice : 0;
 
   const quote = async () => {
@@ -49,7 +54,7 @@ export function WithdrawSheet({
       setPhase("pending");
     } catch (e: any) {
       const msg = String(e?.info || e?.message || e);
-      setError(e instanceof WithdrawalSafetyError ? `Safety check failed: ${msg}` : /declin|reject|cancel/i.test(msg) ? "Signature was declined in the wallet." : msg);
+      setError(e instanceof WithdrawalSafetyError ? `Safety check failed: ${msg}` : walletErrorMessage(e));
       setPhase("review");
     }
   };
@@ -87,8 +92,8 @@ export function WithdrawSheet({
             <KV k="Fee" v={<span class="num">$1.00</span>} hint="Strike's flat withdrawal fee" />
             <KV k="You receive (est.)" v={<span class="num">≈ {receiveAda.toFixed(2)} ADA</span>} />
             {client.session && <KV k="To" v={<span class="addr">{shortAddress(client.session.address, 12, 6)}</span>} hint="Strike locks the destination to the wallet you connected with" />}
-            <button class="cta" disabled={!(amount >= MIN_WITHDRAW_USD && amount <= max) || phase === "quoting"} onClick={quote}>
-              {phase === "quoting" ? <><Spinner /> Getting quote…</> : amount > max ? "Exceeds available balance" : amount >= MIN_WITHDRAW_USD ? "Review withdrawal" : `Minimum ${formatUsd(MIN_WITHDRAW_USD, { decimals: 0 })}`}
+            <button class="cta" disabled={!(amount >= minUsd && amount <= max) || phase === "quoting"} onClick={quote}>
+              {phase === "quoting" ? <><Spinner /> Getting quote…</> : amount > max ? "Exceeds what you can withdraw now" : amount >= minUsd ? "Review withdrawal" : `Minimum ${formatUsd(minUsd, { decimals: 0 })}`}
             </button>
           </>
         )}

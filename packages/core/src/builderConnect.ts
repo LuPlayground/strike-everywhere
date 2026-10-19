@@ -41,10 +41,16 @@ export async function builderConnect(p: ConnectParams): Promise<{ session: Build
   });
   p.onMessage?.(challenge.message_to_sign);
   const walletSignature = await p.signMessage(challenge.message_to_sign);
-  const r = await p.http.request<any>("POST", "/auth/builder/verify-signature", {
-    auth: false,
-    body: { address: p.address, chain: p.chain, nonce: challenge.nonce, wallet_signature: walletSignature },
-  });
+  let r: any;
+  try {
+    r = await p.http.request<any>("POST", "/auth/builder/verify-signature", {
+      auth: false,
+      body: { address: p.address, chain: p.chain, nonce: challenge.nonce, wallet_signature: walletSignature },
+    });
+  } catch (e: any) {
+    if (/expir|nonce|challenge/i.test(e?.message ?? "")) throw new Error("The signature request expired (Strike allows about 3 minutes). Click Sign & connect to get a new one.");
+    throw e;
+  }
   if (r.api_wallet_public_key && r.api_wallet_public_key !== key.publicKeyHex) {
     throw new Error("Strike returned a different API key than the one generated. Aborting.");
   }

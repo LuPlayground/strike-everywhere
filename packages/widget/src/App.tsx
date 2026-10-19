@@ -95,6 +95,13 @@ export function App({ config }: { config: WidgetConfig }) {
       return next;
     });
 
+  const [referralMissing, setReferralMissing] = useState(false);
+  useEffect(() => {
+    setReferralMissing(false);
+    if (!session || !config.referralCode) return;
+    client.withdrawLimits().then((l) => setReferralMissing(l.feeDiscountPct === 0)).catch(() => {});
+  }, [session]);
+
   useEffect(() => setSymbol(config.market), [config.market]);
   useEffect(() => setSide(config.side ?? "buy"), [config.side]);
   useEffect(() => setLeverage((l) => Math.min(l, config.maxLeverage)), [config.maxLeverage]);
@@ -259,7 +266,9 @@ export function App({ config }: { config: WidgetConfig }) {
   const buyingPower = available * lev;
   const pct = buyingPower > 0 ? Math.min(100, (usd / buyingPower) * 100) : 0;
   const sizeStep = spec ? (orderType === "market" ? spec.marketStepSize ?? spec.stepSize : spec.stepSize) : 0;
-  const baseSize = px > 0 && spec ? Number(roundToStep(usd / px, sizeStep, "floor")) : 0;
+  const floorSize = px > 0 && spec ? Number(roundToStep(usd / px, sizeStep, "floor")) : 0;
+  const baseSize =
+    spec && px > 0 && sizeStep > 0 && floorSize * px < spec.minNotional && usd >= spec.minNotional ? Number(roundToStep(floorSize + sizeStep, sizeStep, "floor")) : floorSize;
   const feeBps = client.orderFeeBps;
   const preview = spec && px > 0 && usd > 0 ? previewOrder({ side, price: px, notional: baseSize * px, leverage: lev, takerRate, builderFeeBps: feeBps, tiers: spec.marginTiers }) : null;
   const position = positions.find((p) => p.symbol === symbol);
@@ -272,7 +281,7 @@ export function App({ config }: { config: WidgetConfig }) {
     if (!session) return null;
     if (available <= 0 && !reduceOnly) return null;
     if (!usd) return "Enter a size";
-    if (baseSize * px < spec.minNotional) return `Minimum order ${formatUsd(spec.minNotional, { decimals: 0 })}`;
+    if (!reduceOnly && baseSize * px < spec.minNotional) return `Minimum order ${formatUsd(spec.minNotional, { decimals: 0 })}`;
     if (!reduceOnly && usd / lev > available * 1.0001) return "Not enough available balance";
     if (orderType === "limit") {
       if (!(Number(limitPrice) > 0)) return "Enter a limit price";
@@ -549,6 +558,14 @@ export function App({ config }: { config: WidgetConfig }) {
                     Withdraw
                   </button>
                 </div>
+                {referralMissing && client.referralLink() && (
+                  <div class="note">
+                    Save on Strike's trading fees: apply referral code <b>{config.referralCode}</b>.{" "}
+                    <a class="linkbtn" href={client.referralLink()!} target="_blank" rel="noopener">
+                      Apply on Strike ↗
+                    </a>
+                  </div>
+                )}
                 <a class="linkbtn" style={{ fontSize: "12px", justifySelf: "end" }} href={client.appUrl("/portfolio")} target="_blank" rel="noopener">
                   Full account on Strike ↗
                 </a>

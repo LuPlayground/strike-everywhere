@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { StrikeEverywhere, WalletNetworkMismatchError, formatUsd, shortAddress, type OnboardingCheck, type WalletInfo } from "@strike-everywhere/core";
+import { StrikeEverywhere, WalletNetworkMismatchError, formatUsd, walletErrorMessage, shortAddress, type OnboardingCheck, type WalletInfo } from "@strike-everywhere/core";
 import { Spinner, Step } from "./parts";
 
 const INSTALL_LINKS = [
@@ -32,7 +32,7 @@ export function ConnectSheet({ client, onClose, onConnected }: { client: StrikeE
       setCheck(await client.checkOnboarding(w.id));
       setPhase("review");
     } catch (e: any) {
-      setError(e instanceof WalletNetworkMismatchError ? e.message : e?.message || "Could not open the wallet.");
+      setError(e instanceof WalletNetworkMismatchError ? e.message : walletErrorMessage(e) || "Could not open the wallet.");
       setPhase("pick");
     }
   };
@@ -46,8 +46,7 @@ export function ConnectSheet({ client, onClose, onConnected }: { client: StrikeE
       setPhase("done");
       setTimeout(onConnected, 600);
     } catch (e: any) {
-      const msg = String(e?.info || e?.message || e);
-      setError(/declin|reject|cancel/i.test(msg) ? "Signature was declined in the wallet." : msg);
+      setError(walletErrorMessage(e));
       setPhase("review");
     }
   };

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import * as ed from "@noble/ed25519";
 import { hexToBytes, sha256Hex, utf8 } from "../src/bytes.js";
 import { ApiWalletKey, canonicalRequestMessage, signRequest } from "../src/signer.js";
@@ -8,6 +8,8 @@ import type { MarginTier } from "../src/types.js";
 import { StrikeHttp } from "../src/http.js";
 import { NETWORKS } from "../src/config.js";
 import { AccountApi } from "../src/account.js";
+import { walletErrorMessage } from "../src/cardano/wallet.js";
+import { StrikeEverywhere } from "../src/client.js";
 
 const ADA_TIERS: MarginTier[] = [
   { max_notional: "10000", max_leverage: 40, maintenance_margin_rate: "0.005", maintenance_amount: "0" },
@@ -169,5 +171,52 @@ describe("AccountApi.exists", () => {
     expect(await api(200).exists("addr_test1x")).toBe(true);
     expect(await api(404).exists("addr_test1x")).toBe(false);
     expect(await api(500).exists("addr_test1x")).toBe(null);
+  });
+});
+
+describe("walletErrorMessage", () => {
+  it("maps CIP-30 errors and wallet texts to plain language", () => {
+    expect(walletErrorMessage({ code: -3, info: "Refused" })).toMatch(/refused/);
+    expect(walletErrorMessage({ code: 2, info: "user declined to sign tx" })).toMatch(/Declined/);
+    expect(walletErrorMessage({ code: 2, info: "address is not a key hash" })).toMatch(/can't sign messages/);
+    expect(walletErrorMessage({ code: 3, info: "user declined" })).toMatch(/Declined/);
+    expect(walletErrorMessage(new Error("Wallet is locked"))).toMatch(/locked/);
+    expect(walletErrorMessage(new Error("blockchain fee too low"))).toBe("blockchain fee too low");
+  });
+});
+
+describe("leverage changes (Strike applies them asynchronously)", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => { globalThis.fetch = realFetch; });
+
+  async function clientWith(lev: { now: number; applyAfterPolls: number; target?: number }) {
+    const calls: string[] = [];
+    let polls = 0;
+    globalThis.fetch = (async (url: string, init: any) => {
+      const path = new URL(url).pathname;
+      calls.push(`${init?.method ?? "GET"} ${path}`);
+      if (path === "/v2/leverage") { lev.target = JSON.parse(init.body).leverage; polls = 0; return new Response("{}", { status: 200 }); }
+      if (path === "/v2/account") {
+        if (lev.target !== undefined && ++polls > lev.applyAfterPolls) lev.now = lev.target;
+        return new Response(JSON.stringify({ symbol_settings: { "ADA-USD": { leverage: lev.now } } }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    }) as any;
+    const c = new StrikeEverywhere({ network: "testnet", builderCode: "x" });
+    c.http.key = await ApiWalletKey.generate();
+    return { c, calls };
+  }
+
+  it("waits until Strike reports the new leverage", async () => {
+    const { c, calls } = await clientWith({ now: 3, applyAfterPolls: 2 });
+    await (c as any).applyLeverage("ADA-USD", 5);
+    expect(calls.filter((x) => x === "POST /v2/leverage")).toHaveLength(1);
+    expect(calls.filter((x) => x === "GET /v2/account").length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("skips the change when that leverage is already set", async () => {
+    const { c, calls } = await clientWith({ now: 5, applyAfterPolls: 0 });
+    await (c as any).applyLeverage("ADA-USD", 5);
+    expect(calls).not.toContain("POST /v2/leverage");
   });
 });

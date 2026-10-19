@@ -175,7 +175,9 @@ export class StrikeEverywhere {
     if (!this.wallet) this.wallet = await CardanoWallet.enable(walletId, this.net);
     if (this.session?.address && this.wallet.address !== this.session.address) {
       this.wallet = null;
-      throw new Error("Your wallet's active account isn't the one connected to Strike here. Switch accounts in your wallet, or disconnect and connect again.");
+      throw new Error(
+        "Your wallet's active address isn't the one connected to Strike here. Switch back to that account, or turn on single-address mode in your wallet (multi-address mode can rotate addresses), or disconnect and connect again.",
+      );
     }
     return this.wallet;
   }
@@ -238,8 +240,18 @@ export class StrikeEverywhere {
   }
 
   private async applyLeverage(symbol: string, leverage: number): Promise<void> {
+    const want = Math.round(leverage);
+    const before = await this.account.symbolLeverage(symbol).catch(() => null);
+    if (before === want) return;
     try {
-      await this.trading.setLeverage(symbol, leverage);
+      await this.trading.setLeverage(symbol, want);
+      const deadline = Date.now() + 5000;
+      for (;;) {
+        const now = await this.account.symbolLeverage(symbol).catch(() => null);
+        if (now === want || now === null) break;
+        if (Date.now() > deadline) throw new Error("Strike hasn't confirmed the leverage change yet");
+        await new Promise((r) => setTimeout(r, 400));
+      }
     } catch (e: any) {
       const pos = await this.account.positions().catch(() => [] as Position[]);
       const current = Number(pos.find((p) => p.symbol === symbol && Number(p.size) !== 0)?.leverage);
@@ -286,6 +298,15 @@ export class StrikeEverywhere {
     await this.deposits.register(requestId, txHash);
   }
 
+
+  withdrawLimits(): Promise<{ maxUsd: number | null; minUsd: number | null; feeDiscountPct: number | null }> {
+    return this.account.withdrawLimits();
+  }
+
+  referralLink(): string | null {
+    const code = this.opts.referralCode;
+    return code ? `${this.net.app}/trade/BTC?referralCode=${encodeURIComponent(code)}` : null;
+  }
 
   async prepareWithdrawal(usd: number): Promise<PreparedWithdrawal> {
     return this.withdrawals.prepareAda(usd, this.wallet?.address);

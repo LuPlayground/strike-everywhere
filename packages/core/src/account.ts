@@ -8,6 +8,27 @@ export class AccountApi {
     return this.http.request<Account>("GET", "/v2/account");
   }
 
+  async symbolLeverage(symbol: string): Promise<number | null> {
+    const a: any = await this.account();
+    const v = Number(a?.symbol_settings?.[symbol]?.leverage);
+    return Number.isFinite(v) && v >= 1 ? v : null;
+  }
+
+  async withdrawLimits(): Promise<{ maxUsd: number | null; minUsd: number | null; feeDiscountPct: number | null }> {
+    const [b, p] = await Promise.all([
+      this.http.request<any>("GET", "/v2/balances").catch(() => null),
+      this.http.request<any>("GET", "/v2/portfolio").catch(() => null),
+    ]);
+    const num = (v: unknown) => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+    return { maxUsd: num(b?.maxWithdrawAmount), minUsd: num(p?.min_withdraw_usd), feeDiscountPct: num(p?.fee_discount_rate) };
+  }
+
+  async referralDiscountPct(): Promise<number | null> {
+    const p = await this.http.request<any>("GET", "/v2/portfolio").catch(() => null);
+    const v = Number(p?.fee_discount_rate);
+    return p && Number.isFinite(v) ? v : null;
+  }
+
   async positions(): Promise<Position[]> {
     const j = await this.http.request<{ positions: Position[] }>("GET", "/v2/positions");
     return (j.positions ?? []).filter((p) => Number(p.size) !== 0);

@@ -45,6 +45,27 @@ export function detectWallets(win: any = globalThis): WalletInfo[] {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export function walletErrorMessage(e: unknown): string {
+  const err = e as { code?: number; info?: string; message?: string } | null;
+  const text = String(err?.info || err?.message || e || "");
+  if (/\blocked?\b/i.test(text)) return "Your wallet is locked. Unlock it and try again.";
+  if (/declin|reject|cancel|denied|user (closed|abort)/i.test(text)) return "Declined in your wallet.";
+  if (/hardware|ledger|trezor|device/i.test(text)) return "Your hardware wallet couldn't sign. Connect and unlock it, open the Cardano app, and try again.";
+  switch (err?.code) {
+    case -3:
+      return "Your wallet refused the request. Unlock it and allow this site in its connected-dApps settings.";
+    case -4:
+      return "Your wallet account changed. Disconnect and connect again.";
+    case 1:
+      return "Your wallet couldn't produce the signature (e.g. a hardware wallet that's locked or busy). Try again.";
+    case 2:
+      return /address/i.test(text) ? "This address can't sign messages. Use a regular wallet account." : "Declined in your wallet.";
+    case 3:
+      return "Declined in your wallet.";
+  }
+  return text || "Your wallet returned an error.";
+}
+
 export class WalletNetworkMismatchError extends Error {
   constructor(public expected: number, public actual: number) {
     super(
