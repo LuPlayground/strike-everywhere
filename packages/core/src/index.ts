@@ -10,7 +10,7 @@ export { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 export { AccountApi, normalizeOrder } from "./account.js";
 export { Trading, OrderRejectedError, humanizeRejection, type PlaceOrderInput, type PlacedOrder } from "./trading.js";
 export { Deposits, DepositSafetyError, DepositRegistrationError, checkDepositTx, type PreparedDeposit } from "./deposit.js";
-export { Withdrawals, MIN_WITHDRAW_USD, type PreparedWithdrawal } from "./withdraw.js";
+export { Withdrawals, MIN_WITHDRAW_USD, WithdrawalSafetyError, checkFundingTx, normalizeWithdrawMessage, type PreparedWithdrawal } from "./withdraw.js";
 export { PriceStream, UserStream } from "./ws.js";
 export { SessionStore, type PersistMode } from "./session.js";
 export { CardanoWallet, detectWallets, WalletNetworkMismatchError, type WalletInfo, type Cip30Api } from "./cardano/wallet.js";

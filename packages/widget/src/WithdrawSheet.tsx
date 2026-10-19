@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { MIN_WITHDRAW_USD, StrikeEverywhere, formatUsd, shortAddress, type PreparedWithdrawal } from "@strike-everywhere/core";
+import { MIN_WITHDRAW_USD, StrikeEverywhere, WithdrawalSafetyError, formatUsd, lovelaceToAda, shortAddress, type PreparedWithdrawal } from "@strike-everywhere/core";
 import { KV, Spinner, Step, decimalInput } from "./parts";
 
 type Phase = "amount" | "quoting" | "review" | "signing" | "pending" | "done";
@@ -35,7 +35,7 @@ export function WithdrawSheet({
       setPrepared(await client.prepareWithdrawal(amount));
       setPhase("review");
     } catch (e: any) {
-      setError(e?.message || String(e));
+      setError(e instanceof WithdrawalSafetyError ? `Safety check failed: ${e.message}` : e?.message || String(e));
       setPhase("amount");
     }
   };
@@ -49,7 +49,7 @@ export function WithdrawSheet({
       setPhase("pending");
     } catch (e: any) {
       const msg = String(e?.info || e?.message || e);
-      setError(/declin|reject|cancel/i.test(msg) ? "Signature was declined in the wallet." : msg);
+      setError(e instanceof WithdrawalSafetyError ? `Safety check failed: ${msg}` : /declin|reject|cancel/i.test(msg) ? "Signature was declined in the wallet." : msg);
       setPhase("review");
     }
   };
@@ -94,10 +94,24 @@ export function WithdrawSheet({
         )}
         {prepared && phase !== "amount" && phase !== "quoting" && (
           <>
-            <p>Your wallet will sign Strike's withdrawal message. The trading key alone cannot withdraw, so every withdrawal needs your signature.</p>
+            <p>
+              Your wallet will sign Strike's withdrawal message{prepared.funding ? " and a small funding transaction" : ""}. The trading key alone cannot withdraw, so every withdrawal needs your signature.
+            </p>
             <div class="consent">{prepared.messageToSign}</div>
+            {prepared.funding && (
+              <>
+                <div class="details">
+                  <KV k="Validator min-UTxO" v={<span class="num">{lovelaceToAda(prepared.funding.lovelace).toFixed(2)} ADA</span>} hint="Strike's Cardano withdrawals ask you to fund the validator's minimum UTxO before it pays out" />
+                  <KV k="Network fee" v={<span class="num">{lovelaceToAda(prepared.funding.networkFee).toFixed(3)} ADA</span>} />
+                  <KV k="To (Strike validator)" v={<span class="addr">{shortAddress(prepared.funding.validatorAddress, 14, 8)}</span>} hint={prepared.funding.validatorAddress} />
+                </div>
+                <div class="note">
+                  <b>Checked before signing:</b> the funding transaction only pays {lovelaceToAda(prepared.funding.lovelace).toFixed(2)} ADA to Strike's quoted validator, moves no tokens and contains nothing else. Your wallet will ask twice: the message, then the transaction.
+                </div>
+              </>
+            )}
             <div class="steps">
-              <Step n={1} state={phase === "review" ? "todo" : phase === "signing" ? "active" : "done"}>Sign in your wallet</Step>
+              <Step n={1} state={phase === "review" ? "todo" : phase === "signing" ? "active" : "done"}>{prepared.funding ? "Sign the message and funding transaction" : "Sign in your wallet"}</Step>
               <Step n={2} state={phase === "pending" ? "active" : phase === "done" ? "done" : "todo"}>Strike processes the withdrawal</Step>
               <Step n={3} state={phase === "done" ? "done" : "todo"}>ADA arrives in your wallet</Step>
             </div>

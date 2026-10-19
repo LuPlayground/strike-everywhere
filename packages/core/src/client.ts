@@ -288,7 +288,7 @@ export class StrikeEverywhere {
 
 
   async prepareWithdrawal(usd: number): Promise<PreparedWithdrawal> {
-    return this.withdrawals.prepareAda(usd);
+    return this.withdrawals.prepareAda(usd, this.wallet?.address);
   }
 
   async confirmWithdrawal(prepared: PreparedWithdrawal): Promise<{ status: string; requestId: string }> {

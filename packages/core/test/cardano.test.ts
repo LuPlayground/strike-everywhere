@@ -4,6 +4,7 @@ import { decode, readHead, skipItem, spliceWitnessSet, txBodyBytes } from "../sr
 import { previewTransaction } from "../src/cardano/txPreview.js";
 import { addressHexToBech32, bech32ToAddressHex } from "../src/cardano/address.js";
 import { checkDepositTx, DepositSafetyError } from "../src/deposit.js";
+import { checkFundingTx, normalizeWithdrawMessage } from "../src/withdraw.js";
 
 const UNSIGNED_TX =
   "84a600d9010281825820df528e680b2fa6f7e0f133f32ec3058154941a67c1e4f2d1495690542d48ec73010182a30058390037a512f8f1bf8462dfcd4b541bcaf5450875ccdc2bca4a50b3adccf2314378a0eea93f9a5f08722fd429a76016fa9bf96e5a40fc0660fbcf011a02faf080028201d8185877d8799f582465323465663763382d623031312d346437372d626563312d393336383339656136313136582430316131353066302d653162342d373066662d613038662d303035393535656261386161581c794e1bcebcc2924f76a268fe316c8c5c860e1bf21a30fe1f0d9a23001b000001a1513116b0ff82583900794e1bcebcc2924f76a268fe316c8c5c860e1bf21a30fe1f0d9a2300c0ff34e6017364a5c32142823c88991503e80fcefd1560b317f0cd661b00000002331fa97e021a0002b041031a08258c86081a082585060ed9010281581c794e1bcebcc2924f76a268fe316c8c5c860e1bf21a30fe1f0d9a2300a0f5f6";
@@ -100,6 +101,23 @@ describe("checkDepositTx", () => {
     }
     expect(() => decode(hexToBytes("9f58"))).toThrow();
     expect(() => skipItem(hexToBytes("9f01"), 0)).toThrow();
+  });
+});
+
+describe("withdrawals", () => {
+  it("signs hex messages as-is and text messages as UTF-8", () => {
+    const text = "Strike Finance Withdrawal\nAmount: 5.00 USD";
+    const hex = bytesToHex(new TextEncoder().encode(text));
+    expect(normalizeWithdrawMessage(hex)).toEqual({ text, hex });
+    expect(normalizeWithdrawMessage(text)).toEqual({ text, hex });
+  });
+
+  const validator = previewTransaction(UNSIGNED_TX).outputs[0].address;
+  it("refuses a funding transaction that sends more than a min-UTxO", () => {
+    expect(() => checkFundingTx(UNSIGNED_TX, { walletAddress: USER_ADDR, validatorAddress: validator })).toThrow(/expected about 1–2/);
+  });
+  it("refuses a funding transaction paying anyone but the quoted validator", () => {
+    expect(() => checkFundingTx(UNSIGNED_TX, { walletAddress: USER_ADDR, validatorAddress: USER_ADDR.replace(/.$/, "x") })).toThrow(/unexpected address/);
   });
 });
 

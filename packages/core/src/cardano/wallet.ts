@@ -75,7 +75,11 @@ export class CardanoWallet {
   }
 
   async signMessage(message: string): Promise<string> {
-    const { signature, key } = await this.api.signData(this.addressHex, bytesToHex(utf8(message)));
+    return this.signHex(bytesToHex(utf8(message)));
+  }
+
+  async signHex(payloadHex: string): Promise<string> {
+    const { signature, key } = await this.api.signData(this.addressHex, payloadHex);
     return `${signature}:${key}`;
   }
 
