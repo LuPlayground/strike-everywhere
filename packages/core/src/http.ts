@@ -19,21 +19,45 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
+const TIMESTAMP_REJECTED = /signature expired|invalid timestamp/i;
+
 export class StrikeHttp {
-  clockSkewSec = 0;
+  clockSkewMs = 0;
   key: ApiWalletKey | null = null;
 
   constructor(public readonly net: NetworkConfig, private readonly fetchImpl: typeof fetch = globalThis.fetch.bind(globalThis)) {}
 
+  get clockSkewSec(): number {
+    return Math.round(this.clockSkewMs / 1000);
+  }
+
   async syncClock(): Promise<void> {
     try {
+      const t0 = Date.now();
       const j = await this.request<{ serverTime: number }>("GET", "/v2/time", { auth: false });
-      if (j?.serverTime) this.clockSkewSec = Math.round(j.serverTime / 1000 - Date.now() / 1000);
+      const t1 = Date.now();
+      if (Number.isFinite(j?.serverTime)) this.clockSkewMs = j.serverTime - (t0 + t1) / 2;
     } catch {
     }
   }
 
+  serverNowMs(): number {
+    return Math.floor(Date.now() + this.clockSkewMs - 500);
+  }
+
   async request<T = any>(method: string, path: string, opts: RequestOptions = {}): Promise<T> {
+    try {
+      return await this.send<T>(method, path, opts);
+    } catch (e) {
+      if (e instanceof StrikeApiError && (opts.auth ?? (opts.base ?? "api") === "api") && TIMESTAMP_REJECTED.test(e.message)) {
+        await this.syncClock();
+        return this.send<T>(method, path, opts);
+      }
+      throw e;
+    }
+  }
+
+  private async send<T>(method: string, path: string, opts: RequestOptions): Promise<T> {
     const base = opts.base ?? "api";
     const auth = opts.auth ?? base === "api";
     const body = opts.body === undefined ? "" : JSON.stringify(opts.body);
@@ -41,7 +65,7 @@ export class StrikeHttp {
     if (body) headers["Content-Type"] = "application/json";
     if (auth) {
       if (!this.key) throw new StrikeApiError(401, "Not connected: connect a wallet first.", null, path);
-      const ts = Math.floor(Date.now() / 1000) + this.clockSkewSec;
+      const ts = Math.floor(this.serverNowMs() / 1000);
       Object.assign(headers, await signRequest(this.key, method, path, body, ts, uuid()));
     }
     if (opts.builderFeeBps !== undefined) headers["X-Builder-Fee-Bps"] = String(opts.builderFeeBps);

@@ -5,6 +5,8 @@ import { ApiWalletKey, canonicalRequestMessage, signRequest } from "../src/signe
 import { decimalsOf, roundToStep } from "../src/format.js";
 import { estimateLiquidationPrice, maxLeverageFor, previewOrder } from "../src/math.js";
 import type { MarginTier } from "../src/types.js";
+import { StrikeHttp } from "../src/http.js";
+import { NETWORKS } from "../src/config.js";
 
 const ADA_TIERS: MarginTier[] = [
   { max_notional: "10000", max_leverage: 40, maintenance_margin_rate: "0.005", maintenance_amount: "0" },
@@ -71,5 +73,48 @@ describe("risk math", () => {
     expect(p.strikeFee).toBeCloseTo(0.01);
     expect(p.builderFee).toBeCloseTo(0.02);
     expect(p.totalFee).toBeCloseTo(0.03);
+  });
+});
+
+describe("StrikeHttp signing clock", () => {
+  const fakeStrike = (offsetMs: number, calls: string[]) =>
+    (async (url: string, init: any) => {
+      const now = Date.now() + offsetMs;
+      if (url.endsWith("/v2/time")) return new Response(JSON.stringify({ serverTime: now }), { status: 200 });
+      const ts = Number(init.headers["X-API-Wallet-Timestamp"]);
+      calls.push(String(ts));
+      if (ts * 1000 > now) return new Response(JSON.stringify({ error: "signature expired or invalid timestamp" }), { status: 401 });
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+  it("never signs with a timestamp ahead of server time (sub-second offsets)", async () => {
+    for (const offset of [850, 999, 1490, -300, 0, 120_000]) {
+      const calls: string[] = [];
+      const http = new StrikeHttp(NETWORKS.testnet, fakeStrike(offset, calls));
+      http.key = await ApiWalletKey.generate();
+      await http.syncClock();
+      for (let i = 0; i < 25; i++) {
+        await http.request("GET", "/v2/account");
+        await new Promise((r) => setTimeout(r, 37));
+      }
+      expect(calls.length).toBe(25);
+    }
+  }, 30_000);
+
+  it("re-syncs and retries once when Strike rejects the timestamp", async () => {
+    const calls: string[] = [];
+    const http = new StrikeHttp(NETWORKS.testnet, fakeStrike(5_000, calls));
+    http.key = await ApiWalletKey.generate();
+    http.clockSkewMs = 60_000;
+    await expect(http.request("GET", "/v2/account")).resolves.toEqual({ ok: true });
+    expect(calls.length).toBe(2);
+  });
+
+  it("does not retry other errors", async () => {
+    let n = 0;
+    const http = new StrikeHttp(NETWORKS.testnet, (async () => (n++, new Response(JSON.stringify({ error: "insufficient_balance" }), { status: 400 }))) as unknown as typeof fetch);
+    http.key = await ApiWalletKey.generate();
+    await expect(http.request("POST", "/v2/order", { body: {} })).rejects.toThrow("insufficient_balance");
+    expect(n).toBe(1);
   });
 });
