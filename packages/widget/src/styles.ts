@@ -120,7 +120,8 @@ button:disabled { cursor: not-allowed; }
 
 .ticket { padding: 12px 14px 14px; display: grid; gap: 10px; }
 .pills { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.pill { height: 32px; border-radius: var(--se-radius); background: var(--se-raised); font-weight: 600; font-size: 13px; display: grid; place-items: center; }
+.pill { height: 32px; border-radius: var(--se-radius); background: var(--se-raised); font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; white-space: nowrap; }
+.pill-k { color: var(--se-text-2); font-weight: 500; font-size: 11.5px; }
 .pill:hover:not(:disabled) { background: #2e2e2e; }
 .pill.static { cursor: default; }
 .tabs { display: flex; gap: 18px; border-bottom: 1px solid var(--se-border); }
@@ -147,7 +148,12 @@ button:disabled { cursor: not-allowed; }
 .slider .tick { position: absolute; top: 6px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #3a3a3a; }
 .slider .tick.on { background: var(--se-accent); }
 .slider .knob { position: absolute; top: 2px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 2px solid var(--se-accent); background: var(--se-bg); pointer-events: none; }
-.pct { height: 32px; border: 1px solid var(--se-border-strong); border-radius: var(--se-radius); display: grid; place-items: center; font-weight: 600; }
+.pct { height: 32px; border: 1px solid var(--se-border-strong); border-radius: var(--se-radius); display: flex; align-items: center; gap: 3px; padding: 0 8px; font-weight: 600; cursor: text; }
+.pct:focus-within { border-color: rgba(var(--se-accent-rgb), .6); }
+.pct input { flex: 1; min-width: 0; width: 100%; background: transparent; border: 0; outline: none; padding: 0; text-align: right; font: inherit; color: inherit; }
+.hint-row { font-size: 11px; color: var(--se-faint); margin-top: -4px; }
+.connect-strip { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 14px; background: rgba(var(--se-accent-rgb), .07); border-bottom: 1px solid var(--se-border); font-size: 12.5px; color: var(--se-text-soft); }
+.connect-strip .mini { margin-left: 0; flex: none; }
 .checks { display: flex; gap: 18px; }
 .check { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; user-select: none; }
 .check .box { width: 15px; height: 15px; border: 1.5px solid #5a5a5a; border-radius: 3px; display: grid; place-items: center; }

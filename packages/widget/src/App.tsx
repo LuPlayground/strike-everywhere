@@ -115,6 +115,7 @@ export function App({ config }: { config: WidgetConfig }) {
   const [twapLimit, setTwapLimit] = useState("");
   const [randomize, setRandomize] = useState(false);
   const [slipAck, setSlipAck] = useState("");
+  const [pctDraft, setPctDraft] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
 
   const [sheet, setSheet] = useState<null | "connect" | "deposit" | "withdraw">(null);
@@ -673,6 +674,12 @@ export function App({ config }: { config: WidgetConfig }) {
           })}
         </div>
       )}
+      {!session && (
+        <div class="connect-strip">
+          <span>Connect a Cardano wallet to trade</span>
+          <button class="mini go" onClick={() => setSheet("connect")}>Connect</button>
+        </div>
+      )}
       <div class="stats">
         <div class="stat">
           <div class="k dotted" title="Strike's index: a weighted average of external spot prices">Index</div>
@@ -728,8 +735,8 @@ export function App({ config }: { config: WidgetConfig }) {
           >
             {marginBusy ? <Spinner /> : marginMode === "cross" ? "Cross" : "Isolated"}
           </button>
-          <button class="pill" data-menu onClick={() => setMenu(menu === "leverage" ? null : "leverage")} aria-label="Leverage">
-            {lev}x
+          <button class="pill" data-menu onClick={() => setMenu(menu === "leverage" ? null : "leverage")} aria-label={`Leverage ${lev}x, change`} title="Leverage: tap to change">
+            <span class="pill-k">Leverage</span> {lev}x
           </button>
           <span class="pill static">One-Way</span>
         </div>
@@ -809,10 +816,27 @@ export function App({ config }: { config: WidgetConfig }) {
           <input id="se-size" inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd(decimalInput((e.target as HTMLInputElement).value))} aria-label="Order size in USD" />
           <span class="unit">USD</span>
         </div>
-        <div class="slider-row">
+        <div class="slider-row" title="Order size as a % of your buying power (available balance × leverage)">
           <PctSlider value={pct} onChange={setPct} />
-          <div class="pct num">{pct.toFixed(1)} %</div>
+          <label class="pct num">
+            <input
+              inputMode="decimal"
+              aria-label="Order size as percent of buying power"
+              value={pctDraft ?? (pct ? pct.toFixed(1) : "")}
+              placeholder="0"
+              onFocus={() => setPctDraft(pct ? pct.toFixed(1) : "")}
+              onInput={(e) => setPctDraft(decimalInput((e.target as HTMLInputElement).value))}
+              onBlur={() => {
+                const v = Number(pctDraft);
+                if (pctDraft !== null && Number.isFinite(v)) setPct(Math.max(0, Math.min(100, v)));
+                setPctDraft(null);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+            />
+            %
+          </label>
         </div>
+        <div class="hint-row">Slider = size as % of buying power · leverage is set above</div>
         {orderType === "twap" && (
           <>
             <div class="durs" role="radiogroup" aria-label="TWAP duration">
