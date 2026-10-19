@@ -168,9 +168,16 @@ async function stats(url: URL, env: Env): Promise<Response> {
     env.DB.prepare(`SELECT COUNT(*) AS orders, SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) AS rejected FROM events WHERE network = ? AND builder_code = ? AND type = 'order' AND ts >= ?`).bind(network, builder, since),
     env.DB.prepare(`SELECT COUNT(*) AS deposits, COUNT(DISTINCT account_id) AS funded, COALESCE(SUM(usd),0) AS usd FROM events WHERE network = ? AND builder_code = ? AND type = 'deposit' AND ts >= ?`).bind(network, builder, since),
     env.DB.prepare(
-      `SELECT a.partner_id, a.host_origin, COUNT(DISTINCT a.account_id) AS wallets,
-              COUNT(DISTINCT f.account_id) AS traders, COALESCE(SUM(f.notional),0) AS volume, COALESCE(SUM(f.builder_fee),0) AS fees
-       FROM accounts a LEFT JOIN fills f ON f.network = a.network AND f.builder_code = a.builder_code AND f.account_id = a.account_id AND f.ts >= ?3
+      `SELECT a.partner_id, a.host_origin,
+              COUNT(*) AS wallets,
+              MIN(a.first_seen) AS first_seen,
+              MAX(a.last_seen) AS last_seen,
+              (SELECT COUNT(DISTINCT e.account_id) FROM events e WHERE e.network = ?1 AND e.builder_code = ?2 AND e.partner_id = a.partner_id AND e.host_origin = a.host_origin AND e.type = 'deposit' AND e.ts >= ?3) AS funded,
+              (SELECT COUNT(*) FROM events e WHERE e.network = ?1 AND e.builder_code = ?2 AND e.partner_id = a.partner_id AND e.host_origin = a.host_origin AND e.type = 'order' AND e.ts >= ?3) AS orders,
+              (SELECT COUNT(DISTINCT f.account_id) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = a.partner_id AND f.host_origin = a.host_origin AND f.ts >= ?3) AS traders,
+              (SELECT COALESCE(SUM(f.notional), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = a.partner_id AND f.host_origin = a.host_origin AND f.ts >= ?3) AS volume,
+              (SELECT COALESCE(SUM(f.builder_fee), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = a.partner_id AND f.host_origin = a.host_origin AND f.ts >= ?3) AS fees
+       FROM accounts a
        WHERE a.network = ?1 AND a.builder_code = ?2
        GROUP BY a.partner_id, a.host_origin ORDER BY volume DESC, wallets DESC LIMIT 50`,
     ).bind(network, builder, since),
@@ -194,6 +201,8 @@ async function stats(url: URL, env: Env): Promise<Response> {
       days,
       generatedAt: Date.now(),
       totals: {
+        integrations: (byPartner.results ?? []).length,
+        activeIntegrations: (byPartner.results ?? []).filter((p: any) => Date.now() - Number(p.last_seen) < 7 * 86_400_000).length,
         connectedWallets: t.wallets ?? 0,
         fundedAccounts: d.funded ?? 0,
         tradingAccounts: t.traders ?? 0,

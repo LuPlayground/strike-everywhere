@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Developers · Embed the Strike panel · Strike Everywhere</title>
+<meta name="description" content="Embed Strike perps in your wallet or app in two minutes: configure, preview live, copy one snippet." />
+<link rel="stylesheet" href="../assets/theme.css" />
+<style>
+  .top { position: relative; padding: 46px 0 26px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mint); }
+  h1 { font-size: 40px; line-height: 1.1; letter-spacing: -0.025em; margin: 12px 0 10px; }
+  .top p { color: var(--ink-2); font-size: 16px; margin: 0; max-width: 640px; }
+  .stepper { display: flex; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .stepper .s { display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 10px; font-size: 13.5px; font-weight: 600; }
+  .stepper .s b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(var(--mint-rgb), .14); color: var(--mint); font-size: 12px; }
+  .stepper .s span { color: var(--ink-2); font-weight: 400; margin-left: 2px; }
+  .stepper .arrow { color: var(--faint); align-self: center; }
+
+  .studio { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; align-items: start; padding-bottom: 20px; }
+  .cfg { position: sticky; top: calc(var(--nav-h) + 12px); }
+  .cfg .body { padding: 16px; display: grid; gap: 16px; }
+  .fld { display: grid; gap: 7px; }
+  .fld > label, .fld > .lbl { font-size: 12px; color: var(--ink-2); display: flex; justify-content: space-between; align-items: baseline; }
+  .fld .help { font-size: 11.5px; color: var(--muted); }
+  .fld a { color: var(--mint); text-decoration: none; font-size: 11.5px; }
+  .fld .seg { width: 100%; }
+  .fld .seg button { flex: 1; }
+  .range { width: 100%; accent-color: var(--mint); }
+  .earn { font-size: 12px; color: var(--ink-2); background: rgba(var(--mint-rgb), .06); border: 1px solid rgba(var(--mint-rgb), .16); border-radius: 6px; padding: 8px 10px; }
+  .earn b { color: var(--mint); font-family: var(--mono); font-weight: 500; }
+
+  .right { display: grid; gap: 16px; min-width: 0; }
+  .browser { overflow: hidden; }
+  .browser .bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--glass-line); }
+  .browser .bar i { width: 10px; height: 10px; border-radius: 50%; background: #2c2c2c; }
+  .browser .url { flex: 1; margin-left: 10px; height: 26px; border-radius: 6px; background: rgba(255,255,255,.05); display: flex; align-items: center; gap: 8px; padding: 0 10px; font: 12px var(--mono); color: var(--ink-2); }
+  .browser .live-tag { font-size: 11.5px; color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+  .host { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 22px; padding: 22px; min-height: 640px; background: radial-gradient(1200px 400px at 0% 0%, rgba(122,162,255,.05), transparent 60%), #0b0c0f; }
+  .host .appnav { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .host .applogo { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #7c8cff, #3dd6c6); }
+  .host .appname { font-weight: 600; }
+  .host .sk { display: grid; gap: 12px; align-content: start; }
+  .host .sk div { border-radius: 10px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.05); }
+  .host .slot { position: relative; padding: 6px; border-radius: 14px; border: 1px dashed rgba(var(--mint-rgb), .35); align-self: start; }
+  .host .slot .tag { position: absolute; top: -10px; left: 14px; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: #0b0c0f; color: var(--mint); padding: 0 6px; }
+
+  .codebox .tabs { padding: 0 16px; }
+  .codebox pre { border: 0; border-radius: 0; background: transparent; min-height: 150px; }
+  .codebox .foot { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .codebox .foot .muted { font-size: 12px; }
+
+  .next { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 28px 0 10px; }
+  .next .card { padding: 20px; }
+  .next .ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: rgba(var(--mint-rgb), .1); color: var(--mint); }
+  .next h3 { margin: 12px 0 4px; font-size: 15.5px; }
+  .next p { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
+  .next a { color: var(--mint); text-decoration: none; font-weight: 600; font-size: 13px; display: inline-block; margin-top: 10px; }
+
+  .faq { padding: 22px 0 60px; display: grid; gap: 10px; max-width: 860px; }
+  .faq h2 { font-size: 20px; margin: 0 0 6px; }
+  details { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  summary { cursor: pointer; padding: 14px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--mint); font-size: 18px; font-weight: 400; }
+  details[open] summary::after { content: "–"; }
+  details p { margin: 0; padding: 0 16px 16px; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+
+  @media (max-width: 1080px) { .studio { grid-template-columns: 1fr; } .cfg { position: static; } .next { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .host { grid-template-columns: 1fr; } .host .sk { display: none; } h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+<nav class="se-nav">
+  <a class="se-brand" href="../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Strike Everywhere</a>
+  <div class="se-links"><a href="../">Overview</a><a href="../#demos">Demos</a><a class="on" href="./">Developers</a><a href="../dashboard/">Dashboard</a><a href="https://github.com/LuPlayground/strike-everywhere">Docs</a></div>
+  <span class="sp"></span>
+  <a class="btn btn-mint btn-sm" href="#code">Copy embed code</a>
+</nav>
+<div class="se-ticker" id="ticker"></div>
+
+<main class="wrap">
+  <div class="top">
+    <div class="bg-grid" style="inset:-40px -24px 0"></div>
+    <span class="eyebrow"><span class="dot pulse"></span>Developers</span>
+    <h1>Embed the Strike panel in two minutes</h1>
+    <p>Configure on the left, watch it update live in a sample app, and copy one snippet. No backend, no API keys, no build step.</p>
+    <div class="stepper">
+      <div class="glass s"><b>1</b>Get a builder code<span>· on Strike</span></div><span class="arrow">→</span>
+      <div class="glass s"><b>2</b>Configure<span>· live preview</span></div><span class="arrow">→</span>
+      <div class="glass s"><b>3</b>Paste &amp; ship<span>· track on dashboard</span></div>
+    </div>
+  </div>
+
+  <div class="studio">
+    <aside class="panel cfg" aria-label="Configuration">
+      <div class="panel-h"><h3>Configure</h3><span class="sub">changes apply instantly</span></div>
+      <div class="body">
+        <div class="fld">
+          <label for="c-code">Builder code <a id="regLink" target="_blank" rel="noopener">Register one ↗</a></label>
+          <input class="input" id="c-code" value="Playground101" spellcheck="false" autocomplete="off" />
+          <span class="help">Your code from Strike's builder-codes page. Fees go to its owner.</span>
+        </div>
+        <div class="fld"><span class="lbl">Network</span><div class="seg" id="c-net"><button type="button" data-v="testnet" class="on">Testnet</button><button type="button" data-v="mainnet">Mainnet</button></div></div>
+        <div class="fld"><label for="c-market">Default market</label><select class="input" id="c-market"><option>ADA-USD</option></select></div>
+        <div class="fld"><span class="lbl">Default side</span><div class="seg" id="c-side"><button type="button" data-v="buy" class="on">Long</button><button type="button" data-v="sell">Short (hedge)</button></div></div>
+        <div class="fld">
+          <label for="c-fee">Builder fee <span class="num" id="feeLbl" style="color:var(--ink)">5 bps · 0.05%</span></label>
+          <input class="range" type="range" id="c-fee" min="0" max="25" step="1" value="5" />
+          <div class="earn">On a <b>$1,000</b> trade your app earns <b id="earn">$0.50</b>, paid by Strike on fill.</div>
+        </div>
+        <div class="fld"><span class="lbl">Max leverage for your users</span><div class="seg" id="c-lev"><button type="button" data-v="3">3x</button><button type="button" data-v="5" class="on">5x</button><button type="button" data-v="10">10x</button><button type="button" data-v="20">20x</button></div></div>
+        <div class="fld"><span class="lbl">Width</span><div class="seg" id="c-width"><button type="button" data-v="340">Compact</button><button type="button" data-v="380" class="on">Standard</button><button type="button" data-v="420">Wide</button></div></div>
+        <div class="fld"><label for="c-partner">App name <span class="help">shown on your dashboard</span></label><input class="input" id="c-partner" value="my-wallet" spellcheck="false" /></div>
+      </div>
+    </aside>
+
+    <div class="right">
+      <section class="glass browser" aria-label="Live preview">
+        <div class="bar"><i></i><i></i><i></i><div class="url"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.5"/></svg><span id="urlApp">my-wallet.app</span></div><span class="live-tag"><span class="dot pulse"></span>Live preview</span></div>
+        <div class="host">
+          <div class="appnav"><span class="applogo"></span><span class="appname" id="appName">my-wallet</span><span class="muted" style="font-size:12.5px;margin-left:8px">Your app</span></div>
+          <div class="sk"><div style="height:120px"></div><div style="height:72px"></div><div style="height:72px"></div><div style="height:180px"></div></div>
+          <div class="slot"><span class="tag">Strike panel</span><div id="previewMount"></div></div>
+        </div>
+      </section>
+
+      <section class="panel codebox" id="code">
+        <div class="tabs" id="codeTabs"><button class="tab on" data-t="html">HTML</button><button class="tab" data-t="react">React</button><button class="tab" data-t="wallet">Wallet extension</button></div>
+        <pre class="code" id="snippet"></pre>
+        <div class="foot"><button class="btn btn-mint btn-sm" id="copy">Copy snippet</button><a class="btn btn-ghost btn-sm" id="dashLink">Open your dashboard ↗</a><span class="muted">Works in any stack: it's a standard web component.</span></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="next">
+    <div class="glass card"><div class="ic"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="5.5" width="14" height="10" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M13 10.5h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><h3>Users connect once</h3><p>Any CIP-30 wallet (Lace, Eternl, Vespr, Typhon…). One signature creates their Strike account and a trading key that can't withdraw.</p></div>
+    <div class="glass card"><div class="ic"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M12 8c-.4-.6-1.1-1-2-1-1.3 0-2.2.6-2.2 1.6s.9 1.4 2.2 1.6 2.2.6 2.2 1.6-.9 1.6-2.2 1.6c-.9 0-1.6-.4-2-1M10 5.5v9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div><h3>Strike pays you</h3><p>Your builder fee is added to each order and credited by Strike to your account on every fill. Users always see it before confirming.</p></div>
+    <div class="glass card"><div class="ic"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 15 7.5 10l3 3L17 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Track every integration</h3><p>Referred users, active traders and volume per app, verified against Strike's public fill history.</p><a id="dashLink2">Open dashboard →</a></div>
+  </div>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <details><summary>Do I need a backend or API keys?</summary><p>No. The panel talks directly to Strike from the user's browser. Your only credential is your public builder code.</p></details>
+    <details><summary>Can my app access user funds?</summary><p>No. The trading key created at connect can place orders but cannot withdraw: withdrawals need the user's own wallet signature and only go back to their wallet. Deposits are checked before the user signs.</p></details>
+    <details><summary>What should I charge?</summary><p>We recommend 5 bps (0.05%). Strike allows up to 100 bps, but the panel shows every fee before confirming. Low fees win volume, like Phantom at 5 bps on Hyperliquid.</p></details>
+    <details><summary>Does it work in a wallet extension or mobile wallet?</summary><p>Yes, it's a standard web component. In an extension popup set <span class="num">width="368"</span>; if your CSP blocks remote scripts, bundle the ESM build (<span class="num">strike-everywhere.js</span>) instead.</p></details>
+  </section>
+</main>
+<footer class="se-foot"><div class="wrap row"><span>Strike Everywhere is an independent project built on Strike's public Builder API. Not affiliated with Strike Finance.</span><a href="../" style="color:var(--mint);text-decoration:none;font-weight:600">Overview →</a></div></footer>
+
+<script src="../assets/chrome.js"></script>
+<script>
+(function () {
+  SEChrome.ticker(document.getElementById("ticker"));
+  var $ = function (id) { return document.getElementById(id); };
+  var WIDGET = new URL("../widget/strike-everywhere.iife.js", location.href).href;
+  var WIDGET_ESM = new URL("../widget/strike-everywhere.js", location.href).href;
+  var API = "https://strike-everywhere-api.strike-everywhere.workers.dev";
+  var cfg = { net: "testnet", side: "buy", lev: "5", width: "380", tab: "html" };
+  var esc = function (s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+
+  function seg(id, key) {
+    $(id).addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      cfg[key] = b.dataset.v;
+      $(id).querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+      update();
+    });
+  }
+  seg("c-net", "net"); seg("c-side", "side"); seg("c-lev", "lev"); seg("c-width", "width");
+
+  fetch("https://api.strikefinance.org/v2/markets").then(function (r) { return r.json(); }).then(function (j) {
+    var list = Object.values(j.markets || {}).filter(function (m) { return m.status === "trading"; }).map(function (m) { return m.symbol; }).sort();
+    var sel = $("c-market"); sel.innerHTML = list.map(function (s) { return "<option" + (s === "ADA-USD" ? " selected" : "") + ">" + s + "</option>"; }).join("");
+  }).catch(function () {});
+
+  function attrs() {
+    var a = [["builder-code", $("c-code").value.trim() || "YOUR_CODE"], ["fee-bps", $("c-fee").value], ["market", $("c-market").value]];
+    if (cfg.side === "sell") a.push(["side", "sell"]);
+    a.push(["max-leverage", cfg.lev]);
+    if (cfg.width !== "380") a.push(["width", cfg.width]);
+    a.push(["partner-id", $("c-partner").value.trim() || "my-app"]);
+    if (cfg.net === "testnet") a.push(["network", "testnet"]);
+    a.push(["partner-api", API]);
+    return a;
+  }
+
+  var tag = function (a, indent) {
+    return '<span class="k">&lt;strike-trade</span>\n' + a.map(function (p) { return indent + '<span class="a">' + p[0] + '</span>=<span class="s">"' + esc(p[1]) + '"</span>'; }).join("\n") + '<span class="k">&gt;&lt;/strike-trade&gt;</span>';
+  };
+
+  function snippet() {
+    var a = attrs();
+    if (cfg.tab === "html")
+      return '<span class="muted">&lt;!-- 1. Load once, anywhere on the page --&gt;</span>\n<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + WIDGET + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n\n<span class="muted">&lt;!-- 2. Place the panel --&gt;</span>\n' + tag(a, "  ");
+    if (cfg.tab === "react")
+      return '<span class="k">import</span> { useEffect } <span class="k">from</span> <span class="s">"react"</span>;\n\n<span class="k">export function</span> StrikePanel() {\n  useEffect(() =&gt; {\n    <span class="k">if</span> (customElements.get(<span class="s">"strike-trade"</span>)) <span class="k">return</span>;\n    <span class="k">const</span> s = document.createElement(<span class="s">"script"</span>);\n    s.src = <span class="s">"' + WIDGET + '"</span>;\n    document.head.appendChild(s);\n  }, []);\n  <span class="k">return</span> (\n    ' + tag(a, "      ").replace(/\n/g, "\n    ") + '\n  );\n}';
+    var wa = a.filter(function (p) { return p[0] !== "width"; }).concat([["width", "368"]]);
+    return '<span class="muted">// popup.html — bundle the ESM build if your CSP blocks remote scripts</span>\n<span class="k">&lt;script</span> <span class="a">type</span>=<span class="s">"module"</span> <span class="a">src</span>=<span class="s">"./vendor/strike-everywhere.js"</span><span class="k">&gt;&lt;/script&gt;</span>\n<span class="muted">// get it from: ' + WIDGET_ESM + '</span>\n\n<span class="k">&lt;section</span> <span class="a">id</span>=<span class="s">"perps-tab"</span><span class="k">&gt;</span>\n  ' + tag(wa, "    ").replace(/\n/g, "\n  ") + '\n<span class="k">&lt;/section&gt;</span>';
+  }
+
+  var t = null;
+  function update() {
+    var fee = Number($("c-fee").value);
+    $("feeLbl").textContent = fee + " bps · " + (fee / 100).toFixed(2) + "%";
+    $("earn").textContent = "$" + (1000 * fee / 10000).toFixed(2);
+    var name = $("c-partner").value.trim() || "my-app";
+    $("appName").textContent = name; $("urlApp").textContent = name.replace(/[^a-z0-9-]/gi, "").toLowerCase() + ".app";
+    $("regLink").href = cfg.net === "mainnet" ? "https://app.strikefinance.org/builder-codes" : "https://testnet.strikefinance.org/builder-codes";
+    var code = $("c-code").value.trim() || "YOUR_CODE";
+    var dash = "../dashboard/?builder=" + encodeURIComponent(code) + "&network=" + cfg.net;
+    $("dashLink").href = dash; $("dashLink2").href = dash;
+    $("snippet").innerHTML = snippet();
+    clearTimeout(t);
+    t = setTimeout(renderPreview, 350);
+  }
+
+  function renderPreview() {
+    var mount = $("previewMount");
+    mount.innerHTML = "";
+    var el = document.createElement("strike-trade");
+    attrs().forEach(function (p) { el.setAttribute(p[0], p[1]); });
+    if (!el.getAttribute("width")) el.setAttribute("width", cfg.width);
+    if (el.getAttribute("builder-code") === "YOUR_CODE") el.setAttribute("builder-code", "Playground101");
+    el.removeAttribute("partner-api");
+    mount.appendChild(el);
+  }
+
+  ["c-code", "c-fee", "c-market", "c-partner"].forEach(function (id) { $(id).addEventListener("input", update); $(id).addEventListener("change", update); });
+  $("codeTabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab"); if (!b) return;
+    cfg.tab = b.dataset.t;
+    $("codeTabs").querySelectorAll(".tab").forEach(function (x) { x.classList.toggle("on", x === b); });
+    $("snippet").innerHTML = snippet();
+  });
+  $("copy").addEventListener("click", function () {
+    navigator.clipboard.writeText($("snippet").textContent).then(function () { $("copy").textContent = "Copied ✓"; setTimeout(function () { $("copy").textContent = "Copy snippet"; }, 1500); });
+  });
+  update();
+})();
+</script>
+<script src="../widget/strike-everywhere.iife.js" defer></script>
+</body>
+</html>

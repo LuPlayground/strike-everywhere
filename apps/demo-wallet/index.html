@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Perps in your wallet (concept) · Strike Everywhere</title>
+<meta name="description" content="Concept: a Cardano wallet with a native Perpetuals tab powered by Strike Everywhere. Fictional wallet for illustration." />
+<link rel="stylesheet" href="../../assets/theme.css" />
+<style>
+  body { overflow-x: hidden; }
+  .stage { position: relative; min-height: calc(100vh - var(--nav-h) - 38px); }
+  .hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 56px; align-items: center; padding: 48px 0 64px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mint); }
+  h1 { font-size: 44px; line-height: 1.08; letter-spacing: -0.02em; margin: 14px 0 16px; }
+  h1 em { font-style: normal; color: var(--mint); }
+  .lede { color: var(--ink-2); font-size: 17px; line-height: 1.6; max-width: 560px; margin: 0 0 26px; }
+  .points { display: grid; gap: 12px; margin: 0 0 26px; padding: 0; list-style: none; max-width: 560px; }
+  .points li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; font-size: 14.5px; color: var(--ink-soft); }
+  .points li i { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: rgba(var(--mint-rgb), .12); color: var(--mint); font-style: normal; font-weight: 700; font-size: 12px; }
+  .points b { color: var(--ink); }
+  .concept { display: inline-flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--ink-2); border: 1px dashed var(--line-2); border-radius: 8px; padding: 8px 12px; }
+
+  .popup-wrap { position: relative; justify-self: center; }
+  .popup-wrap::before { content: ""; position: absolute; inset: -60px; background: radial-gradient(closest-side, rgba(var(--mint-rgb), .16), transparent 70%); filter: blur(20px); z-index: 0; }
+  .popup { position: relative; z-index: 1; width: 400px; height: 760px; border-radius: 18px; background: #0c0d10; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 40px 120px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); display: grid; grid-template-rows: auto auto 1fr auto; overflow: hidden; }
+  .chrome-bar { height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: #15161a; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 11px; color: #8b8f99; }
+  .chrome-bar i { width: 9px; height: 9px; border-radius: 50%; background: #3a3d45; }
+  .chrome-bar span { margin-left: 8px; }
+  .w-top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .w-avatar { width: 30px; height: 30px; border-radius: 50%; background: conic-gradient(from 90deg, #7c8cff, #4efab0, #ffd36e, #7c8cff); }
+  .w-name { font-weight: 600; font-size: 13.5px; line-height: 1.2; }
+  .w-addr { font: 11px var(--mono); color: #8b8f99; }
+  .w-net { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: rgba(248,147,26,.14); color: #fbbf74; }
+  .w-net.main { background: rgba(var(--mint-rgb), .12); color: var(--mint); }
+  .w-body { overflow-y: auto; overflow-x: hidden; padding: 14px 16px; }
+  .w-body::-webkit-scrollbar { width: 6px; } .w-body::-webkit-scrollbar-thumb { background: #2a2c33; border-radius: 3px; }
+  .bal { text-align: center; padding: 10px 0 16px; }
+  .bal .k { font-size: 12px; color: #8b8f99; }
+  .bal .v { font-size: 30px; font-weight: 600; margin-top: 4px; }
+  .bal .s { font-size: 12.5px; color: #8b8f99; margin-top: 2px; }
+  .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .actions button { display: grid; justify-items: center; gap: 6px; background: #15161a; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 10px 0; font-size: 11.5px; color: #c9ccd4; cursor: pointer; }
+  .actions button:hover { border-color: rgba(var(--mint-rgb), .35); }
+  .actions svg { width: 18px; height: 18px; color: #c9ccd4; }
+  .list { display: grid; gap: 6px; }
+  .asset { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: #121318; border: 1px solid rgba(255,255,255,.05); }
+  .asset i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 11px; color: #04120c; }
+  .asset .n { font-weight: 600; font-size: 13.5px; } .asset .t { font-size: 11.5px; color: #8b8f99; }
+  .asset .r { margin-left: auto; text-align: right; font-family: var(--mono); font-size: 13px; } .asset .r small { display: block; color: #8b8f99; font-size: 11px; }
+  .perps-intro { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8b8f99; margin: 0 0 10px; }
+  .perps-intro b { color: var(--ink); font-weight: 600; }
+  .perps-intro .badge { margin-left: auto; }
+  .w-nav { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid rgba(255,255,255,.07); background: #0f1014; }
+  .w-nav button { position: relative; display: grid; justify-items: center; gap: 4px; padding: 10px 0 12px; background: none; border: 0; font-size: 11px; color: #8b8f99; cursor: pointer; }
+  .w-nav button svg { width: 19px; height: 19px; }
+  .w-nav button.on { color: var(--mint); }
+  .w-nav button.on::before { content: ""; position: absolute; top: 0; left: 28%; right: 28%; height: 2px; border-radius: 2px; background: var(--mint); }
+  .w-nav .new { position: absolute; top: 6px; right: 14%; font-size: 8.5px; font-weight: 700; background: var(--mint); color: #04120c; border-radius: 4px; padding: 0 4px; }
+  .stake-card { border-radius: 14px; padding: 16px; background: linear-gradient(135deg, rgba(124,140,255,.16), rgba(var(--mint-rgb), .08)); border: 1px solid rgba(255,255,255,.08); }
+  .stake-card .row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; color: #c9ccd4; } .stake-card .row b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+  .dapps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .dapps div { background: #121318; border: 1px solid rgba(255,255,255,.05); border-radius: 12px; padding: 14px 6px; text-align: center; font-size: 11.5px; color: #c9ccd4; }
+  .dapps i { display: block; width: 30px; height: 30px; margin: 0 auto 8px; border-radius: 9px; }
+  .snippet { margin-top: 22px; max-width: 560px; }
+  .snippet .lbl { font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
+  @media (max-width: 1080px) { .hero { grid-template-columns: 1fr; } .popup-wrap { justify-self: center; } h1 { font-size: 34px; } }
+  @media (max-width: 460px) { .popup { width: calc(100vw - 32px); height: 720px; } }
+</style>
+</head>
+<body>
+<nav class="se-nav">
+  <a class="se-brand" href="../../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Strike Everywhere</a>
+  <div class="se-links"><a href="../../">Overview</a><a class="on" href="../../#demos">Demos</a><a href="../../developers/">Developers</a><a href="../../dashboard/">Dashboard</a></div>
+  <span class="sp"></span>
+  <span class="chip">Concept · wallet integration</span>
+</nav>
+<div class="se-ticker" id="ticker"></div>
+
+<div class="stage">
+  <div class="bg-grid"></div>
+  <div class="wrap hero">
+    <div>
+      <span class="eyebrow"><span class="dot pulse"></span>Concept · Wallet-native perps</span>
+      <h1>A <em>Perpetuals</em> tab inside the wallet people already use.</h1>
+      <p class="lede">On Hyperliquid, wallets that embed trading became the biggest source of builder volume. This is what that looks like for Cardano: a wallet adds one component, and its users trade Strike perps without leaving the wallet.</p>
+      <ul class="points">
+        <li><i>1</i><span><b>No new site, no new seed.</b> The wallet's own keys sign Strike's one-time connect message.</span></li>
+        <li><i>2</i><span><b>The wallet earns.</b> Its builder code collects a small fee on every fill, credited by Strike.</span></li>
+        <li><i>3</i><span><b>Safe by design.</b> The trading key can't withdraw; deposits are checked before signing.</span></li>
+      </ul>
+      <div class="concept"><span class="badge gold">Concept</span>"Halo" is a fictional wallet for illustration. Real wallet integrations (Lace, Eternl, Vespr, …) would be partnerships.</div>
+      <div class="snippet">
+        <div class="lbl">What a wallet team adds:</div>
+        <pre class="code"><span class="k">&lt;strike-trade</span> <span class="a">builder-code</span>=<span class="s">"halo"</span> <span class="a">fee-bps</span>=<span class="s">"5"</span> <span class="a">width</span>=<span class="s">"368"</span><span class="k">&gt;</span>
+<span class="k">&lt;/strike-trade&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="popup-wrap">
+      <div class="popup" role="region" aria-label="Concept wallet with Perpetuals tab">
+        <div class="chrome-bar"><i></i><i></i><i></i><span>Halo Wallet · extension</span></div>
+        <div class="w-top">
+          <div class="w-avatar"></div>
+          <div><div class="w-name">Main account</div><div class="w-addr">addr1qx…7f3k</div></div>
+          <span class="w-net" id="net">Preprod</span>
+        </div>
+        <div class="w-body" id="body"></div>
+        <div class="w-nav" id="nav">
+          <button data-tab="wallet"><svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5" width="15" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 10.5h2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4.5 5 13 2.8V5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Wallet</button>
+          <button data-tab="activity"><svg viewBox="0 0 20 20" fill="none"><path d="M3 10h3l2-5 4 10 2-5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Activity</button>
+          <button data-tab="perps" class="on"><span class="new">NEW</span><svg viewBox="0 0 20 20" fill="none"><path d="M3 14 7.5 9l3 3L17 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 5.5h4v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Perps</button>
+          <button data-tab="staking"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l2.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Staking</button>
+          <button data-tab="dapps"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>dApps</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="se-foot"><div class="wrap row"><span>Concept mockup. "Halo" is fictional. Strike Everywhere is an independent project built on Strike's public Builder API.</span><a href="../../" style="color:var(--mint);text-decoration:none;font-weight:600">Strike Everywhere →</a></div></footer>
+
+<template id="tpl-wallet">
+  <div class="bal"><div class="k">Total balance</div><div class="v num">₳ 12,480.22</div><div class="s num" id="usdBal">≈ $—</div></div>
+  <div class="actions">
+    <button><svg viewBox="0 0 20 20" fill="none"><path d="M10 15V5m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Send</button>
+    <button><svg viewBox="0 0 20 20" fill="none"><path d="M10 5v10m0 0-4-4m4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Receive</button>
+    <button><svg viewBox="0 0 20 20" fill="none"><path d="M4 7h11l-3-3M16 13H5l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Swap</button>
+    <button data-go="perps"><svg viewBox="0 0 20 20" fill="none"><path d="M3 14 7.5 9l3 3L17 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Perps</button>
+  </div>
+  <div class="list">
+    <div class="asset"><i style="background:#4efab0">₳</i><div><div class="n">Cardano</div><div class="t">ADA · staked</div></div><div class="r">12,480.22<small id="adaUsd">$—</small></div></div>
+    <div class="asset"><i style="background:#c7f9cc">$</i><div><div class="n">Moneta Dollar</div><div class="t">USDM</div></div><div class="r">850.00<small>$850.00</small></div></div>
+    <div class="asset"><i style="background:#a5b4fc">NI</i><div><div class="n">Midnight</div><div class="t">NIGHT</div></div><div class="r">14,000<small>sample</small></div></div>
+  </div>
+</template>
+<template id="tpl-activity">
+  <div class="list">
+    <div class="asset"><i style="background:#4efab0">↓</i><div><div class="n">Received</div><div class="t">2 hours ago</div></div><div class="r">+250 ₳<small>sample</small></div></div>
+    <div class="asset"><i style="background:#a5b4fc">⚡</i><div><div class="n">Staking reward</div><div class="t">Epoch 612</div></div><div class="r">+6.84 ₳<small>sample</small></div></div>
+    <div class="asset"><i style="background:#fbbf24">↑</i><div><div class="n">Sent</div><div class="t">Yesterday</div></div><div class="r">-40 ₳<small>sample</small></div></div>
+  </div>
+</template>
+<template id="tpl-staking">
+  <div class="stake-card">
+    <div style="font-weight:600;margin-bottom:6px">Delegated · HALO1 pool</div>
+    <div class="row"><span>Live stake</span><b>12,480 ₳</b></div>
+    <div class="row"><span>Est. APY</span><b>2.9%</b></div>
+    <div class="row"><span>Rewards (all time)</span><b>311.40 ₳</b></div>
+  </div>
+  <p class="perps-intro" style="margin-top:14px">Tip: hedge your staked ADA with a short in <b>&nbsp;Perps</b>: stay staked, reduce downside.</p>
+</template>
+<template id="tpl-dapps">
+  <div class="dapps">
+    <div><i style="background:#4efab0"></i>Perps</div><div><i style="background:#7c8cff"></i>DEX</div><div><i style="background:#ffd36e"></i>Lending</div>
+    <div><i style="background:#f472b6"></i>NFTs</div><div><i style="background:#38bdf8"></i>Bridge</div><div><i style="background:#a3e635"></i>Governance</div>
+  </div>
+</template>
+
+<script src="../../assets/chrome.js"></script>
+<script>
+(function () {
+  SEChrome.ticker(document.getElementById("ticker"));
+  var q = new URLSearchParams(location.search);
+  var network = q.get("network") || "testnet", builder = q.get("builder") || "Playground101";
+  var net = document.getElementById("net");
+  net.textContent = network === "mainnet" ? "Mainnet" : "Preprod"; net.className = "w-net" + (network === "mainnet" ? " main" : "");
+  var body = document.getElementById("body");
+  var perps = document.createElement("div");
+  perps.innerHTML = '<p class="perps-intro"><span class="dot"></span><b>Perpetuals</b> · powered by Strike<span class="badge mint">beta</span></p>';
+  var w = document.createElement("strike-trade");
+  [["builder-code", builder], ["network", network], ["market", "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["width", "368"], ["max-leverage", "5"], ["partner-api", "https://strike-everywhere-api.strike-everywhere.workers.dev"]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
+  perps.appendChild(w);
+  var views = {};
+  function show(tab) {
+    document.querySelectorAll("#nav button").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
+    Array.from(body.children).forEach(function (c) { c.hidden = true; });
+    if (tab === "perps") { if (!perps.parentNode) body.appendChild(perps); perps.hidden = false; return; }
+    if (!views[tab]) { var d = document.createElement("div"); d.appendChild(document.getElementById("tpl-" + tab).content.cloneNode(true)); views[tab] = d; body.appendChild(d); }
+    views[tab].hidden = false;
+    var go = views[tab].querySelector("[data-go]"); if (go) go.onclick = function () { show(go.dataset.go); };
+    fillPrices();
+  }
+  function fillPrices() {
+    fetch("https://api.strikefinance.org/price/v2/premiumIndex?symbol=ADA-USD").then(function (r) { return r.json(); }).then(function (p) {
+      var px = Number(p.markPrice), usd = (12480.22 * px).toLocaleString("en-US", { maximumFractionDigits: 0 });
+      var a = document.getElementById("usdBal"), b = document.getElementById("adaUsd");
+      if (a) a.textContent = "≈ $" + usd; if (b) b.textContent = "$" + usd;
+    }).catch(function () {});
+  }
+  document.getElementById("nav").addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) show(b.dataset.tab); });
+  show(q.get("tab") || "perps");
+})();
+</script>
+<script src="../../widget/strike-everywhere.iife.js" defer></script>
+</body>
+</html>

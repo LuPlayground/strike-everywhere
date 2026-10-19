@@ -15,7 +15,9 @@ cpSync(dist, join(out, "widget"), { recursive: true });
 cpSync(join(root, "apps", "landing"), out, { recursive: true });
 cpSync(join(root, "apps", "demo-blog"), join(out, "demo", "blog"), { recursive: true });
 cpSync(join(root, "apps", "demo-portfolio"), join(out, "demo", "portfolio"), { recursive: true });
+cpSync(join(root, "apps", "demo-wallet"), join(out, "demo", "wallet"), { recursive: true });
 cpSync(join(root, "apps", "dashboard"), join(out, "dashboard"), { recursive: true });
+cpSync(join(root, "apps", "developers"), join(out, "developers"), { recursive: true });
 writeFileSync(
   join(out, "_headers"),
   [

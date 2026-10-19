@@ -136,6 +136,14 @@ export class StrikeEverywhere {
     return session;
   }
 
+  dispose(): void {
+    this.priceStream?.close();
+    this.priceStream = null;
+    this.userStream?.close();
+    this.userStream = null;
+    this.listeners.clear();
+  }
+
   disconnect(): void {
     this.userStream?.close();
     this.userStream = null;

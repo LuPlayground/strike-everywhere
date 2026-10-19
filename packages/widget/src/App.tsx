@@ -147,6 +147,7 @@ export function App({ config }: { config: WidgetConfig }) {
       off();
       offWs();
       clearInterval(poll);
+      client.dispose();
     };
   }, [client]);
 

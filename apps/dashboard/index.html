@@ -4,217 +4,256 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Partner Dashboard · Strike Everywhere</title>
-<meta name="description" content="Builder attribution for Strike Everywhere: wallets connected, funded and trading accounts, verified volume and builder fees per partner site." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<meta name="description" content="Builder attribution for Strike Everywhere: connected, funded and trading accounts, verified volume and builder fees per partner site." />
+<link rel="stylesheet" href="../assets/theme.css" />
 <style>
-  :root {
-    --bg: #0a0a0a; --surface: #111111; --raised: #1a1a1a; --line: #252525; --line-2: #363636;
-    --ink: #ffffff; --ink-2: #b8b8b8; --muted: rgba(255,255,255,.55);
-    --accent: #4efab0; --accent-rgb: 78,250,176; --bar: #1aa673; --neg: #f43f5e;
-    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-  header { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .02em; }
-  .logo i { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: inline-block; }
-  .logo span { color: var(--ink-2); font-weight: 500; }
-  .controls { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  input, select, button { font: inherit; color: inherit; }
-  .ctl { height: 34px; background: rgba(255,255,255,.08); border: 1px solid transparent; border-radius: 6px; padding: 0 10px; outline: none; }
-  .ctl:focus { border-color: rgba(var(--accent-rgb), .55); }
-  select.ctl option { background: #1a1a1a; }
-  .btn { height: 34px; border: 0; border-radius: 6px; padding: 0 14px; background: var(--accent); color: #04120c; font-weight: 600; cursor: pointer; }
-  .btn.ghost { background: #252525; color: var(--ink); }
-  main { max-width: 1240px; margin: 0 auto; padding: 22px 24px 60px; display: grid; gap: 18px; }
-  .banner { font-size: 13px; color: var(--ink-2); }
-  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
-  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
-  .tile .k { color: var(--ink-2); font-size: 12.5px; }
-  .tile .v { font-size: 24px; font-weight: 600; margin-top: 6px; }
-  .tile .s { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
-  .panel h2 { margin: 0; font-size: 15px; font-weight: 600; }
-  .panel .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-  .ph { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
-  .ph .tog { margin-left: auto; display: flex; background: #1a1a1a; border-radius: 6px; padding: 2px; }
-  .tog button { border: 0; background: none; padding: 4px 10px; border-radius: 5px; color: var(--ink-2); cursor: pointer; font-size: 12.5px; }
-  .tog button.on { background: #2a2a2a; color: var(--ink); }
-  .chart { position: relative; height: 240px; }
+  .head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 26px 0 18px; }
+  .head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .head .sub { color: var(--ink-2); font-size: 13px; margin-top: 4px; }
+  .controls { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .code-in { display: flex; align-items: center; gap: 8px; height: 36px; background: rgba(255,255,255,.07); border-radius: var(--radius); padding: 0 6px 0 12px; border: 1px solid transparent; }
+  .code-in:focus-within { border-color: rgba(var(--mint-rgb), .55); }
+  .code-in label { color: var(--ink-2); font-size: 12px; white-space: nowrap; }
+  .code-in input { background: none; border: 0; outline: none; width: 140px; font-family: var(--mono); font-size: 13px; }
+  .stats { display: grid; grid-template-columns: repeat(6, 1fr); }
+  .stat { padding: 16px 18px; border-right: 1px solid var(--line); min-width: 0; }
+  .stat:last-child { border-right: 0; }
+  .stat .k { font-size: 12px; color: var(--ink-2); display: inline-block; }
+  .stat .v { font-size: 22px; font-weight: 600; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grid-a { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+  .chart { position: relative; height: 260px; padding: 8px 12px 4px; }
   .chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .tip { position: absolute; pointer-events: none; background: #1a1a1a; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 10px 30px rgba(0,0,0,.5); white-space: nowrap; transform: translate(-50%, -100%); margin-top: -10px; display: none; }
-  .tip b { display: block; margin-bottom: 2px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; font-size: 13px; }
-  th { color: var(--ink-2); font-weight: 500; font-size: 12px; }
-  th:first-child, td:first-child { text-align: left; }
-  td.l, th.l { text-align: left; }
-  .grid2 { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; }
-  .empty { color: var(--muted); text-align: center; padding: 26px 0; font-size: 13px; }
-  .tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #252525; color: var(--ink-2); }
-  .tag.connect { background: rgba(122,162,255,.15); color: #a9c1ff; }
-  .tag.order { background: rgba(var(--accent-rgb), .14); color: var(--accent); }
-  .tag.deposit { background: rgba(248,147,26,.15); color: #fbbf74; }
-  .tag.rejected { background: rgba(244,63,94,.14); color: #fda4b4; }
-  .kit { display: grid; grid-template-columns: repeat(5, 1fr) auto; gap: 8px; align-items: end; }
-  .kit label { display: grid; gap: 4px; color: var(--ink-2); font-size: 12px; }
-  pre { margin: 12px 0 0; background: #050505; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: 12.5px/1.55 var(--mono); color: #d0d0d0; white-space: pre-wrap; word-break: break-all; }
-  .method { color: var(--muted); font-size: 12px; }
-  .err { color: #fda4b4; font-size: 13px; }
-  @media (max-width: 1100px) { .tiles { grid-template-columns: repeat(3, 1fr); } .grid2 { grid-template-columns: 1fr; } .kit { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 560px) { .tiles { grid-template-columns: 1fr 1fr; } header { padding: 12px 16px; } main { padding: 16px; } }
+  .tip { position: absolute; pointer-events: none; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); white-space: nowrap; transform: translate(-50%, -100%); margin-top: -10px; display: none; z-index: 2; }
+  .tip b { display: block; margin-bottom: 2px; font-family: var(--mono); font-weight: 500; }
+  .funnel { padding: 18px 16px; display: grid; gap: 16px; }
+  .fstep .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; margin-bottom: 7px; }
+  .fstep .row .lbl { color: var(--ink-soft); font-weight: 500; }
+  .fstep .row .val { font-family: var(--mono); }
+  .fstep .row .pct { color: var(--muted); font-family: var(--mono); font-size: 12px; margin-left: 8px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--raised); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--mint-deep), var(--mint)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+  .fnote { color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .kit { display: grid; grid-template-columns: 320px minmax(0, 1fr); }
+  .kit-form { padding: 16px; display: grid; gap: 12px; border-right: 1px solid var(--line); align-content: start; }
+  .kit-form label { display: grid; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .kit-code { padding: 16px; display: grid; gap: 12px; align-content: start; }
+  .kit-code .bar2 { display: flex; gap: 8px; align-items: center; }
+  .method { color: var(--muted); font-size: 12px; margin: 16px 0 0; display: flex; gap: 8px; align-items: flex-start; }
+  .banner { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; }
+  .err { color: #fda4b4; }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, 1fr); } .stat:nth-child(3) { border-right: 0; } .stat:nth-child(-n+3) { border-bottom: 1px solid var(--line); } .grid-a { grid-template-columns: 1fr; } .kit { grid-template-columns: 1fr; } .kit-form { border-right: 0; border-bottom: 1px solid var(--line); } }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } .stat { border-right: 0 !important; border-bottom: 1px solid var(--line); } .controls { margin-left: 0; } }
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><i></i>Strike Everywhere <span>· Partner dashboard</span></div>
-  <form class="controls" id="f">
-    <input class="ctl" id="builder" placeholder="Builder code" aria-label="Builder code" size="16" />
-    <select class="ctl" id="network" aria-label="Network"><option value="testnet">Testnet</option><option value="mainnet">Mainnet</option></select>
-    <select class="ctl" id="days" aria-label="Date range"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select>
-    <button class="btn" type="submit">Load</button>
-    <button class="btn ghost" type="button" id="refresh" title="Pull the latest fills from Strike now">Sync fills</button>
-  </form>
-</header>
-<main>
-  <div class="banner" id="banner">Attribution for sites embedding Strike through your builder code. Figures update automatically every 10 minutes from Strike's public fill history.</div>
-  <div class="tiles">
-    <div class="tile"><div class="k">Connected wallets</div><div class="v num" id="t-wallets">—</div><div class="s">via Builder Connect</div></div>
-    <div class="tile"><div class="k">Funded accounts</div><div class="v num" id="t-funded">—</div><div class="s" id="t-depusd">deposits through the widget</div></div>
-    <div class="tile"><div class="k">Trading accounts</div><div class="v num" id="t-traders">—</div><div class="s">with ≥1 attributed fill</div></div>
-    <div class="tile"><div class="k">Attributed volume</div><div class="v num" id="t-volume">—</div><div class="s" id="t-fills">verified fills</div></div>
-    <div class="tile"><div class="k">Builder fees earned</div><div class="v num" id="t-fees">—</div><div class="s">notional × fee bps</div></div>
-    <div class="tile"><div class="k">Orders placed</div><div class="v num" id="t-orders">—</div><div class="s" id="t-rejected">&nbsp;</div></div>
+<nav class="se-nav">
+  <a class="se-brand" href="../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Strike Everywhere</a>
+  <div class="se-links"><a href="../">Overview</a><a href="../#demos">Demos</a><a href="../developers/">Developers</a><a class="on" href="./">Dashboard</a><a href="https://github.com/LuPlayground/strike-everywhere">Docs</a></div>
+  <span class="sp"></span>
+  <span class="chip">Builder attribution</span>
+  <a class="btn btn-mint btn-sm" href="#kit">Get embed code</a>
+</nav>
+<div class="se-ticker" id="ticker"></div>
+
+<main class="wrap">
+  <div class="head">
+    <div>
+      <h1>Partner Dashboard</h1>
+      <div class="sub">Users, volume and builder fees each partner site brings to Strike, verified against Strike's public fill history.</div>
+    </div>
+    <form class="controls" id="f">
+      <div class="code-in"><label for="builder">Builder code</label><input id="builder" spellcheck="false" autocomplete="off" /></div>
+      <div class="seg" id="netSeg"><button type="button" data-v="mainnet">Mainnet</button><button type="button" data-v="testnet">Testnet</button></div>
+      <div class="seg" id="daySeg"><button type="button" data-v="7">7D</button><button type="button" data-v="30">30D</button><button type="button" data-v="90">90D</button></div>
+      <button class="btn btn-ghost btn-sm" type="button" id="sync" title="Pull the latest fills from Strike now"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Sync fills</button>
+    </form>
   </div>
 
   <section class="panel">
-    <div class="ph">
-      <div><h2>Daily attributed volume</h2><div class="sub">USD notional of fills placed through the widget</div></div>
-      <div class="tog" role="tablist"><button class="on" data-view="chart">Chart</button><button data-view="table">Table</button></div>
+    <div class="stats">
+      <div class="stat"><span class="k dotted" title="Apps and sites embedding the widget with this builder code (by partner-id and origin)">Integrations</span><div class="v num" id="t-integrations">—</div><div class="s" id="t-active">apps embedding Strike</div></div>
+      <div class="stat"><span class="k dotted" title="Wallets that connected through an integration (Builder Connect)">Referred users</span><div class="v num" id="t-wallets">—</div><div class="s">connected via integrations</div></div>
+      <div class="stat"><span class="k dotted" title="Referred users who deposited through the widget">Funded accounts</span><div class="v num" id="t-funded">—</div><div class="s" id="t-depusd">deposits via widget</div></div>
+      <div class="stat"><span class="k dotted" title="Referred users with at least one verified fill in the selected range">Active traders</span><div class="v num" id="t-traders">—</div><div class="s" id="t-orders">orders via widget</div></div>
+      <div class="stat"><span class="k dotted" title="USD notional of fills Strike reports for orders placed through the widget">Attributed volume</span><div class="v num" id="t-volume">—</div><div class="s" id="t-fills">verified fills</div></div>
+      <div class="stat"><span class="k dotted" title="Executed notional × the order's builder fee (bps). Strike credits these to your account">Builder fees</span><div class="v num pos" id="t-fees">—</div><div class="s">credited by Strike</div></div>
     </div>
-    <div class="chart" id="chart"><svg id="svg" role="img" aria-label="Daily attributed volume bar chart"></svg><div class="tip" id="tip"></div></div>
-    <div id="dailyTable" hidden></div>
   </section>
 
-  <div class="grid2">
+  <section class="panel" style="margin-top:16px">
+    <div class="panel-h"><h3>Integrations</h3><span class="sub">Each app embedding the Strike panel: referred users, active traders and volume attributed to it</span><span style="flex:1"></span><a class="btn btn-ghost btn-sm" href="../developers/">+ Add integration</a></div>
+    <div id="partners" style="overflow:auto"></div>
+  </section>
+
+  <div class="grid-a">
     <section class="panel">
-      <div class="ph"><div><h2>By partner site</h2><div class="sub">Grouped by the widget's <span class="num">partner-id</span> and host origin</div></div></div>
-      <div id="partners"></div>
+      <div class="panel-h" style="padding-bottom:0;border-bottom:0">
+        <div class="tabs" id="metricTabs" style="flex:1"><button class="tab on" data-m="volume">Volume</button><button class="tab" data-m="fees">Builder fees</button><button class="tab" data-m="fills">Fills</button></div>
+        <div class="seg" id="viewSeg" style="margin-bottom:6px"><button type="button" class="on" data-v="chart">Chart</button><button type="button" data-v="table">Table</button></div>
+      </div>
+      <div class="chart" id="chart"><svg id="svg" role="img" aria-label="Daily attributed metric"></svg><div class="tip" id="tip"></div></div>
+      <div id="dailyTable" hidden style="max-height:268px;overflow:auto"></div>
     </section>
     <section class="panel">
-      <div class="ph"><div><h2>Recent activity</h2><div class="sub">Latest widget events</div></div></div>
-      <div id="recent"></div>
+      <div class="panel-h"><h3>Conversion funnel</h3><span class="sub">widget users, selected range</span></div>
+      <div class="funnel" id="funnel"></div>
     </section>
   </div>
 
-  <section class="panel">
-    <div class="ph"><div><h2>Integration kit</h2><div class="sub">Generate the embed snippet for a partner site. Each partner can use your code with its own partner-id, or register its own builder code.</div></div></div>
+  <section class="panel" style="margin-top:16px">
+    <div class="panel-h"><h3>Recent activity</h3><span class="sub" id="updated"></span></div>
+    <div id="recent" style="overflow:auto;max-height:380px"></div>
+  </section>
+
+  <section class="panel" id="kit" style="margin-top:16px">
+    <div class="panel-h"><h3>Integration kit</h3><span class="sub">Generate the embed for a partner site: one script, one tag.</span></div>
     <div class="kit">
-      <label>Builder code<input class="ctl" id="k-code" /></label>
-      <label>Fee (bps)<input class="ctl" id="k-fee" type="number" min="0" max="100" value="5" /></label>
-      <label>Market<input class="ctl" id="k-market" value="ADA-USD" /></label>
-      <label>Partner id<input class="ctl" id="k-partner" value="my-site" /></label>
-      <label>Network<select class="ctl" id="k-net"><option>mainnet</option><option>testnet</option></select></label>
-      <button class="btn ghost" type="button" id="copy">Copy</button>
+      <div class="kit-form">
+        <label>Builder code<input class="input" id="k-code" spellcheck="false" /></label>
+        <label>Builder fee (bps)<input class="input" id="k-fee" type="number" min="0" max="100" value="5" /></label>
+        <label>Default market<input class="input" id="k-market" value="ADA-USD" /></label>
+        <label>Partner id<input class="input" id="k-partner" value="my-site" /></label>
+        <label>Network<div class="seg" id="k-net"><button type="button" class="on" data-v="mainnet">Mainnet</button><button type="button" data-v="testnet">Testnet</button></div></label>
+      </div>
+      <div class="kit-code">
+        <pre class="code" id="snippet"></pre>
+        <div class="bar2">
+          <button class="btn btn-mint btn-sm" type="button" id="copy">Copy snippet</button>
+          <a class="btn btn-ghost btn-sm" id="preview" target="_blank" rel="noopener">Preview on demo site ↗</a>
+          <span class="muted" style="font-size:12px">5 bps = 0.05% per fill, on top of Strike's fees.</span>
+        </div>
+      </div>
     </div>
-    <pre id="snippet"></pre>
   </section>
-  <div class="method" id="method"></div>
+
+  <p class="method"><span class="dot"></span><span id="method">Volume and fees count only fills reported by Strike's public fill history whose client order id was created by the widget.</span></p>
 </main>
+<footer class="se-foot"><div class="wrap row"><span>Strike Everywhere · independent project built on Strike's public Builder API. Not affiliated with Strike Finance.</span><span class="banner" id="banner"></span></div></footer>
+
+<script src="../assets/chrome.js"></script>
 <script>
 (function () {
+  SEChrome.ticker(document.getElementById("ticker"));
   var API = new URLSearchParams(location.search).get("api") || "https://strike-everywhere-api.strike-everywhere.workers.dev";
   var WIDGET = new URL("../widget/strike-everywhere.iife.js", location.href).href;
   var $ = function (id) { return document.getElementById(id); };
   var q = new URLSearchParams(location.search);
-  $("builder").value = q.get("builder") || "Playground101";
-  $("network").value = q.get("network") || "testnet";
-  $("days").value = q.get("days") || "30";
-  var usd = function (v, d) { d = d === undefined ? (Math.abs(v) >= 1000 ? 0 : 2) : d; return "$" + Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+  var state = { builder: q.get("builder") || "Playground101", network: q.get("network") || "testnet", days: q.get("days") || "30", metric: "volume", kitNet: "mainnet" };
+  $("builder").value = state.builder;
+  var usd = function (v, d) { v = Number(v || 0); d = d === undefined ? (Math.abs(v) >= 1000 ? 0 : 2) : d; return "$" + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var last = null;
 
+  function segBind(id, key, after) {
+    var seg = $(id);
+    var sync = function () { seg.querySelectorAll("button").forEach(function (b) { b.classList.toggle("on", b.dataset.v === state[key]); }); };
+    seg.addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; state[key] = b.dataset.v; sync(); after && after(); });
+    sync();
+  }
+  segBind("netSeg", "network", function () { load(false); });
+  segBind("daySeg", "days", function () { load(false); });
+  segBind("k-net", "kitNet", syncKit);
+
   function load(refresh) {
-    var b = $("builder").value.trim(), n = $("network").value, d = $("days").value;
-    if (!b) return;
-    history.replaceState(null, "", "?builder=" + encodeURIComponent(b) + "&network=" + n + "&days=" + d);
-    $("banner").innerHTML = 'Loading <span class="num">' + esc(b) + "</span> on " + n + "…";
-    fetch(API + "/v1/stats?builder=" + encodeURIComponent(b) + "&network=" + n + "&days=" + d + (refresh ? "&refresh=1" : ""))
+    state.builder = $("builder").value.trim();
+    if (!state.builder) return;
+    history.replaceState(null, "", "?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days);
+    $("banner").innerHTML = '<span class="dot pulse"></span>Loading…';
+    fetch(API + "/v1/stats?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days + (refresh ? "&refresh=1" : ""))
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); })
       .then(function (j) { last = j; render(j); })
       .catch(function (e) { $("banner").innerHTML = '<span class="err">Could not load stats: ' + esc(e.message) + "</span>"; });
     syncKit();
   }
 
+  function pct(a, b) { return b ? Math.round((a / b) * 100) + "%" : "—"; }
+
   function render(j) {
     var t = j.totals;
-    $("banner").innerHTML = 'Builder <span class="num">' + esc(j.builder) + "</span> · " + j.network + " · last " + j.days + " days · updated " + new Date(j.generatedAt).toLocaleTimeString();
+    $("banner").innerHTML = '<span class="dot ' + (j.network === "testnet" ? "gold" : "") + '"></span>' + (j.network === "testnet" ? "Testnet" : "Mainnet") + ' · <span class="num">' + esc(j.builder) + "</span>";
+    $("updated").textContent = "updated " + new Date(j.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    $("t-integrations").textContent = (t.integrations || 0).toLocaleString();
+    $("t-active").textContent = (t.activeIntegrations || 0) + " active in last 7 days";
     $("t-wallets").textContent = t.connectedWallets.toLocaleString();
     $("t-funded").textContent = t.fundedAccounts.toLocaleString();
-    $("t-depusd").textContent = t.deposits ? usd(t.depositUsd) + " deposited" : "deposits through the widget";
+    $("t-depusd").textContent = t.deposits ? usd(t.depositUsd) + " deposited" : "deposits via widget";
     $("t-traders").textContent = t.tradingAccounts.toLocaleString();
+    $("t-orders").textContent = t.orders + " order" + (t.orders === 1 ? "" : "s") + (t.rejectedOrders ? " · " + t.rejectedOrders + " rejected" : "");
     $("t-volume").textContent = usd(t.volumeUsd);
     $("t-fills").textContent = t.fills + " verified fill" + (t.fills === 1 ? "" : "s");
-    $("t-fees").textContent = usd(t.builderFeesUsd, t.builderFeesUsd < 1 ? 4 : 2);
-    $("t-orders").textContent = t.orders.toLocaleString();
-    $("t-rejected").textContent = t.rejectedOrders ? t.rejectedOrders + " rejected by Strike" : " ";
+    $("t-fees").textContent = usd(t.builderFeesUsd, t.builderFeesUsd < 1 && t.builderFeesUsd > 0 ? 4 : 2);
+
+    var w = t.connectedWallets;
+    $("funnel").innerHTML = [["Connected", w, w], ["Funded", t.fundedAccounts, w], ["Trading", t.tradingAccounts, w]].map(function (s) {
+      var width = s[2] ? Math.max(2, (s[1] / s[2]) * 100) : 0;
+      return '<div class="fstep"><div class="row"><span class="lbl">' + s[0] + '</span><span><span class="val">' + s[1] + '</span><span class="pct">' + (s[0] === "Connected" ? "" : pct(s[1], s[2])) + '</span></span></div><div class="bar"><i style="width:' + width + '%"></i></div></div>';
+    }).join("") + '<div class="fnote">Healthy partners convert connected wallets into funded, trading accounts. Volume alone can be gamed; this funnel can\'t.</div>';
+
     drawChart(j);
+
+    var ago = function (ts) { var s = (Date.now() - ts) / 1000; return s < 90 ? "just now" : s < 3600 ? Math.round(s / 60) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago"; };
+    var maxVol = Math.max.apply(null, j.byPartner.map(function (p) { return p.volume; }).concat([0]));
     $("partners").innerHTML = j.byPartner.length
-      ? "<table><thead><tr><th class=l>Partner</th><th class=l>Origin</th><th>Wallets</th><th>Traders</th><th>Volume</th><th>Fees</th></tr></thead><tbody>" +
+      ? '<table class="tbl"><thead><tr><th><span>Integration</span></th><th class="r"><span>Referred users</span></th><th class="r"><span>Funded</span></th><th class="r"><span>Active traders</span></th><th class="r"><span>Orders</span></th><th class="r"><span>Attributed volume</span></th><th class="r"><span>Builder fees</span></th><th class="r"><span>Last activity</span></th></tr></thead><tbody>' +
         j.byPartner.map(function (p) {
-          return "<tr><td>" + esc(p.partner_id || "—") + '</td><td class="l" style="color:var(--ink-2)">' + esc((p.host_origin || "").replace(/^https?:\/\//, "")) + '</td><td class="num">' + p.wallets + '</td><td class="num">' + p.traders + '</td><td class="num">' + usd(p.volume) + '</td><td class="num">' + usd(p.fees, p.fees < 1 ? 4 : 2) + "</td></tr>";
+          var active = Date.now() - p.last_seen < 7 * 86400000;
+          var share = maxVol > 0 ? Math.max(2, (p.volume / maxVol) * 100) : 0;
+          return '<tr><td><div style="display:flex;align-items:center;gap:10px"><span class="dot' + (active ? " pulse" : "") + '" style="' + (active ? "" : "background:#555;box-shadow:none") + '"></span><div><div style="font-weight:600">' + esc(p.partner_id || "default") + '</div><div class="soft" style="font-size:12px">' + esc((p.host_origin || "").replace(/^https?:\/\//, "")) + "</div></div></div></td>" +
+            '<td class="r num">' + p.wallets + '</td><td class="r num">' + p.funded + ' <span class="muted">' + (p.wallets ? Math.round((p.funded / p.wallets) * 100) + "%" : "") + '</span></td><td class="r num">' + p.traders + '</td><td class="r num">' + p.orders + "</td>" +
+            '<td class="r"><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><span class="num">' + usd(p.volume) + '</span><span style="width:70px;height:5px;border-radius:3px;background:var(--raised);overflow:hidden;display:inline-block"><span style="display:block;height:100%;width:' + share + '%;background:linear-gradient(90deg,var(--mint-deep),var(--mint))"></span></span></div></td>' +
+            '<td class="r num pos">' + usd(p.fees, p.fees > 0 && p.fees < 1 ? 4 : 2) + '</td><td class="r soft">' + ago(p.last_seen) + "</td></tr>";
         }).join("") + "</tbody></table>"
-      : '<div class="empty">No partner sites yet. Embed the widget with your builder code to start.</div>';
+      : '<div class="empty">No integrations yet. <a href="../developers/" style="color:var(--mint)">Embed the Strike panel</a> in an app to start.</div>';
+
     $("recent").innerHTML = j.recent.length
-      ? "<table><thead><tr><th class=l>When</th><th class=l>Event</th><th class=l>Partner</th><th>Detail</th></tr></thead><tbody>" +
+      ? '<table class="tbl"><thead><tr><th><span>Time</span></th><th><span>Event</span></th><th class="r"><span>Detail</span></th></tr></thead><tbody>' +
         j.recent.map(function (r) {
-          var cls = r.status === "rejected" ? "rejected" : r.type;
-          var detail = r.type === "order" ? esc((r.side || "") + " " + (r.symbol || "")) + " · " + usd(r.notional || 0) + (r.status ? " · " + esc(r.status) : "") : r.type === "deposit" ? usd(r.usd || 0) : '<span class="num">' + esc(r.account_id || "") + "</span>";
-          return '<tr><td class="num" style="color:var(--ink-2)">' + new Date(r.ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) + '</td><td class="l"><span class="tag ' + cls + '">' + esc(r.type) + '</span></td><td class="l">' + esc(r.partner_id || "—") + "</td><td>" + detail + "</td></tr>";
+          var cls = r.status === "rejected" ? "rose" : r.type === "order" ? "mint" : r.type === "deposit" ? "gold" : "blue";
+          var detail = r.type === "order" ? esc((r.side || "").toUpperCase() + " " + (r.symbol || "")) + " · " + usd(r.notional) + (r.status ? " · " + esc(r.status) : "") : r.type === "deposit" ? usd(r.usd) : esc(r.partner_id || "");
+          return '<tr><td class="num soft">' + new Date(r.ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) + '</td><td><span class="badge ' + cls + '">' + esc(r.type) + '</span></td><td class="r">' + detail + "</td></tr>";
         }).join("") + "</tbody></table>"
       : '<div class="empty">No activity yet.</div>';
-    $("method").textContent = "Method: " + j.method;
+    $("method").textContent = j.method;
   }
 
   function series(j) {
     var map = {}; j.daily.forEach(function (d) { map[d.day] = d; });
     var out = [], now = new Date();
-    for (var i = j.days - 1; i >= 0; i--) {
-      var dt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
-      var key = dt.toISOString().slice(0, 10);
-      var d = map[key] || { volume: 0, fees: 0, fills: 0 };
+    for (var i = Number(j.days) - 1; i >= 0; i--) {
+      var key = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i)).toISOString().slice(0, 10);
+      var d = map[key] || {};
       out.push({ day: key, volume: d.volume || 0, fees: d.fees || 0, fills: d.fills || 0 });
     }
     return out;
   }
-
-  function niceMax(v) { if (v <= 0) return 10; var p = Math.pow(10, Math.floor(Math.log10(v))); var m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+  function niceMax(v) { if (v <= 0) return 1; var p = Math.pow(10, Math.floor(Math.log10(v))); var m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+  function fmtAxis(v) { return state.metric === "fills" ? String(Math.round(v)) : usd(v, v >= 100 || v === 0 ? 0 : 2); }
 
   function drawChart(j) {
-    var data = series(j), svg = $("svg"), box = $("chart").getBoundingClientRect();
-    var W = Math.max(320, box.width), H = 240, padL = 56, padR = 8, padT = 10, padB = 26;
-    var max = niceMax(Math.max.apply(null, data.map(function (d) { return d.volume; })));
+    var data = series(j), m = state.metric, svg = $("svg"), box = $("chart").getBoundingClientRect();
+    var W = Math.max(320, box.width - 24), H = 252, padL = 60, padR = 6, padT = 10, padB = 24;
+    var max = niceMax(Math.max.apply(null, data.map(function (d) { return d[m]; })));
     var iw = W - padL - padR, ih = H - padT - padB, step = iw / data.length, bw = Math.max(2, step - 2);
     var y = function (v) { return padT + ih - (v / max) * ih; };
-    var s = '<g>';
+    var s = "";
     for (var g = 0; g <= 4; g++) {
       var v = (max / 4) * g, yy = y(v);
-      s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="#252525" stroke-width="1"/>';
-      s += '<text x="' + (padL - 8) + '" y="' + (yy + 4) + '" fill="#8a8a8a" font-size="11" text-anchor="end" font-family="IBM Plex Mono, monospace">' + usd(v, v >= 1000 || v === 0 ? 0 : 2) + "</text>";
+      s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="#1d1d1d"/>';
+      s += '<text x="' + (padL - 10) + '" y="' + (yy + 4) + '" fill="#8a8a8a" font-size="11" text-anchor="end" font-family="IBM Plex Mono, monospace">' + fmtAxis(v) + "</text>";
     }
     var every = Math.ceil(data.length / 8);
     data.forEach(function (d, i) {
-      var x = padL + i * step + 1, h = Math.max(0, y(0) - y(d.volume));
-      if (d.volume > 0) {
+      var x = padL + i * step + 1, val = d[m], top = y(val), h = y(0) - top;
+      if (val > 0) {
         var r = Math.min(4, bw / 2, h);
-        s += '<path class="b" data-i="' + i + '" fill="#1aa673" d="M' + x + "," + y(0) + " V" + (y(d.volume) + r) + " Q" + x + "," + y(d.volume) + " " + (x + r) + "," + y(d.volume) + " H" + (x + bw - r) + " Q" + (x + bw) + "," + y(d.volume) + " " + (x + bw) + "," + (y(d.volume) + r) + " V" + y(0) + ' Z"/>';
+        s += '<path class="b" data-i="' + i + '" fill="#1aa673" d="M' + x + "," + y(0) + " V" + (top + r) + " Q" + x + "," + top + " " + (x + r) + "," + top + " H" + (x + bw - r) + " Q" + (x + bw) + "," + top + " " + (x + bw) + "," + (top + r) + " V" + y(0) + ' Z"/>';
       }
       s += '<rect class="hit" data-i="' + i + '" x="' + (padL + i * step) + '" y="' + padT + '" width="' + step + '" height="' + ih + '" fill="transparent"/>';
-      if (i % every === 0) s += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" fill="#8a8a8a" font-size="11" text-anchor="middle">' + d.day.slice(5) + "</text>";
+      if (i % every === 0) s += '<text x="' + (x + bw / 2) + '" y="' + (H - 6) + '" fill="#8a8a8a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono, monospace">' + d.day.slice(5) + "</text>";
     });
-    s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#363636"/></g>';
+    s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#363636"/>';
+    if (!data.some(function (d) { return d[m] > 0; })) s += '<text x="' + (padL + iw / 2) + '" y="' + (padT + ih / 2) + '" fill="#8a8a8a" font-size="13" text-anchor="middle">No attributed fills in this range yet</text>';
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     svg.innerHTML = s;
     var tip = $("tip");
@@ -222,36 +261,45 @@
       el.addEventListener("mouseenter", function () {
         var i = +el.dataset.i, d = data[i];
         svg.querySelectorAll(".b").forEach(function (b) { b.setAttribute("fill", +b.dataset.i === i ? "#4efab0" : "#1aa673"); });
-        tip.innerHTML = "<b>" + d.day + "</b>Volume " + usd(d.volume) + "<br>Builder fees " + usd(d.fees, d.fees < 1 ? 4 : 2) + "<br>" + d.fills + " fill" + (d.fills === 1 ? "" : "s");
-        tip.style.left = ((padL + i * step + step / 2) / W) * 100 + "%";
-        tip.style.top = (d.volume ? y(d.volume) : y(0)) + "px";
+        tip.innerHTML = "<b>" + d.day + "</b>Volume " + usd(d.volume) + "<br>Builder fees " + usd(d.fees, d.fees > 0 && d.fees < 1 ? 4 : 2) + "<br>" + d.fills + " fill" + (d.fills === 1 ? "" : "s");
+        tip.style.left = 12 + ((padL + i * step + step / 2) / W) * (box.width - 24) + "px";
+        tip.style.top = 8 + (d[m] ? y(d[m]) : y(0)) + "px";
         tip.style.display = "block";
       });
     });
-    svg.addEventListener("mouseleave", function () { tip.style.display = "none"; svg.querySelectorAll(".b").forEach(function (b) { b.setAttribute("fill", "#1aa673"); }); });
-    $("dailyTable").innerHTML = "<table><thead><tr><th class=l>Day</th><th>Volume</th><th>Builder fees</th><th>Fills</th></tr></thead><tbody>" +
-      data.slice().reverse().filter(function (d) { return d.fills; }).map(function (d) { return '<tr><td class="num">' + d.day + '</td><td class="num">' + usd(d.volume) + '</td><td class="num">' + usd(d.fees, d.fees < 1 ? 4 : 2) + '</td><td class="num">' + d.fills + "</td></tr>"; }).join("") +
-      "</tbody></table>" + (data.some(function (d) { return d.fills; }) ? "" : '<div class="empty">No fills in this range yet.</div>');
+    svg.onmouseleave = function () { tip.style.display = "none"; svg.querySelectorAll(".b").forEach(function (b) { b.setAttribute("fill", "#1aa673"); }); };
+    var rows = data.slice().reverse().filter(function (d) { return d.fills; });
+    $("dailyTable").innerHTML = rows.length
+      ? '<table class="tbl"><thead><tr><th><span>Day</span></th><th class="r"><span>Volume</span></th><th class="r"><span>Builder fees</span></th><th class="r"><span>Fills</span></th></tr></thead><tbody>' + rows.map(function (d) { return '<tr><td class="num">' + d.day + '</td><td class="r num">' + usd(d.volume) + '</td><td class="r num pos">' + usd(d.fees, d.fees < 1 ? 4 : 2) + '</td><td class="r num">' + d.fills + "</td></tr>"; }).join("") + "</tbody></table>"
+      : '<div class="empty">No fills in this range yet.</div>';
   }
 
-  document.querySelectorAll(".tog button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      document.querySelectorAll(".tog button").forEach(function (x) { x.classList.toggle("on", x === b); });
-      var table = b.dataset.view === "table";
-      $("chart").hidden = table; $("dailyTable").hidden = !table;
-    });
+  $("metricTabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab"); if (!b) return;
+    state.metric = b.dataset.m;
+    $("metricTabs").querySelectorAll(".tab").forEach(function (x) { x.classList.toggle("on", x === b); });
+    if (last) drawChart(last);
+  });
+  $("viewSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    $("viewSeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    var table = b.dataset.v === "table";
+    $("chart").hidden = table; $("dailyTable").hidden = !table;
   });
 
   function syncKit() {
     if (!$("k-code").value) $("k-code").value = $("builder").value;
-    $("k-net").value = $("k-net").dataset.touched ? $("k-net").value : $("network").value;
-    var attrs = 'builder-code="' + $("k-code").value + '" fee-bps="' + $("k-fee").value + '" market="' + $("k-market").value.toUpperCase() + '" partner-id="' + $("k-partner").value + '" network="' + $("k-net").value + '"\n  partner-api="' + API + '"';
-    $("snippet").textContent = '<script src="' + WIDGET + '" defer><\/script>\n<strike-trade ' + attrs + "></strike-trade>";
+    var code = $("k-code").value || "YOUR_CODE";
+    var html = '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + WIDGET + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n' +
+      '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"' + esc(code) + '"</span> <span class="a">fee-bps</span>=<span class="s">"' + esc($("k-fee").value) + '"</span>\n  <span class="a">market</span>=<span class="s">"' + esc($("k-market").value.toUpperCase()) + '"</span> <span class="a">partner-id</span>=<span class="s">"' + esc($("k-partner").value) + '"</span>' + (state.kitNet === "testnet" ? ' <span class="a">network</span>=<span class="s">"testnet"</span>' : "") + '\n  <span class="a">partner-api</span>=<span class="s">"' + API + '"</span><span class="k">&gt;&lt;/strike-trade&gt;</span>';
+    $("snippet").innerHTML = html;
+    $("preview").href = "../demo/blog/?network=" + state.kitNet + "&builder=" + encodeURIComponent(code);
   }
-  ["k-code", "k-fee", "k-market", "k-partner", "k-net"].forEach(function (id) { $(id).addEventListener("input", function () { if (id === "k-net") $("k-net").dataset.touched = "1"; syncKit(); }); });
-  $("copy").addEventListener("click", function () { navigator.clipboard.writeText($("snippet").textContent).then(function () { $("copy").textContent = "Copied"; setTimeout(function () { $("copy").textContent = "Copy"; }, 1500); }); });
+  ["k-code", "k-fee", "k-market", "k-partner"].forEach(function (id) { $(id).addEventListener("input", syncKit); });
+  $("copy").addEventListener("click", function () { navigator.clipboard.writeText($("snippet").textContent).then(function () { $("copy").textContent = "Copied ✓"; setTimeout(function () { $("copy").textContent = "Copy snippet"; }, 1500); }); });
   $("f").addEventListener("submit", function (e) { e.preventDefault(); load(false); });
-  $("refresh").addEventListener("click", function () { load(true); });
+  $("builder").addEventListener("change", function () { load(false); });
+  $("sync").addEventListener("click", function () { load(true); });
   window.addEventListener("resize", function () { if (last) drawChart(last); });
   load(false);
   setInterval(function () { if (!document.hidden) load(false); }, 60000);
