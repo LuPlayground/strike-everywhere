@@ -10,6 +10,9 @@ import { NETWORKS } from "../src/config.js";
 import { AccountApi } from "../src/account.js";
 import { walletErrorMessage } from "../src/cardano/wallet.js";
 import { StrikeEverywhere } from "../src/client.js";
+import { builderConnect, checkConsentMessage } from "../src/builderConnect.js";
+import { Withdrawals } from "../src/withdraw.js";
+import { UserStream } from "../src/ws.js";
 
 const ADA_TIERS: MarginTier[] = [
   { max_notional: "10000", max_leverage: 40, maintenance_margin_rate: "0.005", maintenance_amount: "0" },
@@ -218,5 +221,70 @@ describe("leverage changes (Strike applies them asynchronously)", () => {
     const { c, calls } = await clientWith({ now: 5, applyAfterPolls: 0 });
     await (c as any).applyLeverage("ADA-USD", 5);
     expect(calls).not.toContain("POST /v2/leverage");
+  });
+});
+
+describe("lessons from production integrations", () => {
+  const res = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status });
+
+  it("screens Strike's consent message before the wallet signs", () => {
+    const pk = "ab".repeat(32);
+    expect(() => checkConsentMessage("", pk)).toThrow(/empty/);
+    expect(() => checkConsentMessage("Approve builder\u202Eevil", pk)).toThrow(/control characters/);
+    expect(() => checkConsentMessage("x".repeat(5000), pk)).toThrow(/long/);
+    expect(() => checkConsentMessage(`Approve builder fee 0.05%\nAPI key: ${pk}`, pk)).not.toThrow();
+  });
+
+  it("falls back to USDM when Strike says ADA is an unsupported withdraw asset", async () => {
+    const assets: string[] = [];
+    const http = new StrikeHttp(NETWORKS.mainnet, (async (_u: string, init: any) => {
+      const a = JSON.parse(init.body).asset;
+      assets.push(a);
+      return a === "ADA" ? res({ error: "unsupported asset" }, 400) : res({ withdraw_id: "w1", fee: "1", message_to_sign: "Withdraw 5 USD" });
+    }) as unknown as typeof fetch);
+    http.key = await ApiWalletKey.generate();
+    const p = await new Withdrawals(http).prepareAda(5);
+    expect(assets).toEqual(["ADA", "USDM"]);
+    expect(p.asset).toBe("USDM");
+  });
+
+  it("retries Builder Connect without referral_code if Strike rejects the field", async () => {
+    const bodies: any[] = [];
+    const http = new StrikeHttp(NETWORKS.mainnet, (async (url: string, init: any) => {
+      const body = JSON.parse(init.body);
+      if (url.endsWith("/request-signature")) {
+        bodies.push(body);
+        if ("referral_code" in body) return res({ error: "unknown field \"referral_code\"" }, 400);
+        return res({ nonce: "n1", message_to_sign: `Approve ${body.public_key}` });
+      }
+      return res({ account_id: "acc", fee_share_bps: 5 });
+    }) as unknown as typeof fetch);
+    const s = await builderConnect({ http, address: "addr1x", chain: "cardano", builderCode: "code", feeShareBps: 5, referralCode: "REF", signMessage: async () => "sig:key" });
+    expect(bodies.map((b) => "referral_code" in b)).toEqual([true, false]);
+    expect(bodies[1]).toMatchObject({ fee_share_bps: 5, code: "code" });
+    expect(s.session.accountId).toBe("acc");
+  });
+
+  it("tries the alternative userstream logon payload once if the first is rejected", async () => {
+    const sent: any[] = [];
+    class FakeWS {
+      readyState = 1;
+      onopen: any; onmessage: any; onclose: any; onerror: any;
+      constructor() { FakeWS.last = this; setTimeout(() => this.onopen?.(), 0); }
+      static last: FakeWS;
+      send(s: string) { sent.push(JSON.parse(s)); }
+      close() {}
+    }
+    const key = await ApiWalletKey.generate();
+    const ws = new UserStream("wss://x", key, () => 1_800_000_000_000, FakeWS as any);
+    ws.connect();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(sent).toHaveLength(1);
+    FakeWS.last.onmessage({ data: JSON.stringify({ id: sent[0].id, status: 401, error: "invalid signature" }) });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(sent).toHaveLength(2);
+    expect(sent[1].method).toBe("session.logon");
+    expect(await ed.verifyAsync(sent[1].params.signature, new TextEncoder().encode(`apiKey=${key.publicKeyHex}&timestamp=1800000000000`), key.publicKeyHex)).toBe(true);
+    ws.close();
   });
 });

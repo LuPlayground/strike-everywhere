@@ -9,6 +9,7 @@ export interface PreparedWithdrawal {
   fee: number;
   messageToSign: string;
   messageHex: string;
+  asset: "ADA" | "USDM";
   funding?: {
     unsignedTx: string;
     validatorAddress: string;
@@ -69,15 +70,23 @@ export class Withdrawals {
   async prepareAda(usdValue: number, walletAddress?: string): Promise<PreparedWithdrawal> {
     if (!Number.isFinite(usdValue) || !(usdValue >= MIN_WITHDRAW_USD)) throw new Error(`Minimum withdrawal is $${MIN_WITHDRAW_USD}.`);
     let q: { withdraw_id: string; fee: string; message_to_sign: string; tx_cbor?: string; validator_address?: string };
+    let asset: "ADA" | "USDM" = "ADA";
+    const quote = (a: string) => this.http.request<typeof q>("POST", "/v2/withdraw/quote", { body: { usd_value: usdValue.toFixed(2), blockchain: "cardano", asset: a } });
     try {
-      q = await this.http.request("POST", "/v2/withdraw/quote", { body: { usd_value: usdValue.toFixed(2), blockchain: "cardano", asset: "ADA" } });
+      try {
+        q = await quote(asset);
+      } catch (e: any) {
+        if (!/unsupported asset/i.test(e?.message ?? "")) throw e;
+        asset = "USDM";
+        q = await quote(asset);
+      }
     } catch (e: any) {
       if (/single-withdrawal limit/i.test(e?.message ?? "")) throw new Error("That's above Strike's limit for a single withdrawal. Try a smaller amount.");
       if (/rate limit/i.test(e?.message ?? "")) throw new Error("Strike's withdrawal limit for this hour or day is reached. Try again later or a smaller amount.");
       throw e;
     }
     const msg = normalizeWithdrawMessage(q.message_to_sign);
-    const out: PreparedWithdrawal = { withdrawId: q.withdraw_id, usdValue, fee: Number(q.fee), messageToSign: msg.text, messageHex: msg.hex };
+    const out: PreparedWithdrawal = { withdrawId: q.withdraw_id, usdValue, fee: Number(q.fee), messageToSign: msg.text, messageHex: msg.hex, asset };
     if (q.tx_cbor) {
       if (!walletAddress) throw new Error("Reconnect your wallet to withdraw.");
       if (!q.validator_address) throw new WithdrawalSafetyError("Strike sent a funding transaction without its validator address. Not signing.");

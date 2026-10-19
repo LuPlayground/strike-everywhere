@@ -102,6 +102,11 @@ export function WithdrawSheet({
             <p>
               Your wallet will sign Strike's withdrawal message{prepared.funding ? " and a small funding transaction" : ""}. The trading key alone cannot withdraw, so every withdrawal needs your signature.
             </p>
+            <KV
+              k="You receive"
+              v={<span class="num">{prepared.asset === "USDM" ? `≈ ${formatUsd(Math.max(0, prepared.usdValue - prepared.fee))} in USDM` : `≈ ${receiveAda.toFixed(2)} ADA`}</span>}
+              hint={prepared.asset === "USDM" ? "Strike pays Cardano withdrawals out in USDM (a USD stablecoin) on this network" : "Paid out in ADA at Strike's rate"}
+            />
             <div class="consent">{prepared.messageToSign}</div>
             {prepared.funding && (
               <>

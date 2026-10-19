@@ -128,17 +128,34 @@ export class PriceStream extends ReconnectingSocket {
   }
 }
 
+const LOGON_ID = 900_001;
+
 export class UserStream extends ReconnectingSocket {
   constructor(url: string, private readonly key: ApiWalletKey, private readonly serverNowMs: () => number = () => Date.now() - 500, WS?: typeof WebSocket) {
     super(url, WS);
     this.onMessage((msg) => {
-      if (msg?.result?.authenticated) this.send({ method: "subscribe", channel: "userstream" });
+      if (msg?.result?.authenticated) {
+        this.send({ method: "subscribe", channel: "userstream" });
+        return;
+      }
+      if (msg?.id === LOGON_ID && !this.triedAltLogon) {
+        this.triedAltLogon = true;
+        void this.logon(true);
+      }
     });
   }
 
-  protected async onOpen(): Promise<void> {
+  private triedAltLogon = false;
+
+  private async logon(alt: boolean): Promise<void> {
     const ts = this.serverNowMs();
-    const signature = await signLogon(this.key, ts);
-    this.send({ method: "session.logon", params: { apiKey: this.key.publicKeyHex, signature, timestamp: ts } });
+    const pk = this.key.publicKeyHex;
+    const signature = alt ? await this.key.sign(`apiKey=${pk}&timestamp=${ts}`) : await signLogon(this.key, ts);
+    this.send({ id: alt ? LOGON_ID + 1 : LOGON_ID, method: "session.logon", params: { apiKey: pk, signature, timestamp: ts } });
+  }
+
+  protected async onOpen(): Promise<void> {
+    this.triedAltLogon = false;
+    await this.logon(false);
   }
 }

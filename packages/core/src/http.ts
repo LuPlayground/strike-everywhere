@@ -81,7 +81,8 @@ export class StrikeHttp {
     } catch {
     }
     if (!res.ok) {
-      const msg = (json && (json.error || json.msg || json.message)) || `HTTP ${res.status}`;
+      const err = json && (json.error || json.msg || json.message || json.detail);
+      const msg = (typeof err === "string" ? err : err ? JSON.stringify(err) : "") || `HTTP ${res.status}`;
       throw new StrikeApiError(res.status, String(msg), json, path);
     }
     return json as T;

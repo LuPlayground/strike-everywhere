@@ -30,7 +30,7 @@ export class DepositSafetyError extends Error {}
 
 export class DepositRegistrationError extends Error {
   constructor(public readonly requestId: string, public readonly txHash: string, cause: string) {
-    super(`Your deposit was sent on-chain (tx ${txHash.slice(0, 12)}…) but Strike didn't register it yet: ${cause}. Don't resend; retry registration.`);
+    super(`Your deposit is on-chain (tx ${txHash.slice(0, 12)}…). Strike usually credits it from the chain on its own; registering it directly failed (${cause}). Don't send it again. You can retry registering.`);
     this.name = "DepositRegistrationError";
   }
 }
