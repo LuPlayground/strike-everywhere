@@ -25,18 +25,22 @@ export interface RawMarket {
 }
 
 export function toMarketSpec(m: RawMarket): MarketSpec {
+  const tiers = Array.isArray(m.margin_tiers) ? m.margin_tiers : [];
+  const stepSize = Number(m.order_limit_step_size);
+  const marketStep = Number(m.order_market_step_size);
   return {
     symbol: m.symbol,
     name: m.name,
     baseAsset: m.base_asset,
     status: m.status,
     tickSize: Number(m.order_tick_price),
-    stepSize: Number(m.order_limit_step_size),
+    stepSize,
+    marketStepSize: marketStep > 0 ? marketStep : stepSize,
     minQty: Number(m.order_limit_min_size),
     minNotional: Number(m.order_min_notional),
     defaultLeverage: m.default_leverage,
-    maxLeverage: Math.max(1, ...m.margin_tiers.map((t) => t.max_leverage)),
-    marginTiers: m.margin_tiers,
+    maxLeverage: Math.max(1, ...tiers.map((t) => Number(t.max_leverage) || 1)),
+    marginTiers: tiers,
   };
 }
 

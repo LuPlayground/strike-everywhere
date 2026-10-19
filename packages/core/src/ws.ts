@@ -10,6 +10,7 @@ abstract class ReconnectingSocket {
   private retry = 0;
   private closedByUser = false;
   private pingTimer: ReturnType<typeof setInterval> | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private nextId = 1;
 
   constructor(protected readonly url: string, private readonly WS: typeof WebSocket = globalThis.WebSocket) {}
@@ -26,19 +27,32 @@ abstract class ReconnectingSocket {
 
   connect(): void {
     this.closedByUser = false;
-    const ws = new this.WS(this.url);
+    this.clearTimers();
+    let ws: WebSocket;
+    try {
+      ws = new this.WS(this.url);
+    } catch {
+      this.scheduleReconnect();
+      return;
+    }
     this.ws = ws;
+    let openedAt = 0;
+    const current = () => this.ws === ws && !this.closedByUser;
     ws.onopen = async () => {
-      this.retry = 0;
+      if (!current()) return;
+      openedAt = Date.now();
       try {
         await this.onOpen();
       } catch (e) {
         console.warn("[strike-everywhere] socket init failed", e);
       }
+      if (!current()) return;
       this.stateListeners.forEach((f) => f("open"));
+      if (this.pingTimer) clearInterval(this.pingTimer);
       this.pingTimer = setInterval(() => this.send({ method: "ping", id: "hb" }), 30_000);
     };
     ws.onmessage = (ev) => {
+      if (this.ws !== ws) return;
       const text = typeof ev.data === "string" ? ev.data : "";
       for (const line of text.split("\n")) {
         const t = line.trim();
@@ -54,20 +68,37 @@ abstract class ReconnectingSocket {
       }
     };
     ws.onclose = () => {
-      if (this.pingTimer) clearInterval(this.pingTimer);
+      if (!current()) return;
+      this.clearTimers();
       this.stateListeners.forEach((f) => f("closed"));
-      if (this.closedByUser) return;
-      const delay = Math.min(30_000, 500 * 2 ** this.retry++);
-      setTimeout(() => !this.closedByUser && this.connect(), delay);
+      if (openedAt && Date.now() - openedAt > 20_000) this.retry = 0;
+      this.scheduleReconnect();
     };
     ws.onerror = () => ws.close();
   }
 
+  private scheduleReconnect(): void {
+    if (this.closedByUser) return;
+    const delay = Math.min(30_000, 500 * 2 ** Math.min(this.retry++, 6));
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (!this.closedByUser) this.connect();
+    }, delay);
+  }
+
+  private clearTimers(): void {
+    if (this.pingTimer) clearInterval(this.pingTimer);
+    this.pingTimer = null;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+  }
+
   close(): void {
     this.closedByUser = true;
-    if (this.pingTimer) clearInterval(this.pingTimer);
-    this.ws?.close();
+    this.clearTimers();
+    const ws = this.ws;
     this.ws = null;
+    ws?.close();
   }
 
   protected send(obj: Record<string, unknown>): void {

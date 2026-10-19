@@ -16,7 +16,7 @@ import {
   type RawMarket,
   type StrikeEverywhereOptions,
 } from "@strike-everywhere/core";
-import { Check, Chevron, CoinIcon, KV, PctSlider, Sparkline, Spinner } from "./parts";
+import { Check, Chevron, CoinIcon, KV, PctSlider, Sparkline, Spinner, decimalInput } from "./parts";
 import { ConnectSheet } from "./ConnectSheet";
 import { DepositSheet } from "./DepositSheet";
 import { WithdrawSheet } from "./WithdrawSheet";
@@ -37,9 +37,28 @@ interface Live {
 }
 
 const LEVERAGE_STEPS = [1, 2, 3, 5, 10, 15, 20, 25, 40, 50, 75, 100];
+const WALLET_KEY = "strike-everywhere:wallet";
+
+
+function storageGet(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function storageSet(key: string, value: string): void {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+  }
+}
+
+const fmtQty = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 8 });
 
 export function App({ config }: { config: WidgetConfig }) {
-  const client = useMemo(() => new StrikeEverywhere(config), [config.network, config.builderCode, config.feeBps, config.maxFeeBps, config.partnerApi, config.partnerId]);
+  const client = useMemo(() => new StrikeEverywhere(config), []);
 
   const [markets, setMarkets] = useState<MarketSpec[]>([]);
   const [symbol, setSymbol] = useState(config.market);
@@ -68,7 +87,17 @@ export function App({ config }: { config: WidgetConfig }) {
   const [menu, setMenu] = useState<null | "market" | "leverage">(null);
   const [query, setQuery] = useState("");
   const [lowerTab, setLowerTab] = useState<"positions" | "orders" | "account">("positions");
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [busy, setBusy] = useState<Set<string>>(new Set());
+  const markBusy = (id: string, on: boolean) =>
+    setBusy((prev) => {
+      const next = new Set(prev);
+      on ? next.add(id) : next.delete(id);
+      return next;
+    });
+
+  useEffect(() => setSymbol(config.market), [config.market]);
+  useEffect(() => setSide(config.side ?? "buy"), [config.side]);
+  useEffect(() => setLeverage((l) => Math.min(l, config.maxLeverage)), [config.maxLeverage]);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -85,28 +114,33 @@ export function App({ config }: { config: WidgetConfig }) {
       if (e.type === "user") scheduleRefresh();
     });
     (async () => {
-      try {
-        await client.init();
-        const [specs, tickers, rate] = await Promise.all([client.loadMarkets(), client.market.tickers().catch(() => []), client.market.baseTakerRate()]);
-        if (!alive) return;
-        setMarkets(specs);
-        setTakerRate(rate);
-        const next: Record<string, Live> = {};
-        for (const s of specs) {
-          const raw = client.raw(s.symbol)!;
-          const t = tickers.find((x) => x.symbol === s.symbol);
-          next[s.symbol] = {
-            mark: Number(raw.mark_price),
-            index: Number(raw.index_price),
-            funding: Number(raw.funding_rate),
-            open: t ? Number(t.lastPrice) / (1 + Number(t.priceChangePercent) / 100) : Number(raw.mark_price),
-            quoteVolume: t ? Number(t.quoteVolume) : 0,
-          };
+      for (let attempt = 0; alive; attempt++) {
+        try {
+          if (attempt === 0) await client.init();
+          const [specs, tickers, rate] = await Promise.all([client.loadMarkets(), client.market.tickers().catch(() => []), client.market.baseTakerRate()]);
+          if (!alive) return;
+          setMarkets(specs);
+          setTakerRate(rate);
+          setLoadError("");
+          const next: Record<string, Live> = {};
+          for (const s of specs) {
+            const raw = client.raw(s.symbol)!;
+            const t = tickers.find((x) => x.symbol === s.symbol);
+            next[s.symbol] = {
+              mark: Number(raw.mark_price),
+              index: Number(raw.index_price),
+              funding: Number(raw.funding_rate),
+              open: t ? Number(t.lastPrice) / (1 + Number(t.priceChangePercent) / 100) : Number(raw.mark_price),
+              quoteVolume: t ? Number(t.quoteVolume) : 0,
+            };
+          }
+          setLive(next);
+          return;
+        } catch (e: any) {
+          if (!alive) return;
+          setLoadError(e?.message || "Could not reach Strike.");
+          await new Promise((r) => setTimeout(r, Math.min(30_000, 2000 * 2 ** attempt)));
         }
-        setLive(next);
-        if (!specs.find((s) => s.symbol === config.market) && specs[0]) setSymbol(specs[0].symbol);
-      } catch (e: any) {
-        if (alive) setLoadError(e?.message || "Could not reach Strike.");
       }
     })();
 
@@ -152,7 +186,12 @@ export function App({ config }: { config: WidgetConfig }) {
   }, [client]);
 
   useEffect(() => {
+    if (markets.length && !markets.find((s) => s.symbol === symbol)) setSymbol(markets[0].symbol);
+  }, [markets, symbol]);
+
+  useEffect(() => {
     let alive = true;
+    setSpark([]);
     const load = () =>
       client.market
         .klines(symbol, "1h", 48, "mark")
@@ -219,11 +258,13 @@ export function App({ config }: { config: WidgetConfig }) {
   const available = Number(account?.available_balance ?? 0);
   const buyingPower = available * lev;
   const pct = buyingPower > 0 ? Math.min(100, (usd / buyingPower) * 100) : 0;
-  const baseSize = px > 0 && spec ? Number(roundToStep(usd / px, spec.stepSize, "floor")) : 0;
-  const preview = spec && px > 0 && usd > 0 ? previewOrder({ side, price: px, notional: baseSize * px, leverage: lev, takerRate, builderFeeBps: client.feeBps, tiers: spec.marginTiers }) : null;
+  const sizeStep = spec ? (orderType === "market" ? spec.marketStepSize ?? spec.stepSize : spec.stepSize) : 0;
+  const baseSize = px > 0 && spec ? Number(roundToStep(usd / px, sizeStep, "floor")) : 0;
+  const feeBps = client.orderFeeBps;
+  const preview = spec && px > 0 && usd > 0 ? previewOrder({ side, price: px, notional: baseSize * px, leverage: lev, takerRate, builderFeeBps: feeBps, tiers: spec.marginTiers }) : null;
   const position = positions.find((p) => p.symbol === symbol);
   const posSize = position ? Number(position.size) : 0;
-  const isNewAccount = !!account && Number(account.wallet_balance) <= 0 && positions.length === 0;
+  const isNewAccount = !account || (Number(account.wallet_balance) <= 0 && positions.length === 0);
   const bound = Number(raw?.order_limit_price_bound ?? 0.05);
 
   const problem = ((): string | null => {
@@ -262,7 +303,7 @@ export function App({ config }: { config: WidgetConfig }) {
         leverage: reduceOnly ? undefined : lev,
       });
       const verb = order.status === "filled" ? "Filled" : order.status === "open" ? "Order placed" : `Order ${order.status}`;
-      notify("ok", `${verb}: ${side === "buy" ? "Long" : "Short"} ${baseSize.toLocaleString()} ${base}`);
+      notify("ok", `${verb}: ${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base}`);
       setSizeUsd("");
       setLowerTab(order.status === "open" ? "orders" : "positions");
       refresh();
@@ -274,7 +315,9 @@ export function App({ config }: { config: WidgetConfig }) {
   };
 
   const closePosition = async (p: Position) => {
-    setBusyId(p.id);
+    const id = `pos:${p.id}`;
+    if (busy.has(id)) return;
+    markBusy(id, true);
     try {
       const o = await client.closePosition(p);
       notify("ok", o.status === "filled" ? `Closed ${p.symbol}` : `Close order ${o.status}`);
@@ -282,12 +325,14 @@ export function App({ config }: { config: WidgetConfig }) {
     } catch (e: any) {
       notify("err", e?.message || String(e));
     } finally {
-      setBusyId(null);
+      markBusy(id, false);
     }
   };
 
   const cancelOrder = async (o: OrderHistoryEntry) => {
-    setBusyId(o.id);
+    const id = `ord:${o.id}`;
+    if (busy.has(id)) return;
+    markBusy(id, true);
     try {
       await client.trading.cancelOrder(o.symbol, o.id);
       notify("ok", "Order cancelled");
@@ -295,14 +340,21 @@ export function App({ config }: { config: WidgetConfig }) {
     } catch (e: any) {
       notify("err", e?.message || String(e));
     } finally {
-      setBusyId(null);
+      markBusy(id, false);
     }
   };
 
   const openWalletSheet = async (which: "deposit" | "withdraw") => {
     if (!client.wallet) {
-      const id = sessionStorage.getItem("strike-everywhere:wallet");
-      if (id) await client.ensureWallet(id).catch(() => {});
+      const id = storageGet(WALLET_KEY);
+      if (id) {
+        try {
+          await client.ensureWallet(id);
+        } catch (e: any) {
+          notify("err", e?.message || String(e));
+          return;
+        }
+      }
     }
     if (!client.wallet) return setSheet("connect");
     setSheet(which);
@@ -310,8 +362,15 @@ export function App({ config }: { config: WidgetConfig }) {
   const openDeposit = () => openWalletSheet("deposit");
 
   const setPct = (v: number) => {
-    if (buyingPower <= 0) return;
-    setSizeUsd(v === 0 ? "" : (Math.floor(buyingPower * (v / 100) * 100) / 100).toString());
+    if (buyingPower <= 0 || !spec) return;
+    if (v === 0) return setSizeUsd("");
+    const feeRate = takerRate + feeBps / 10_000;
+    let target = available * lev * (v / 100);
+    for (let i = 0; i < 4; i++) {
+      const cap = Math.max(1, Math.min(lev, maxLeverageFor(spec.marginTiers, target)));
+      target = (available * (v / 100)) / (1 / cap + feeRate);
+    }
+    setSizeUsd((Math.floor(target * 0.998 * 100) / 100).toString());
   };
 
   const filtered = markets.filter((m) => !query || m.symbol.toLowerCase().includes(query.toLowerCase()) || m.name.toLowerCase().includes(query.toLowerCase()));
@@ -337,7 +396,7 @@ export function App({ config }: { config: WidgetConfig }) {
   }
 
   return (
-    <div class="card" onClick={(e) => menu && !(e.target as HTMLElement).closest(".menu, [data-menu]") && setMenu(null)}>
+    <div class="card" onClick={(e) => menu && !(e.target as HTMLElement).closest(".menu, [data-menu]") && setMenu(null)} onKeyDown={(e) => e.key === "Escape" && (menu ? setMenu(null) : sheet && setSheet(null))}>
       <div class="mkt">
         <CoinIcon base={base} />
         <button class="mkt-pick" data-menu onClick={() => setMenu(menu === "market" ? null : "market")} aria-haspopup="listbox" aria-expanded={menu === "market"}>
@@ -355,7 +414,7 @@ export function App({ config }: { config: WidgetConfig }) {
             const l = live[m.symbol];
             const c = l && l.open ? ((l.mark - l.open) / l.open) * 100 : 0;
             return (
-              <button key={m.symbol} class={`menu-row${m.symbol === symbol ? " on" : ""}`} role="option" aria-selected={m.symbol === symbol} onClick={() => (setSymbol(m.symbol), setMenu(null), setQuery(""), setLimitPrice(""))}>
+              <button key={m.symbol} class={`menu-row${m.symbol === symbol ? " on" : ""}`} role="option" aria-selected={m.symbol === symbol} onClick={() => (setSymbol(m.symbol), setMenu(null), setQuery(""), setLimitPrice(""), setTp(""), setSl(""))}>
                 <span>
                   <div class="n">{m.symbol}</div>
                   <div class="t">{m.name} · {m.maxLeverage}x</div>
@@ -417,17 +476,17 @@ export function App({ config }: { config: WidgetConfig }) {
           <button class={`short${side === "sell" ? " on" : ""}`} onClick={() => setSide("sell")}>Short/Sell</button>
         </div>
         <KV k="Available to Trade" v={session ? <span class="num">{formatUsd(available)}</span> : "—"} />
-        <KV k="Current Position" v={posSize ? <span class={`num ${posSize > 0 ? "pos" : "neg"}`}>{posSize > 0 ? "+" : ""}{posSize.toLocaleString()} {base}</span> : "—"} />
+        <KV k="Current Position" v={posSize ? <span class={`num ${posSize > 0 ? "pos" : "neg"}`}>{posSize > 0 ? "+" : ""}{fmtQty(posSize)} {base}</span> : "—"} />
         {orderType === "limit" && (
           <div class="field">
-            <label>Price</label>
-            <input inputMode="decimal" placeholder={mark ? formatPrice(mark, tick).replace(/,/g, "") : "0"} value={limitPrice} onInput={(e) => setLimitPrice((e.target as HTMLInputElement).value.replace(/[^0-9.]/g, ""))} />
+            <label for="se-price">Price</label>
+            <input id="se-price" inputMode="decimal" placeholder={mark ? formatPrice(mark, tick).replace(/,/g, "") : "0"} value={limitPrice} onInput={(e) => setLimitPrice(decimalInput((e.target as HTMLInputElement).value))} />
             <button class="unit linkbtn" style={{ textDecoration: "none" }} onClick={() => setLimitPrice(roundToStep(mark, tick ?? 0.0001))}>Mark</button>
           </div>
         )}
         <div class="field">
-          <label>Size</label>
-          <input inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd((e.target as HTMLInputElement).value.replace(/[^0-9.]/g, ""))} aria-label="Order size in USD" />
+          <label for="se-size">Size</label>
+          <input id="se-size" inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd(decimalInput((e.target as HTMLInputElement).value))} aria-label="Order size in USD" />
           <span class="unit">USD</span>
         </div>
         <div class="slider-row">
@@ -441,12 +500,12 @@ export function App({ config }: { config: WidgetConfig }) {
         {tpsl && (
           <div class="tpsl">
             <div class="field">
-              <label>TP</label>
-              <input inputMode="decimal" placeholder="Price" value={tp} onInput={(e) => setTp((e.target as HTMLInputElement).value.replace(/[^0-9.]/g, ""))} />
+              <label for="se-tp">TP</label>
+              <input id="se-tp" inputMode="decimal" placeholder="Take-profit price" value={tp} onInput={(e) => setTp(decimalInput((e.target as HTMLInputElement).value))} />
             </div>
             <div class="field">
-              <label>SL</label>
-              <input inputMode="decimal" placeholder="Price" value={sl} onInput={(e) => setSl((e.target as HTMLInputElement).value.replace(/[^0-9.]/g, ""))} />
+              <label for="se-sl">SL</label>
+              <input id="se-sl" inputMode="decimal" placeholder="Stop-loss price" value={sl} onInput={(e) => setSl(decimalInput((e.target as HTMLInputElement).value))} />
             </div>
           </div>
         )}
@@ -460,10 +519,10 @@ export function App({ config }: { config: WidgetConfig }) {
           <KV k="Est. Entry" hint={orderType === "market" ? "Market orders fill near the mark price" : "Your limit price"} v={<span class="num">{px ? formatPrice(px, tick) : "—"}</span>} />
           <KV k="Est. Liquidation Price" hint="Conservative estimate treating this position as isolated. In cross margin your whole balance backs it, so the real price is usually further away." v={<span class="num">{preview && !reduceOnly ? formatPrice(preview.liquidationPrice, tick) : "—"}</span>} />
           <KV k="Margin" v={<span class="num">{preview ? formatUsd(preview.margin) : "—"}</span>} />
-          <KV k="Order Size" v={<span class="num">{baseSize ? `${baseSize.toLocaleString()} ${base}` : "—"}</span>} />
+          <KV k="Order Size" v={<span class="num">{baseSize ? `${fmtQty(baseSize)} ${base}` : "—"}</span>} />
           <KV
             k="Fees"
-            hint={`Strike taker fee ${(takerRate * 100).toFixed(3)}% + builder fee ${(client.feeBps / 100).toFixed(2)}% (${config.builderCode})`}
+            hint={`Strike taker fee ${(takerRate * 100).toFixed(3)}% + builder fee ${(feeBps / 100).toFixed(2)}% (${config.builderCode})`}
             v={<span class="num">{preview ? formatUsd(preview.totalFee, { decimals: preview.totalFee < 0.1 ? 4 : 2 }) : "—"}</span>}
           />
         </div>
@@ -477,8 +536,8 @@ export function App({ config }: { config: WidgetConfig }) {
             <button role="tab" class={`tab${lowerTab === "account" ? " on" : ""}`} onClick={() => setLowerTab("account")}>Account</button>
           </div>
           <div class="list">
-            {lowerTab === "positions" && <PositionsList positions={positions} marks={marks} ticks={ticks} busyId={busyId} onClose={closePosition} />}
-            {lowerTab === "orders" && <OrdersList orders={orders} ticks={ticks} busyId={busyId} onCancel={cancelOrder} />}
+            {lowerTab === "positions" && <PositionsList positions={positions} marks={marks} ticks={ticks} busy={busy} onClose={closePosition} />}
+            {lowerTab === "orders" && <OrdersList orders={orders} ticks={ticks} busy={busy} onCancel={cancelOrder} />}
             {lowerTab === "account" && (
               <>
                 <KV k="Balance" v={<span class="num">{formatUsd(Number(account?.wallet_balance ?? 0))}</span>} />
@@ -526,7 +585,7 @@ export function App({ config }: { config: WidgetConfig }) {
           client={client}
           onClose={() => setSheet(null)}
           onConnected={() => {
-            if (client.wallet) sessionStorage.setItem("strike-everywhere:wallet", client.wallet.id);
+            if (client.wallet) storageSet(WALLET_KEY, client.wallet.id);
             setSheet(null);
             notify("ok", "Connected to Strike");
           }}

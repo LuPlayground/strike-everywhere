@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234EFAB0'/%3E%3Cpolyline points='8.5,19.75 14.5,13.75 18.25,17.5 23.5,12.25' fill='none' stroke='%2304120c' stroke-width='3.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <title>Partner Dashboard · Strike Everywhere</title>
-<meta name="description" content="Builder attribution for Strike Everywhere: connected, funded and trading accounts, verified volume and builder fees per partner site." />
+<meta name="description" content="Builder attribution for Strike Everywhere: referred, funded and trading accounts, verified volume and estimated builder fees per partner site." />
 <link rel="stylesheet" href="../assets/theme.css" />
 <style>
   .head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 26px 0 18px; }
@@ -42,13 +43,18 @@
   .method { color: var(--muted); font-size: 12px; margin: 16px 0 0; display: flex; gap: 8px; align-items: flex-start; }
   .banner { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; }
   .err { color: #fda4b4; }
+  .kit-form .grp { display: grid; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .kit-form .note { font-size: 11.5px; color: var(--gold); }
+  .rep { font-size: 10.5px; font-weight: 500; color: var(--muted); border: 1px solid var(--line-2); border-radius: 4px; padding: 0 5px; margin-left: 6px; white-space: nowrap; }
+  .ver { color: var(--mint-deep); border-color: rgba(var(--mint-rgb), .25); }
+  .stale .stats, .stale #partners, .stale .grid-a, .stale #recent { opacity: .35; filter: grayscale(1); transition: opacity .2s; }
   @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, 1fr); } .stat:nth-child(3) { border-right: 0; } .stat:nth-child(-n+3) { border-bottom: 1px solid var(--line); } .grid-a { grid-template-columns: 1fr; } .kit { grid-template-columns: 1fr; } .kit-form { border-right: 0; border-bottom: 1px solid var(--line); } }
-  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } .stat { border-right: 0 !important; border-bottom: 1px solid var(--line); } .controls { margin-left: 0; } }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } .stat { border-right: 0 !important; border-bottom: 1px solid var(--line); } .controls { margin-left: 0; } .panel-h { flex-wrap: wrap; } .panel-h .sub { flex: 1 1 100%; order: 5; } .kit-code .bar2 { flex-wrap: wrap; } }
 </style>
 </head>
 <body>
 <nav class="se-nav">
-  <a class="se-brand" href="../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Strike Everywhere</a>
+  <a class="se-brand" href="../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="se-name">Strike Everywhere</span></a>
   <div class="se-links"><a href="../">Overview</a><a href="../#demos">Demos</a><a href="../developers/">Developers</a><a class="on" href="./">Dashboard</a><a href="https://github.com/LuPlayground/strike-everywhere">Docs</a></div>
   <span class="sp"></span>
   <span class="chip">Builder attribution</span>
@@ -60,7 +66,7 @@
   <div class="head">
     <div>
       <h1>Partner Dashboard</h1>
-      <div class="sub">Users, volume and builder fees each partner site brings to Strike, verified against Strike's public fill history.</div>
+      <div class="sub">What each partner site brings to Strike: volume and fills verified against Strike's public fill history, funded accounts against its transaction history.</div>
     </div>
     <form class="controls" id="f">
       <div class="code-in"><label for="builder">Builder code</label><input id="builder" spellcheck="false" autocomplete="off" /></div>
@@ -72,17 +78,17 @@
 
   <section class="panel">
     <div class="stats">
-      <div class="stat"><span class="k dotted" title="Apps and sites embedding the widget with this builder code (by partner-id and origin)">Integrations</span><div class="v num" id="t-integrations">—</div><div class="s" id="t-active">apps embedding Strike</div></div>
-      <div class="stat"><span class="k dotted" title="Wallets that connected through an integration (Builder Connect)">Referred users</span><div class="v num" id="t-wallets">—</div><div class="s">connected via integrations</div></div>
-      <div class="stat"><span class="k dotted" title="Referred users who deposited through the widget">Funded accounts</span><div class="v num" id="t-funded">—</div><div class="s" id="t-depusd">deposits via widget</div></div>
-      <div class="stat"><span class="k dotted" title="Referred users with at least one verified fill in the selected range">Active traders</span><div class="v num" id="t-traders">—</div><div class="s" id="t-orders">orders via widget</div></div>
-      <div class="stat"><span class="k dotted" title="USD notional of fills Strike reports for orders placed through the widget">Attributed volume</span><div class="v num" id="t-volume">—</div><div class="s" id="t-fills">verified fills</div></div>
-      <div class="stat"><span class="k dotted" title="Executed notional × the order's builder fee (bps). Strike credits these to your account">Builder fees</span><div class="v num pos" id="t-fees">—</div><div class="s">credited by Strike</div></div>
+      <div class="stat"><span class="k dotted" title="Apps and sites embedding the widget with this builder code, by partner-id and origin as reported by the widget">Integrations</span><div class="v num" id="t-integrations">—</div><div class="s" id="t-active">reported by widget</div></div>
+      <div class="stat"><span class="k dotted" title="Wallets that connected through an integration (Builder Connect), as reported by the widget. Not verifiable on Strike.">Referred users</span><div class="v num" id="t-wallets">—</div><div class="s">reported by widget</div></div>
+      <div class="stat"><span class="k dotted" title="Referred accounts with a settled deposit in Strike's public transaction history">Funded accounts</span><div class="v num" id="t-funded">—</div><div class="s" id="t-depusd">verified on Strike</div></div>
+      <div class="stat"><span class="k dotted" title="Referred accounts with at least one verified fill in the selected range">Active traders</span><div class="v num" id="t-traders">—</div><div class="s" id="t-orders">orders via widget</div></div>
+      <div class="stat"><span class="k dotted" title="USD notional of fills in Strike's public fill history for orders the widget registered before Strike created them (same account)">Attributed volume</span><div class="v num" id="t-volume">—</div><div class="s" id="t-fills">verified fills</div></div>
+      <div class="stat"><span class="k dotted" title="Computed as executed notional × the order's builder fee (bps). Strike's public history doesn't expose the fee itself, so this is an estimate.">Builder fees</span><div class="v num pos" id="t-fees">—</div><div class="s">notional × fee bps (est.)</div></div>
     </div>
   </section>
 
   <section class="panel" style="margin-top:16px">
-    <div class="panel-h"><h3>Integrations</h3><span class="sub">Each app embedding the Strike panel: referred users, active traders and volume attributed to it</span><span style="flex:1"></span><a class="btn btn-ghost btn-sm" href="../developers/">+ Add integration</a></div>
+    <div class="panel-h"><h3>Integrations</h3><span class="sub">Each app embedding the Strike panel. Names, sites and referred users are reported by the widget; funded, traders and volume are verified on Strike.</span><span style="flex:1"></span><a class="btn btn-ghost btn-sm" href="../developers/">+ Add integration</a></div>
     <div id="partners" style="overflow:auto"></div>
   </section>
 
@@ -111,10 +117,10 @@
     <div class="kit">
       <div class="kit-form">
         <label>Builder code<input class="input" id="k-code" spellcheck="false" /></label>
-        <label>Builder fee (bps)<input class="input" id="k-fee" type="number" min="0" max="100" value="5" /></label>
+        <label>Builder fee (bps)<input class="input" id="k-fee" type="number" min="0" max="100" step="1" value="5" /><span class="note" id="k-feenote" hidden></span></label>
         <label>Default market<input class="input" id="k-market" value="ADA-USD" /></label>
         <label>Partner id<input class="input" id="k-partner" value="my-site" /></label>
-        <label>Network<div class="seg" id="k-net"><button type="button" class="on" data-v="mainnet">Mainnet</button><button type="button" data-v="testnet">Testnet</button></div></label>
+        <div class="grp" role="group" aria-label="Network"><span aria-hidden="true">Network</span><div class="seg" id="k-net"><button type="button" class="on" data-v="mainnet">Mainnet</button><button type="button" data-v="testnet">Testnet</button></div></div>
       </div>
       <div class="kit-code">
         <pre class="code" id="snippet"></pre>
@@ -127,7 +133,7 @@
     </div>
   </section>
 
-  <p class="method"><span class="dot"></span><span id="method">Volume and fees count only fills reported by Strike's public fill history whose client order id was created by the widget.</span></p>
+  <p class="method"><span class="dot"></span><span id="method">Volume, fills, active traders and builder fees count only fills in Strike's public fill history for orders the widget registered before Strike created them (same account). Funded accounts and deposit value come from settled deposits in Strike's public transaction history. Builder fees are computed as executed notional × the order's builder-fee bps. Referred users, partner ids and sites are reported by the widget.</span></p>
 </main>
 <footer class="se-foot"><div class="wrap row"><span>Strike Everywhere · independent project built on Strike's public Builder API. Not affiliated with Strike Finance.</span><span class="banner" id="banner"></span></div></footer>
 
@@ -135,15 +141,18 @@
 <script>
 (function () {
   SEChrome.ticker(document.getElementById("ticker"));
-  var API = new URLSearchParams(location.search).get("api") || "https://strike-everywhere-api.strike-everywhere.workers.dev";
+  var q = new URLSearchParams(location.search);
+  var API = SEChrome.partnerApi(q.get("api"));
   var WIDGET = new URL("../widget/strike-everywhere.iife.js", location.href).href;
   var $ = function (id) { return document.getElementById(id); };
-  var q = new URLSearchParams(location.search);
-  var state = { builder: q.get("builder") || "Playground101", network: q.get("network") || "testnet", days: q.get("days") || "30", metric: "volume", kitNet: "mainnet" };
+  var DAYS = { "7": 1, "30": 1, "90": 1 };
+  var state = { builder: (q.get("builder") || "Playground101").trim(), network: SEChrome.network(q.get("network"), "testnet"), days: DAYS[q.get("days")] ? q.get("days") : "30", metric: "volume", kitNet: "mainnet" };
   $("builder").value = state.builder;
-  var usd = function (v, d) { v = Number(v || 0); d = d === undefined ? (Math.abs(v) >= 1000 ? 0 : 2) : d; return "$" + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
-  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
-  var last = null;
+  var usd = function (v, d) { v = Number(v || 0); if (!isFinite(v)) v = 0; d = d === undefined ? (Math.abs(v) >= 1000 ? 0 : 2) : d; return "$" + v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var num = function (v) { v = Number(v); return isFinite(v) ? v : 0; };
+  var int = function (v) { return Math.round(num(v)).toLocaleString("en-US"); };
+  var last = null, lastKey = null;
 
   function segBind(id, key, after) {
     var seg = $(id);
@@ -155,16 +164,48 @@
   segBind("daySeg", "days", function () { load(false); });
   segBind("k-net", "kitNet", syncKit);
 
+  var seq = 0, inflight = null, timer = null;
+  function queue(refresh, delay) { clearTimeout(timer); timer = setTimeout(function () { load(refresh); }, delay || 0); }
   function load(refresh) {
+    clearTimeout(timer);
     state.builder = $("builder").value.trim();
     if (!state.builder) return;
-    history.replaceState(null, "", "?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days);
+    var key = state.builder + "|" + state.network + "|" + state.days;
+    if (!refresh && inflight && inflight.key === key) return;
+    if (inflight && inflight.ctl) inflight.ctl.abort();
+    var my = ++seq, ctl = typeof AbortController === "function" ? new AbortController() : null;
+    inflight = { key: key, ctl: ctl };
+    history.replaceState(null, "", "?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days + (API !== SEChrome.PARTNER_API ? "&api=" + encodeURIComponent(API) : ""));
+    if (key !== lastKey) document.body.classList.add("stale");
     $("banner").innerHTML = '<span class="dot pulse"></span>Loading…';
-    fetch(API + "/v1/stats?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days + (refresh ? "&refresh=1" : ""))
-      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); })
-      .then(function (j) { last = j; render(j); })
-      .catch(function (e) { $("banner").innerHTML = '<span class="err">Could not load stats: ' + esc(e.message) + "</span>"; });
+    fetch(API + "/v1/stats?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days + (refresh ? "&refresh=1" : ""), ctl ? { signal: ctl.signal } : undefined)
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error((j && j.error) || r.status); return j; }); })
+      .then(function (j) {
+        if (my !== seq) return;
+        inflight = null;
+        if (!j || typeof j.totals !== "object" || !j.totals) throw new Error("unexpected response");
+        last = j; lastKey = key;
+        document.body.classList.remove("stale");
+        render(j);
+      })
+      .catch(function (e) {
+        if (my !== seq) return;
+        inflight = null;
+        if (key !== lastKey) reset();
+        document.body.classList.add("stale");
+        $("banner").innerHTML = '<span class="err">Could not load stats: ' + esc((e && e.message) || e) + "</span>";
+      });
     syncKit();
+  }
+
+  function reset() {
+    last = null; lastKey = null;
+    ["t-integrations", "t-wallets", "t-funded", "t-traders", "t-volume", "t-fees"].forEach(function (id) { $(id).textContent = "—"; });
+    $("t-active").textContent = "reported by widget"; $("t-depusd").textContent = "verified on Strike"; $("t-orders").textContent = "orders via widget"; $("t-fills").textContent = "verified fills";
+    $("funnel").innerHTML = '<div class="empty">No data.</div>';
+    $("partners").innerHTML = '<div class="empty">No data.</div>';
+    $("recent").innerHTML = '<div class="empty">No data.</div>';
+    $("svg").innerHTML = ""; $("dailyTable").innerHTML = '<div class="empty">No data.</div>'; $("updated").textContent = "";
   }
 
   function pct(a, b) { return b ? Math.round((a / b) * 100) + "%" : "—"; }
@@ -172,77 +213,88 @@
   function render(j) {
     var t = j.totals;
     $("banner").innerHTML = '<span class="dot ' + (j.network === "testnet" ? "gold" : "") + '"></span>' + (j.network === "testnet" ? "Testnet" : "Mainnet") + ' · <span class="num">' + esc(j.builder) + "</span>";
-    $("updated").textContent = "updated " + new Date(j.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    $("t-integrations").textContent = (t.integrations || 0).toLocaleString();
-    $("t-active").textContent = (t.activeIntegrations || 0) + " active in last 7 days";
-    $("t-wallets").textContent = t.connectedWallets.toLocaleString();
-    $("t-funded").textContent = t.fundedAccounts.toLocaleString();
-    $("t-depusd").textContent = t.deposits ? usd(t.depositUsd) + " deposited" : "deposits via widget";
-    $("t-traders").textContent = t.tradingAccounts.toLocaleString();
-    $("t-orders").textContent = t.orders + " order" + (t.orders === 1 ? "" : "s") + (t.rejectedOrders ? " · " + t.rejectedOrders + " rejected" : "");
+    $("updated").textContent = "updated " + new Date(num(j.generatedAt) || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    $("t-integrations").textContent = int(t.integrations);
+    $("t-active").textContent = int(t.activeIntegrations) + " active (7d) · reported";
+    $("t-wallets").textContent = int(t.connectedWallets);
+    $("t-funded").textContent = int(t.fundedAccounts);
+    $("t-depusd").textContent = num(t.depositUsd) > 0 ? usd(t.depositUsd) + " verified deposits" : "verified on Strike";
+    $("t-traders").textContent = int(t.tradingAccounts);
+    var orders = num(t.orders), rejected = num(t.rejectedOrders), fills = num(t.fills), fees = num(t.builderFeesUsd);
+    $("t-orders").textContent = int(orders) + " order" + (orders === 1 ? "" : "s") + (rejected ? " · " + int(rejected) + " rejected" : "");
     $("t-volume").textContent = usd(t.volumeUsd);
-    $("t-fills").textContent = t.fills + " verified fill" + (t.fills === 1 ? "" : "s");
-    $("t-fees").textContent = usd(t.builderFeesUsd, t.builderFeesUsd < 1 && t.builderFeesUsd > 0 ? 4 : 2);
+    $("t-fills").textContent = int(fills) + " verified fill" + (fills === 1 ? "" : "s");
+    $("t-fees").textContent = usd(fees, fees < 1 && fees > 0 ? 4 : 2);
 
-    var w = t.connectedWallets;
-    $("funnel").innerHTML = [["Connected", w, w], ["Funded", t.fundedAccounts, w], ["Trading", t.tradingAccounts, w]].map(function (s) {
-      var width = s[2] ? Math.max(2, (s[1] / s[2]) * 100) : 0;
-      return '<div class="fstep"><div class="row"><span class="lbl">' + s[0] + '</span><span><span class="val">' + s[1] + '</span><span class="pct">' + (s[0] === "Connected" ? "" : pct(s[1], s[2])) + '</span></span></div><div class="bar"><i style="width:' + width + '%"></i></div></div>';
-    }).join("") + '<div class="fnote">Healthy partners convert connected wallets into funded, trading accounts. Volume alone can be gamed; this funnel can\'t.</div>';
+    var w = num(t.connectedWallets);
+    $("funnel").innerHTML = [["Connected", w, w, "reported by widget", ""], ["Funded", num(t.fundedAccounts), w, "verified", " ver"], ["Trading", num(t.tradingAccounts), w, "verified", " ver"]].map(function (s) {
+      var width = s[2] > 0 && s[1] > 0 ? Math.min(100, Math.max(2, (s[1] / s[2]) * 100)) : 0;
+      return '<div class="fstep"><div class="row"><span class="lbl">' + s[0] + '<span class="rep' + s[4] + '">' + s[3] + '</span></span><span><span class="val">' + int(s[1]) + '</span><span class="pct">' + (s[0] === "Connected" ? "" : pct(s[1], s[2])) + '</span></span></div><div class="bar"><i style="width:' + width + '%"></i></div></div>';
+    }).join("") + '<div class="fnote">Funded and trading are verified against Strike\'s public transaction and fill history; connected wallets are reported by the widget.</div>';
 
     drawChart(j);
+    drawTable(j);
 
-    var ago = function (ts) { var s = (Date.now() - ts) / 1000; return s < 90 ? "just now" : s < 3600 ? Math.round(s / 60) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago"; };
-    var maxVol = Math.max.apply(null, j.byPartner.map(function (p) { return p.volume; }).concat([0]));
-    $("partners").innerHTML = j.byPartner.length
-      ? '<table class="tbl"><thead><tr><th><span>Integration</span></th><th class="r"><span>Referred users</span></th><th class="r"><span>Funded</span></th><th class="r"><span>Active traders</span></th><th class="r"><span>Orders</span></th><th class="r"><span>Attributed volume</span></th><th class="r"><span>Builder fees</span></th><th class="r"><span>Last activity</span></th></tr></thead><tbody>' +
-        j.byPartner.map(function (p) {
-          var active = Date.now() - p.last_seen < 7 * 86400000;
-          var share = maxVol > 0 ? Math.max(2, (p.volume / maxVol) * 100) : 0;
-          return '<tr><td><div style="display:flex;align-items:center;gap:10px"><span class="dot' + (active ? " pulse" : "") + '" style="' + (active ? "" : "background:#555;box-shadow:none") + '"></span><div><div style="font-weight:600">' + esc(p.partner_id || "default") + '</div><div class="soft" style="font-size:12px">' + esc((p.host_origin || "").replace(/^https?:\/\//, "")) + "</div></div></div></td>" +
-            '<td class="r num">' + p.wallets + '</td><td class="r num">' + p.funded + ' <span class="muted">' + (p.wallets ? Math.round((p.funded / p.wallets) * 100) + "%" : "") + '</span></td><td class="r num">' + p.traders + '</td><td class="r num">' + p.orders + "</td>" +
-            '<td class="r"><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><span class="num">' + usd(p.volume) + '</span><span style="width:70px;height:5px;border-radius:3px;background:var(--raised);overflow:hidden;display:inline-block"><span style="display:block;height:100%;width:' + share + '%;background:linear-gradient(90deg,var(--mint-deep),var(--mint))"></span></span></div></td>' +
-            '<td class="r num pos">' + usd(p.fees, p.fees > 0 && p.fees < 1 ? 4 : 2) + '</td><td class="r soft">' + ago(p.last_seen) + "</td></tr>";
+    var ago = function (ts) { var s = (Date.now() - num(ts)) / 1000; return s < 90 ? "just now" : s < 3600 ? Math.round(s / 60) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago"; };
+    var parts = Array.isArray(j.byPartner) ? j.byPartner : [];
+    var maxVol = Math.max.apply(null, parts.map(function (p) { return num(p.volume); }).concat([0]));
+    $("partners").innerHTML = parts.length
+      ? '<table class="tbl"><thead><tr><th><span>Integration</span></th><th class="r"><span title="Reported by the widget">Referred users</span></th><th class="r"><span title="Settled deposit on Strike">Funded</span></th><th class="r"><span title="Verified fill on Strike">Active traders</span></th><th class="r"><span>Orders</span></th><th class="r"><span>Attributed volume</span></th><th class="r"><span title="Notional × fee bps (estimate)">Builder fees</span></th><th class="r"><span>Last activity</span></th></tr></thead><tbody>' +
+        parts.map(function (p) {
+          var active = Date.now() - num(p.last_seen) < 7 * 86400000;
+          var vol = num(p.volume), fee = num(p.fees), wal = num(p.wallets), fun = num(p.funded);
+          var share = maxVol > 0 && vol > 0 ? Math.max(2, (vol / maxVol) * 100) : 0;
+          return '<tr><td><div style="display:flex;align-items:center;gap:10px"><span class="dot' + (active ? " pulse" : "") + '" style="' + (active ? "" : "background:#555;box-shadow:none") + '"></span><div><div style="font-weight:600">' + esc(p.partner_id || "default") + '</div><div class="soft" style="font-size:12px">' + esc(String(p.host_origin || "").replace(/^https?:\/\//, "")) + "</div></div></div></td>" +
+            '<td class="r num">' + int(wal) + '</td><td class="r num">' + int(fun) + ' <span class="muted">' + (wal ? Math.round((fun / wal) * 100) + "%" : "") + '</span></td><td class="r num">' + int(p.traders) + '</td><td class="r num">' + int(p.orders) + "</td>" +
+            '<td class="r"><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><span class="num">' + usd(vol) + '</span><span style="width:70px;height:5px;border-radius:3px;background:var(--raised);overflow:hidden;display:inline-block"><span style="display:block;height:100%;width:' + share + '%;background:linear-gradient(90deg,var(--mint-deep),var(--mint))"></span></span></div></td>' +
+            '<td class="r num pos">' + usd(fee, fee > 0 && fee < 1 ? 4 : 2) + '</td><td class="r soft">' + ago(p.last_seen) + "</td></tr>";
         }).join("") + "</tbody></table>"
       : '<div class="empty">No integrations yet. <a href="../developers/" style="color:var(--mint)">Embed the Strike panel</a> in an app to start.</div>';
 
-    $("recent").innerHTML = j.recent.length
+    var recent = Array.isArray(j.recent) ? j.recent : [];
+    $("recent").innerHTML = recent.length
       ? '<table class="tbl"><thead><tr><th><span>Time</span></th><th><span>Event</span></th><th class="r"><span>Detail</span></th></tr></thead><tbody>' +
-        j.recent.map(function (r) {
+        recent.map(function (r) {
           var cls = r.status === "rejected" ? "rose" : r.type === "order" ? "mint" : r.type === "deposit" ? "gold" : "blue";
-          var detail = r.type === "order" ? esc((r.side || "").toUpperCase() + " " + (r.symbol || "")) + " · " + usd(r.notional) + (r.status ? " · " + esc(r.status) : "") : r.type === "deposit" ? usd(r.usd) : esc(r.partner_id || "");
-          return '<tr><td class="num soft">' + new Date(r.ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) + '</td><td><span class="badge ' + cls + '">' + esc(r.type) + '</span></td><td class="r">' + detail + "</td></tr>";
+          var detail = r.type === "order" ? esc(String(r.side || "").toUpperCase() + " " + (r.symbol || "")) + " · " + usd(r.notional) + (r.status ? " · " + esc(r.status) : "") : r.type === "deposit" ? usd(r.usd) + ' <span class="rep">reported</span>' : esc(r.partner_id || "");
+          return '<tr><td class="num soft">' + esc(new Date(num(r.ts)).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })) + '</td><td><span class="badge ' + cls + '">' + esc(r.type) + '</span></td><td class="r">' + detail + "</td></tr>";
         }).join("") + "</tbody></table>"
       : '<div class="empty">No activity yet.</div>';
-    $("method").textContent = j.method;
+    if (typeof j.method === "string" && j.method) $("method").textContent = j.method;
   }
 
   function series(j) {
-    var map = {}; j.daily.forEach(function (d) { map[d.day] = d; });
-    var out = [], now = new Date();
-    for (var i = Number(j.days) - 1; i >= 0; i--) {
+    var map = {}; (Array.isArray(j.daily) ? j.daily : []).forEach(function (d) { if (d && d.day) map[d.day] = d; });
+    var out = [], now = new Date(), n = Math.min(366, Math.max(1, Math.round(num(j.days)) || Number(state.days)));
+    for (var i = n - 1; i >= 0; i--) {
       var key = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i)).toISOString().slice(0, 10);
       var d = map[key] || {};
-      out.push({ day: key, volume: d.volume || 0, fees: d.fees || 0, fills: d.fills || 0 });
+      out.push({ day: key, volume: num(d.volume), fees: num(d.fees), fills: Math.round(num(d.fills)) });
     }
     return out;
   }
   function niceMax(v) { if (v <= 0) return 1; var p = Math.pow(10, Math.floor(Math.log10(v))); var m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
-  function fmtAxis(v) { return state.metric === "fills" ? String(Math.round(v)) : usd(v, v >= 100 || v === 0 ? 0 : 2); }
+  function fmtAxis(v, max) {
+    if (state.metric === "fills") return String(Math.round(v));
+    return usd(v, v === 0 || max >= 100 ? 0 : max > 0.1 ? 2 : 4);
+  }
 
+  function chartShown() { return !$("chart").hidden && $("chart").getBoundingClientRect().width > 0; }
   function drawChart(j) {
+    if (!j || !chartShown()) return;
     var data = series(j), m = state.metric, svg = $("svg"), box = $("chart").getBoundingClientRect();
-    var W = Math.max(320, box.width - 24), H = 252, padL = 60, padR = 6, padT = 10, padB = 24;
+    var W = Math.max(280, box.width - 24), H = 252, padL = 60, padR = 6, padT = 10, padB = 24;
     var max = niceMax(Math.max.apply(null, data.map(function (d) { return d[m]; })));
+    var ticks = m === "fills" ? Math.min(5, max) : 4;
     var iw = W - padL - padR, ih = H - padT - padB, step = iw / data.length, bw = Math.max(2, step - 2);
     var y = function (v) { return padT + ih - (v / max) * ih; };
     var s = "";
-    for (var g = 0; g <= 4; g++) {
-      var v = (max / 4) * g, yy = y(v);
+    for (var g = 0; g <= ticks; g++) {
+      var v = (max / ticks) * g, yy = y(v);
       s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="#1d1d1d"/>';
-      s += '<text x="' + (padL - 10) + '" y="' + (yy + 4) + '" fill="#8a8a8a" font-size="11" text-anchor="end" font-family="IBM Plex Mono, monospace">' + fmtAxis(v) + "</text>";
+      s += '<text x="' + (padL - 10) + '" y="' + (yy + 4) + '" fill="#8a8a8a" font-size="11" text-anchor="end" font-family="IBM Plex Mono, monospace">' + fmtAxis(v, max) + "</text>";
     }
-    var every = Math.ceil(data.length / 8);
+    var every = Math.ceil(data.length / (W < 480 ? 5 : 8));
     data.forEach(function (d, i) {
       var x = padL + i * step + 1, val = d[m], top = y(val), h = y(0) - top;
       if (val > 0) {
@@ -257,20 +309,24 @@
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     svg.innerHTML = s;
     var tip = $("tip");
+    tip.style.display = "none";
     svg.querySelectorAll(".hit").forEach(function (el) {
       el.addEventListener("mouseenter", function () {
         var i = +el.dataset.i, d = data[i];
         svg.querySelectorAll(".b").forEach(function (b) { b.setAttribute("fill", +b.dataset.i === i ? "#4efab0" : "#1aa673"); });
-        tip.innerHTML = "<b>" + d.day + "</b>Volume " + usd(d.volume) + "<br>Builder fees " + usd(d.fees, d.fees > 0 && d.fees < 1 ? 4 : 2) + "<br>" + d.fills + " fill" + (d.fills === 1 ? "" : "s");
-        tip.style.left = 12 + ((padL + i * step + step / 2) / W) * (box.width - 24) + "px";
-        tip.style.top = 8 + (d[m] ? y(d[m]) : y(0)) + "px";
+        tip.innerHTML = "<b>" + d.day + "</b>Volume " + usd(d.volume) + "<br>Builder fees " + usd(d.fees, d.fees > 0 && d.fees < 1 ? 4 : 2) + " (est.)<br>" + d.fills + " fill" + (d.fills === 1 ? "" : "s");
         tip.style.display = "block";
+        var cx = 12 + ((padL + i * step + step / 2) / W) * (box.width - 24), half = tip.offsetWidth / 2 + 4;
+        tip.style.left = Math.max(half, Math.min(box.width - half, cx)) + "px";
+        tip.style.top = 8 + (d[m] ? y(d[m]) : y(0)) * ((box.height - 12) / H) + "px";
       });
     });
     svg.onmouseleave = function () { tip.style.display = "none"; svg.querySelectorAll(".b").forEach(function (b) { b.setAttribute("fill", "#1aa673"); }); };
-    var rows = data.slice().reverse().filter(function (d) { return d.fills; });
+  }
+  function drawTable(j) {
+    var rows = series(j).reverse().filter(function (d) { return d.fills; });
     $("dailyTable").innerHTML = rows.length
-      ? '<table class="tbl"><thead><tr><th><span>Day</span></th><th class="r"><span>Volume</span></th><th class="r"><span>Builder fees</span></th><th class="r"><span>Fills</span></th></tr></thead><tbody>' + rows.map(function (d) { return '<tr><td class="num">' + d.day + '</td><td class="r num">' + usd(d.volume) + '</td><td class="r num pos">' + usd(d.fees, d.fees < 1 ? 4 : 2) + '</td><td class="r num">' + d.fills + "</td></tr>"; }).join("") + "</tbody></table>"
+      ? '<table class="tbl"><thead><tr><th><span>Day</span></th><th class="r"><span>Volume</span></th><th class="r"><span>Builder fees (est.)</span></th><th class="r"><span>Fills</span></th></tr></thead><tbody>' + rows.map(function (d) { return '<tr><td class="num">' + d.day + '</td><td class="r num">' + usd(d.volume) + '</td><td class="r num pos">' + usd(d.fees, d.fees < 1 ? 4 : 2) + '</td><td class="r num">' + int(d.fills) + "</td></tr>"; }).join("") + "</tbody></table>"
       : '<div class="empty">No fills in this range yet.</div>';
   }
 
@@ -285,24 +341,33 @@
     $("viewSeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     var table = b.dataset.v === "table";
     $("chart").hidden = table; $("dailyTable").hidden = !table;
+    if (!table && last) drawChart(last);
   });
 
+  function kitFee() {
+    var raw = $("k-fee").value.trim(), n = Number(raw), v, note = "";
+    if (raw === "" || !isFinite(n)) { v = 5; note = "Empty or invalid: using the default 5 bps."; }
+    else { v = Math.min(100, Math.max(0, Math.round(n))); if (v !== n) note = "Using " + v + " bps (whole number, 0–100)."; }
+    $("k-feenote").textContent = note; $("k-feenote").hidden = !note;
+    return v;
+  }
   function syncKit() {
     if (!$("k-code").value) $("k-code").value = $("builder").value;
-    var code = $("k-code").value || "YOUR_CODE";
-    var html = '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + WIDGET + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n' +
-      '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"' + esc(code) + '"</span> <span class="a">fee-bps</span>=<span class="s">"' + esc($("k-fee").value) + '"</span>\n  <span class="a">market</span>=<span class="s">"' + esc($("k-market").value.toUpperCase()) + '"</span> <span class="a">partner-id</span>=<span class="s">"' + esc($("k-partner").value) + '"</span>' + (state.kitNet === "testnet" ? ' <span class="a">network</span>=<span class="s">"testnet"</span>' : "") + '\n  <span class="a">partner-api</span>=<span class="s">"' + API + '"</span><span class="k">&gt;&lt;/strike-trade&gt;</span>';
+    var code = $("k-code").value.trim() || "YOUR_CODE";
+    var html = '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + esc(WIDGET) + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n' +
+      '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"' + esc(code) + '"</span> <span class="a">fee-bps</span>=<span class="s">"' + kitFee() + '"</span>\n  <span class="a">market</span>=<span class="s">"' + esc($("k-market").value.trim().toUpperCase() || "ADA-USD") + '"</span> <span class="a">partner-id</span>=<span class="s">"' + esc($("k-partner").value.trim() || "my-site") + '"</span>' + (state.kitNet === "testnet" ? ' <span class="a">network</span>=<span class="s">"testnet"</span>' : "") + '\n  <span class="a">partner-api</span>=<span class="s">"' + esc(API) + '"</span><span class="k">&gt;&lt;/strike-trade&gt;</span>';
     $("snippet").innerHTML = html;
     $("preview").href = "../demo/blog/?network=" + state.kitNet + "&builder=" + encodeURIComponent(code);
   }
   ["k-code", "k-fee", "k-market", "k-partner"].forEach(function (id) { $(id).addEventListener("input", syncKit); });
-  $("copy").addEventListener("click", function () { navigator.clipboard.writeText($("snippet").textContent).then(function () { $("copy").textContent = "Copied ✓"; setTimeout(function () { $("copy").textContent = "Copy snippet"; }, 1500); }); });
+  $("copy").addEventListener("click", function () { SEChrome.copy($("snippet"), $("copy"), "Copy snippet"); });
   $("f").addEventListener("submit", function (e) { e.preventDefault(); load(false); });
-  $("builder").addEventListener("change", function () { load(false); });
+  $("builder").addEventListener("change", function () { queue(false, 300); });
   $("sync").addEventListener("click", function () { load(true); });
-  window.addEventListener("resize", function () { if (last) drawChart(last); });
+  var rz = null;
+  window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(function () { if (last) drawChart(last); }, 150); });
   load(false);
-  setInterval(function () { if (!document.hidden) load(false); }, 60000);
+  setInterval(function () { if (!document.hidden && !inflight) load(false); }, 60000);
 })();
 </script>
 </body>

@@ -14,7 +14,7 @@ export class Withdrawals {
   constructor(private readonly http: StrikeHttp) {}
 
   async prepareAda(usdValue: number): Promise<PreparedWithdrawal> {
-    if (!(usdValue >= MIN_WITHDRAW_USD)) throw new Error(`Minimum withdrawal is $${MIN_WITHDRAW_USD}.`);
+    if (!Number.isFinite(usdValue) || !(usdValue >= MIN_WITHDRAW_USD)) throw new Error(`Minimum withdrawal is $${MIN_WITHDRAW_USD}.`);
     const q = await this.http.request<{ withdraw_id: string; fee: string; message_to_sign: string }>("POST", "/v2/withdraw/quote", {
       body: { usd_value: usdValue.toFixed(2), blockchain: "cardano", asset: "ADA" },
     });

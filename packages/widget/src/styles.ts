@@ -1,6 +1,8 @@
 export const FONT_HREF = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
 
 export const css =  `:host {
+
+  all: initial;
   --se-bg: #0a0a0a;
   --se-surface: #141414;
   --se-surface-2: #1a1a1a;
@@ -28,7 +30,7 @@ export const css =  `:host {
   display: block;
   width: var(--se-width, 380px);
   max-width: 100%;
-  min-width: 300px;
+  min-width: min(300px, 100%);
   color: var(--se-text);
   font: 400 13px/1.45 var(--se-font);
   -webkit-font-smoothing: antialiased;

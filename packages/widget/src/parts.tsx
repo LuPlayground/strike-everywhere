@@ -94,3 +94,9 @@ export function Step({ state, n, children }: { state: "todo" | "active" | "done"
     </div>
   );
 }
+
+export function decimalInput(v: string): string {
+  const s = v.replace(/,/g, ".").replace(/[^0-9.]/g, "");
+  const i = s.indexOf(".");
+  return i === -1 ? s : s.slice(0, i + 1) + s.slice(i + 1).replace(/\./g, "");
+}

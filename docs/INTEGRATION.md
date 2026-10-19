@@ -38,11 +38,11 @@ return <strike-trade builder-code="YOUR_CODE" fee-bps="5" />;
 ## 3. Track results
 Open **/dashboard/?builder=YOUR_CODE&network=mainnet**. It shows:
 - connected wallets, then funded accounts, then trading accounts;
-- attributed volume and builder fees, verified against Strike's public fill history;
+- attributed volume and builder fees: only fills in Strike's public history for orders the widget registered before Strike created them (fees are computed as notional × your bps);
 - a per-site breakdown by `partner-id` and origin;
 - a snippet generator.
 
-Builder fees themselves are **credited by Strike directly to your Strike account balance** on every fill. You can see them in Strike's own builder-codes page too.
+Builder fees themselves are **credited by Strike directly to your Strike account balance** on every fill. Strike's own builder-codes page is the source of truth for what was credited; the dashboard's fee figure is an estimate from verified fills.
 
 ## Who should register their own code?
 - **Your own site:** use your own code. Fees go to you.

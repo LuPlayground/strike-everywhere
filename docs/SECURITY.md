@@ -20,18 +20,19 @@ Strike Everywhere puts trading inside other people's websites. That makes the tr
 - **Disconnect** clears the key from memory and storage.
 
 ## Deposit safety
-The widget never asks the user to sign a deposit until it has decoded Strike's unsigned Cardano transaction (`cardano/txPreview.ts`) and confirmed that:
-- **exactly one output** leaves the user's wallet;
-- that output carries **exactly the requested lovelace**;
-- **no native tokens** move;
-- any change returns to the user's own address.
+The widget never asks the user to sign a deposit until it has decoded Strike's unsigned Cardano transaction (`cardano/txPreview.ts`, `checkDepositTx` in `deposit.ts`) and confirmed that:
+- the body contains **only the fields a plain transfer needs** (inputs, outputs, fee, validity interval, aux-data hash, required signers, network id). Certificates, reward withdrawals, minting, collateral, governance votes/proposals and treasury donations are refused, since they could move value without showing up as an output;
+- the transaction is **not marked invalid** (which would forfeit collateral) and the **network fee is at most 3 ADA**;
+- **exactly one output** leaves the user's wallet, carrying **exactly the requested lovelace** and **no native tokens**; any change returns to the user's own address;
+- the deposit output's **datum names this deposit request, the user's wallet key and the user's Strike account**, so the deposit can only be credited to them.
 
-If any check fails, the widget refuses (`DepositSafetyError`). Wallet witnesses are spliced in **without re-encoding the transaction body** (`spliceWitnessSet`), so the transaction id the user signs is the one that is submitted. This is covered by tests against a real Strike testnet deposit transaction.
+The same checks run again on the exact bytes right before `signTx`, and an expired quote is refused. If any check fails, the widget refuses (`DepositSafetyError`). Wallet witnesses are spliced in **without re-encoding the transaction body** (`spliceWitnessSet`), so the transaction id the user signs is the one that is submitted. If the on-chain transaction succeeds but registering it with Strike fails, the widget retries and then offers "retry registration" (never a second signature). Malformed or truncated CBOR throws instead of hanging. All of this is covered by tests against a real Strike testnet deposit transaction and tampered variants of it.
 
 > Observation: on testnet, Strike's `build-tx` output address differs from the `deposit_address` in the quote. The widget therefore shows the **actual destination** decoded from the transaction, not the quoted one, and we have asked Strike which address is canonical.
 
 ## Orders
-- Every order carries a client order id generated in the browser and the builder fee header `X-Builder-Fee-Bps`. **Strike rejects any order whose fee exceeds the cap the user signed** (or the builder's registered cap).
+- Every order carries a client order id generated in the browser and the builder fee header `X-Builder-Fee-Bps`. **Strike rejects any order whose fee exceeds the cap the user signed** (or the builder's registered cap). The widget also never sends more than the approved cap: if a page raises its fee, a restored session is dropped and the user sees and signs the new cap.
+- If Strike refuses the requested leverage, the order is **not sent** (unless an open position already uses that leverage or less), so the margin and liquidation estimate the user saw stay true.
 - Orders are accepted asynchronously (201 "pending"). The widget waits for Strike's final status and shows rejections in plain language.
 - **Safety defaults:**
   - leverage starts at 3x;
@@ -45,6 +46,11 @@ If any check fails, the widget refuses (`DepositSafetyError`). Wallet witnesses 
 2. **CIP-30 wallets show Strike's consent text, not the widget's.** The message users sign is Strike's own. It names the builder, the fee cap and the API key, and says the user is *"entrusting your API wallet private key to this builder"*. The widget also shows that text before and while signing.
 3. **The liquidation price shown before an order is an estimate.** It treats the position as isolated. In Strike's default cross margin the real price is usually further away. After a fill, the widget shows Strike's own `liquidation_price`.
 4. **Attribution data is public by nature.** Strike exposes fills by account id publicly, and the partner API only stores what is needed to match them.
+5. **What the dashboard can and can't prove.**
+   - *Verified against Strike:* volume, fills and active traders count only fills from Strike's public history for orders the widget **registered before Strike created them**, from the same account. Order ids are random and only become public once the order exists, so nobody can claim someone else's fills after the fact (`scripts/attribution_selftest.py` checks this against real mainnet fills). Funded accounts and deposit value come from Strike's public transaction history.
+   - *Not verifiable:* "connected wallets" and the integration labels are reported by the widget, so anyone can inflate them for a builder code. The builder-fee amount is computed as notional × the fee bps the widget sent, because Strike's public history doesn't expose builder fees; Strike's own builder page is the source of truth for fees actually credited.
+   - Registration waits at most 1.5 s for the partner API before the order is sent; if the API is slow or down, trading continues and that order simply isn't attributed.
+6. **`persist="session"` widens exposure.** The key then sits in the host origin's `sessionStorage` for up to 12 h, readable by any script (or XSS) on that origin. Prefer the default `memory` mode on pages that load third-party scripts.
 
 ## Reporting
 Please report security issues privately via a GitHub security advisory on this repository.

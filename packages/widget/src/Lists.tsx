@@ -5,13 +5,13 @@ export function PositionsList({
   positions,
   marks,
   ticks,
-  busyId,
+  busy,
   onClose,
 }: {
   positions: Position[];
   marks: Record<string, number>;
   ticks: Record<string, number>;
-  busyId: number | null;
+  busy: Set<string>;
   onClose: (p: Position) => void;
 }) {
   if (!positions.length) return <div class="empty">No open positions</div>;
@@ -32,14 +32,14 @@ export function PositionsList({
               <span class={`badge ${long ? "long" : "short"}`}>
                 {long ? "Long" : "Short"} {p.leverage}x
               </span>
-              <button class="mini" disabled={busyId === p.id} onClick={() => onClose(p)}>
-                {busyId === p.id ? <Spinner /> : "Close"}
+              <button class="mini" disabled={busy.has(`pos:${p.id}`)} onClick={() => onClose(p)}>
+                {busy.has(`pos:${p.id}`) ? <Spinner /> : "Close"}
               </button>
             </div>
             <div class="row-g">
               <div>
                 <div class="k">Size</div>
-                <div class="num">{Math.abs(size).toLocaleString()} {base}</div>
+                <div class="num">{Math.abs(size).toLocaleString("en-US")} {base}</div>
               </div>
               <div>
                 <div class="k">Entry</div>
@@ -75,12 +75,12 @@ export function PositionsList({
 export function OrdersList({
   orders,
   ticks,
-  busyId,
+  busy,
   onCancel,
 }: {
   orders: OrderHistoryEntry[];
   ticks: Record<string, number>;
-  busyId: number | null;
+  busy: Set<string>;
   onCancel: (o: OrderHistoryEntry) => void;
 }) {
   if (!orders.length) return <div class="empty">No open orders</div>;
@@ -93,22 +93,22 @@ export function OrdersList({
             <span class={`badge ${o.side === "buy" ? "long" : "short"}`}>
               {o.side === "buy" ? "Buy" : "Sell"} · {o.type.replace(/_/g, " ")}
             </span>
-            <button class="mini" disabled={busyId === o.id} onClick={() => onCancel(o)}>
-              {busyId === o.id ? <Spinner /> : "Cancel"}
+            <button class="mini" disabled={busy.has(`ord:${o.id}`)} onClick={() => onCancel(o)}>
+              {busy.has(`ord:${o.id}`) ? <Spinner /> : "Cancel"}
             </button>
           </div>
           <div class="row-g">
             <div>
               <div class="k">Price</div>
-              <div class="num">{Number(o.price) > 0 ? formatPrice(Number(o.price), ticks[o.symbol]) : "Market"}</div>
+              <div class="num">{Number(o.price) > 0 ? formatPrice(Number(o.price), ticks[o.symbol]) : Number(o.stop_price) > 0 ? `Trigger ${formatPrice(Number(o.stop_price), ticks[o.symbol])}` : "Market"}</div>
             </div>
             <div>
               <div class="k">Size</div>
-              <div class="num">{Number(o.size).toLocaleString()}</div>
+              <div class="num">{Number(o.size).toLocaleString("en-US")}</div>
             </div>
             <div>
               <div class="k">Filled</div>
-              <div class="num">{Number(o.filled).toLocaleString()}</div>
+              <div class="num">{Number(o.filled).toLocaleString("en-US")}</div>
             </div>
           </div>
         </div>

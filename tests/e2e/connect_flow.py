@@ -8,6 +8,8 @@ import sys
 from playwright.sync_api import sync_playwright
 
 url, out = sys.argv[1], pathlib.Path(sys.argv[2])
+if "api=" not in url:
+    url += ("&" if "?" in url else "?") + "api=http://127.0.0.1:9"
 out.mkdir(parents=True, exist_ok=True)
 mock = (pathlib.Path(__file__).parent / "mock-wallet.js").read_text(encoding="utf-8")
 
@@ -58,4 +60,6 @@ for line in logs[-25:]:
 print("user websocket frames:")
 for d, f in ws_frames[:8]:
     print(" ", d, f)
-print("USER WS AUTHENTICATED" if any('"authenticated":true' in f.replace(" ", "") for d, f in ws_frames if d == "in") else "USER WS NOT AUTHENTICATED")
+ws_ok = any('"authenticated":true' in f.replace(" ", "") for d, f in ws_frames if d == "in")
+print("USER WS AUTHENTICATED" if ws_ok else "USER WS NOT AUTHENTICATED")
+sys.exit(0 if connected and ws_ok else 1)

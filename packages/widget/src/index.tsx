@@ -20,8 +20,12 @@ export class StrikeTradeElement extends HTMLElement {
   static observedAttributes = [...ATTRS];
   private root: ShadowRoot | null = null;
 
+  private teardown: ReturnType<typeof setTimeout> | null = null;
+
   connectedCallback(): void {
     ensureFont();
+    if (this.teardown) clearTimeout(this.teardown);
+    this.teardown = null;
     if (!this.root) {
       this.root = this.attachShadow({ mode: "open" });
       const style = document.createElement("style");
@@ -29,47 +33,56 @@ export class StrikeTradeElement extends HTMLElement {
       this.root.appendChild(style);
       const mount = document.createElement("div");
       this.root.appendChild(mount);
+      for (const t of ["keydown", "keyup", "keypress"]) this.root.addEventListener(t, (e) => e.stopPropagation());
     }
     this.renderApp();
   }
 
   disconnectedCallback(): void {
-    const mount = this.root?.lastElementChild;
-    if (mount) render(null, mount);
+    if (this.teardown) clearTimeout(this.teardown);
+    this.teardown = setTimeout(() => {
+      this.teardown = null;
+      const mount = this.root?.lastElementChild;
+      if (mount && !this.isConnected) render(null, mount);
+    }, 0);
   }
 
   attributeChangedCallback(): void {
-    if (this.root) this.renderApp();
+    if (this.root && this.isConnected) this.renderApp();
   }
 
   private config(): WidgetConfig | string {
     const builderCode = this.getAttribute("builder-code")?.trim();
     if (!builderCode) return 'Missing required attribute: builder-code="your-strike-builder-code"';
     const num = (name: string, fallback: number) => {
-      const v = Number(this.getAttribute(name));
-      return Number.isFinite(v) && this.hasAttribute(name) ? v : fallback;
+      const raw = this.getAttribute(name);
+      if (raw === null || raw.trim() === "") return fallback;
+      const v = Number(raw);
+      return Number.isFinite(v) ? v : fallback;
     };
-    const network = this.getAttribute("network") === "testnet" ? "testnet" : "mainnet";
+    const attr = (name: string) => (this.getAttribute(name) ?? "").trim().toLowerCase();
+    const network = attr("network") === "testnet" ? "testnet" : "mainnet";
     const feeBps = num("fee-bps", 5);
     return {
       builderCode,
       network,
       feeBps,
       maxFeeBps: num("max-fee-bps", feeBps),
-      market: (this.getAttribute("market") || "ADA-USD").toUpperCase(),
+      market: (this.getAttribute("market") || "ADA-USD").trim().toUpperCase(),
       partnerId: this.getAttribute("partner-id") || undefined,
       partnerApi: this.getAttribute("partner-api") || undefined,
       referralCode: this.getAttribute("referral-code") || undefined,
       maxLeverage: Math.max(1, num("max-leverage", 10)),
-      persist: this.getAttribute("persist") === "session" ? "session" : "memory",
-      side: this.getAttribute("side") === "sell" ? "sell" : "buy",
+      persist: attr("persist") === "session" ? "session" : "memory",
+      side: attr("side") === "sell" ? "sell" : "buy",
     };
   }
 
   private renderApp(): void {
     const mount = this.root!.lastElementChild!;
-    const width = this.getAttribute("width");
-    if (width) this.style.setProperty("--se-width", /^\d+$/.test(width) ? `${width}px` : width);
+    const width = this.getAttribute("width")?.trim();
+    if (width) this.style.setProperty("--se-width", /^\d+(\.\d+)?$/.test(width) ? `${width}px` : width);
+    else this.style.removeProperty("--se-width");
     const cfg = this.config();
     if (typeof cfg === "string") {
       render(
@@ -82,7 +95,8 @@ export class StrikeTradeElement extends HTMLElement {
       );
       return;
     }
-    render(<App key={`${cfg.network}|${cfg.builderCode}|${cfg.feeBps}|${cfg.maxFeeBps}`} config={cfg} />, mount);
+    const key = [cfg.network, cfg.builderCode, cfg.feeBps, cfg.maxFeeBps, cfg.partnerApi, cfg.partnerId, cfg.referralCode, cfg.persist].join("|");
+    render(<App key={key} config={cfg} />, mount);
   }
 }
 

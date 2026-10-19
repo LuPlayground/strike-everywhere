@@ -42,5 +42,5 @@ Host page (any origin)
 | Cloudflare blocks default script user agents | The Worker sends a descriptive User-Agent |
 
 ## Bundle
-- `strike-everywhere.iife.js`: ~90 KB minified, **~31 KB gzipped**. It includes Preact, the SDK, Ed25519 and bech32.
+- `strike-everywhere.iife.js`: ~100 KB minified, **~35 KB gzipped**. It includes Preact, the SDK, Ed25519 and bech32.
 - `strike-everywhere.js`: ESM build for bundlers.

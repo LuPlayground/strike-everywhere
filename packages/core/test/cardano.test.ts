@@ -3,6 +3,7 @@ import { bytesToHex, concatBytes, hexToBytes } from "../src/bytes.js";
 import { decode, readHead, skipItem, spliceWitnessSet, txBodyBytes } from "../src/cardano/cbor.js";
 import { previewTransaction } from "../src/cardano/txPreview.js";
 import { addressHexToBech32, bech32ToAddressHex } from "../src/cardano/address.js";
+import { checkDepositTx, DepositSafetyError } from "../src/deposit.js";
 
 const UNSIGNED_TX =
   "84a600d9010281825820df528e680b2fa6f7e0f133f32ec3058154941a67c1e4f2d1495690542d48ec73010182a30058390037a512f8f1bf8462dfcd4b541bcaf5450875ccdc2bca4a50b3adccf2314378a0eea93f9a5f08722fd429a76016fa9bf96e5a40fc0660fbcf011a02faf080028201d8185877d8799f582465323465663763382d623031312d346437372d626563312d393336383339656136313136582430316131353066302d653162342d373066662d613038662d303035393535656261386161581c794e1bcebcc2924f76a268fe316c8c5c860e1bf21a30fe1f0d9a23001b000001a1513116b0ff82583900794e1bcebcc2924f76a268fe316c8c5c860e1bf21a30fe1f0d9a2300c0ff34e6017364a5c32142823c88991503e80fcefd1560b317f0cd661b00000002331fa97e021a0002b041031a08258c86081a082585060ed9010281581c794e1bcebcc2924f76a268fe316c8c5c860e1bf21a30fe1f0d9a2300a0f5f6";
@@ -61,6 +62,44 @@ describe("previewTransaction", () => {
     expect(deposit.address.startsWith("addr_test1qqm62yhc")).toBe(true);
     expect(change.address).toBe(USER_ADDR);
     expect(change.hasDatum).toBe(false);
+  });
+});
+
+describe("checkDepositTx", () => {
+  const ok = { walletAddress: USER_ADDR, lovelace: 50_000_000n, requestId: "e24ef7c8-b011-4d77-bec1-936839ea6116", accountId: "01a150f0-e1b4-70ff-a08f-005955eba8aa" };
+  const tx = hexToBytes(UNSIGNED_TX);
+  const bodyEnd = skipItem(tx, 1);
+
+  it("accepts the real deposit for the right quote, wallet and account", () => {
+    expect(checkDepositTx(UNSIGNED_TX, ok).dest.lovelace).toBe(50_000_000n);
+  });
+
+  it("refuses a different amount, quote or account", () => {
+    expect(() => checkDepositTx(UNSIGNED_TX, { ...ok, lovelace: 40_000_000n })).toThrow(DepositSafetyError);
+    expect(() => checkDepositTx(UNSIGNED_TX, { ...ok, requestId: "00000000-0000-0000-0000-000000000000" })).toThrow(/deposit request/);
+    expect(() => checkDepositTx(UNSIGNED_TX, { ...ok, accountId: "11111111-1111-1111-1111-111111111111" })).toThrow(/Strike account/);
+  });
+
+  it("refuses extra body fields (e.g. a treasury donation, key 22)", () => {
+    const body = concatBytes(new Uint8Array([0xa7]), tx.slice(2, bodyEnd), hexToBytes("161a000f4240"));
+    const evil = concatBytes(tx.slice(0, 1), body, tx.slice(bodyEnd));
+    expect(() => checkDepositTx(bytesToHex(evil), ok)).toThrow(/unexpected fields \(22\)/);
+  });
+
+  it("refuses a transaction marked invalid", () => {
+    const evil = tx.slice();
+    const isValidAt = skipItem(tx, bodyEnd);
+    expect(evil[isValidAt]).toBe(0xf5);
+    evil[isValidAt] = 0xf4;
+    expect(() => checkDepositTx(bytesToHex(evil), ok)).toThrow(/invalid/);
+  });
+
+  it("throws (doesn't hang) on truncated CBOR", () => {
+    for (const cut of [1, 7, 40, 200]) {
+      expect(() => checkDepositTx(UNSIGNED_TX.slice(0, UNSIGNED_TX.length - cut * 2), ok)).toThrow(DepositSafetyError);
+    }
+    expect(() => decode(hexToBytes("9f58"))).toThrow();
+    expect(() => skipItem(hexToBytes("9f01"), 0)).toThrow();
   });
 });
 

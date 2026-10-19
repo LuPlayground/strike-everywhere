@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { MIN_WITHDRAW_USD, StrikeEverywhere, formatUsd, shortAddress, type PreparedWithdrawal } from "@strike-everywhere/core";
-import { KV, Spinner, Step } from "./parts";
+import { KV, Spinner, Step, decimalInput } from "./parts";
 
 type Phase = "amount" | "quoting" | "review" | "signing" | "pending" | "done";
 
@@ -79,8 +79,8 @@ export function WithdrawSheet({
         {(phase === "amount" || phase === "quoting") && (
           <>
             <div class="field">
-              <label>Amount</label>
-              <input inputMode="decimal" value={usd} placeholder="0.00" onInput={(e) => setUsd((e.target as HTMLInputElement).value.replace(/[^0-9.]/g, ""))} />
+              <label for="se-wd-amt">Amount</label>
+              <input id="se-wd-amt" inputMode="decimal" value={usd} placeholder="0.00" onInput={(e) => setUsd(decimalInput((e.target as HTMLInputElement).value))} />
               <button class="unit linkbtn" style={{ textDecoration: "none" }} onClick={() => setUsd(String(max))}>Max</button>
             </div>
             <KV k="Available" v={<span class="num">{formatUsd(available)}</span>} />

@@ -34,16 +34,20 @@ export class SessionStore {
         s = null;
       }
     }
-    if (s && s.expiresAt < Date.now()) {
+    if (s && !(Number(s.expiresAt) > Date.now() && s.session && typeof s.privateKeyHex === "string")) {
       this.clear();
       return null;
     }
     return s;
   }
 
-  clear(): void {
+  clear(onlyIfKeyHex?: string): void {
     this.mem = null;
     try {
+      if (onlyIfKeyHex) {
+        const raw = sessionStorage.getItem(this.storageKey);
+        if (raw && (JSON.parse(raw) as Stored).privateKeyHex !== onlyIfKeyHex) return;
+      }
       sessionStorage.removeItem(this.storageKey);
     } catch {
     }

@@ -2,13 +2,13 @@ import { AccountApi } from "./account.js";
 import { builderConnect, type BuilderSession } from "./builderConnect.js";
 import { CardanoWallet, detectWallets, type WalletInfo } from "./cardano/wallet.js";
 import { MAX_BUILDER_FEE_BPS, NETWORKS, NEW_ACCOUNT_MIN_DEPOSIT_USD, type Network, type NetworkConfig } from "./config.js";
-import { Deposits, type PreparedDeposit } from "./deposit.js";
+import { DepositRegistrationError, Deposits, type PreparedDeposit } from "./deposit.js";
 import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
 import { ApiWalletKey } from "./signer.js";
-import { Trading, type PlaceOrderInput } from "./trading.js";
+import { OrderRejectedError, Trading, type PlacedOrder, type PlaceOrderInput } from "./trading.js";
 import type { MarketSpec, OrderHistoryEntry, Position } from "./types.js";
 import { PriceStream, UserStream } from "./ws.js";
 
@@ -67,8 +67,9 @@ export class StrikeEverywhere {
     this.trading = new Trading(this.http, this.account);
     this.deposits = new Deposits(this.http);
     this.withdrawals = new Withdrawals(this.http);
-    this.maxFeeBps = clampBps(opts.maxFeeBps ?? opts.feeBps ?? 5);
-    this.feeBps = Math.min(clampBps(opts.feeBps ?? 5), this.maxFeeBps);
+    const fee = clampBps(opts.feeBps ?? 5);
+    this.maxFeeBps = clampBps(opts.maxFeeBps ?? fee, fee);
+    this.feeBps = Math.min(fee, this.maxFeeBps);
     this.store = new SessionStore(opts.persist ?? "memory", `strike-everywhere:${this.net.network}:${opts.builderCode}`, opts.sessionTtlMs ?? 12 * 3600_000);
   }
 
@@ -86,10 +87,25 @@ export class StrikeEverywhere {
     await this.http.syncClock();
     const stored = this.store.load();
     if (stored) {
+      if (!(Number(stored.session.feeShareBps) >= this.feeBps) || stored.session.builderCode !== this.opts.builderCode) {
+        this.store.clear(stored.privateKeyHex);
+        return;
+      }
+      this.resetUserStream();
       this.http.key = await ApiWalletKey.fromPrivateKeyHex(stored.privateKeyHex);
       this.session = stored.session;
       this.emit({ type: "session", session: this.session });
     }
+  }
+
+  get orderFeeBps(): number {
+    const approved = Number(this.session?.feeShareBps);
+    return Number.isFinite(approved) ? Math.min(this.feeBps, approved) : this.feeBps;
+  }
+
+  private resetUserStream(): void {
+    this.userStream?.close();
+    this.userStream = null;
   }
 
   static wallets(): WalletInfo[] {
@@ -128,6 +144,7 @@ export class StrikeEverywhere {
       signMessage: (m) => wallet.signMessage(m),
       onMessage: hooks.onMessage,
     });
+    this.resetUserStream();
     this.http.key = key;
     this.session = session;
     this.store.save(session, key.exportPrivateKeyHex());
@@ -145,17 +162,21 @@ export class StrikeEverywhere {
   }
 
   disconnect(): void {
-    this.userStream?.close();
-    this.userStream = null;
+    this.resetUserStream();
+    const keyHex = this.http.key?.exportPrivateKeyHex();
     this.http.key = null;
     this.session = null;
     this.wallet = null;
-    this.store.clear();
+    this.store.clear(keyHex);
     this.emit({ type: "session", session: null });
   }
 
   async ensureWallet(walletId: string): Promise<CardanoWallet> {
     if (!this.wallet) this.wallet = await CardanoWallet.enable(walletId, this.net);
+    if (this.session?.address && this.wallet.address !== this.session.address) {
+      this.wallet = null;
+      throw new Error("Your wallet's active account isn't the one connected to Strike here. Switch accounts in your wallet, or disconnect and connect again.");
+    }
     return this.wallet;
   }
 
@@ -204,43 +225,65 @@ export class StrikeEverywhere {
 
   async placeOrder(input: PlaceOrderInput & { leverage?: number }): Promise<OrderHistoryEntry> {
     const spec = this.spec(input.symbol);
-    if (input.leverage) {
-      await this.trading.setLeverage(input.symbol, input.leverage).catch((e) => console.warn("[strike-everywhere] leverage not changed:", e?.message || e));
-    }
-    const placed = await this.trading.placeOrder(spec, input, this.feeBps);
+    if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
     const price = input.price ?? Number(this.raw(input.symbol)?.mark_price ?? 0);
-    try {
-      const order = await this.trading.waitForOrder(input.symbol, placed.clientOrderId);
-      this.beacon({ type: "order", clientOrderId: placed.clientOrderId, legClientOrderIds: placed.legClientOrderIds, orderId: order.id, symbol: input.symbol, side: input.side, notional: input.size * price, status: order.status });
-      this.emit({ type: "order", order });
-      return order;
-    } catch (e) {
-      this.beacon({ type: "order", clientOrderId: placed.clientOrderId, symbol: input.symbol, side: input.side, notional: input.size * price, status: "rejected" });
-      throw e;
-    }
+    return this.submitTracked(input.symbol, Trading.newOrderIds(input), input.side, input.size * price, (ids) => this.trading.placeOrder(spec, input, this.orderFeeBps, ids));
   }
 
   async closePosition(position: Position): Promise<OrderHistoryEntry> {
     const spec = this.spec(position.symbol);
-    const placed = await this.trading.closePosition(spec, position, this.feeBps);
-    const order = await this.trading.waitForOrder(position.symbol, placed.clientOrderId);
     const price = Number(this.raw(position.symbol)?.mark_price ?? position.entry_price);
-    this.beacon({ type: "order", clientOrderId: placed.clientOrderId, orderId: order.id, symbol: position.symbol, side: Number(position.size) > 0 ? "sell" : "buy", notional: Math.abs(Number(position.size)) * price, status: order.status, reduceOnly: true });
-    this.emit({ type: "order", order });
-    return order;
+    const side = Number(position.size) > 0 ? "sell" : "buy";
+    return this.submitTracked(position.symbol, Trading.newOrderIds({}), side, Math.abs(Number(position.size)) * price, (ids) => this.trading.closePosition(spec, position, this.orderFeeBps, ids), true);
+  }
+
+  private async applyLeverage(symbol: string, leverage: number): Promise<void> {
+    try {
+      await this.trading.setLeverage(symbol, leverage);
+    } catch (e: any) {
+      const pos = await this.account.positions().catch(() => [] as Position[]);
+      const current = Number(pos.find((p) => p.symbol === symbol && Number(p.size) !== 0)?.leverage);
+      if (Number.isFinite(current) && current > 0 && current <= leverage) return;
+      throw new Error(`Couldn't set ${symbol} leverage to ${leverage}x (${e?.message || e}). Order not sent.`);
+    }
+  }
+
+  private async submitTracked(symbol: string, ids: PlacedOrder, side: string, notional: number, send: (ids: PlacedOrder) => Promise<PlacedOrder>, reduceOnly = false): Promise<OrderHistoryEntry> {
+    const base = { clientOrderId: ids.clientOrderId, legClientOrderIds: ids.legClientOrderIds, symbol, side, notional, reduceOnly };
+    await this.beacon({ type: "order", status: "intent", ...base }, 1500);
+    const placed = await send(ids);
+    try {
+      const order = await this.trading.waitForOrder(symbol, placed.clientOrderId);
+      void this.beacon({ type: "order", ...base, orderId: order.id, status: order.status });
+      this.emit({ type: "order", order });
+      return order;
+    } catch (e) {
+      void this.beacon({ type: "order", ...base, status: e instanceof OrderRejectedError ? "rejected" : "pending" });
+      throw e;
+    }
   }
 
 
   async prepareDeposit(ada: number): Promise<PreparedDeposit> {
     if (!this.wallet) throw new Error("Connect a wallet first.");
-    return this.deposits.prepareAda(this.wallet, BigInt(Math.round(ada * 1e6)));
+    if (!(ada > 0) || !Number.isFinite(ada)) throw new Error("Enter an amount of ADA.");
+    return this.deposits.prepareAda(this.wallet, BigInt(Math.round(ada * 1e6)), this.session?.accountId);
   }
 
   async confirmDeposit(prepared: PreparedDeposit): Promise<{ txHash: string }> {
     if (!this.wallet) throw new Error("Connect a wallet first.");
-    const r = await this.deposits.signAndSubmit(this.wallet, prepared);
-    this.beacon({ type: "deposit", usd: prepared.usdValue, txHash: r.txHash });
-    return r;
+    try {
+      const r = await this.deposits.signAndSubmit(this.wallet, prepared);
+      void this.beacon({ type: "deposit", usd: prepared.usdValue, txHash: r.txHash });
+      return r;
+    } catch (e) {
+      if (e instanceof DepositRegistrationError) void this.beacon({ type: "deposit", usd: prepared.usdValue, txHash: e.txHash });
+      throw e;
+    }
+  }
+
+  async retryDepositRegistration(requestId: string, txHash: string): Promise<void> {
+    await this.deposits.register(requestId, txHash);
   }
 
 
@@ -258,25 +301,31 @@ export class StrikeEverywhere {
   }
 
 
-  private beacon(evt: Record<string, unknown>): void {
-    if (!this.opts.partnerApi) return;
+  private beacon(evt: Record<string, unknown>, waitMs = 0): Promise<void> {
+    const accountId = evt.accountId ?? this.session?.accountId;
+    if (!this.opts.partnerApi || !accountId) return Promise.resolve();
     const payload = {
       ...evt,
       network: this.net.network,
       builderCode: this.opts.builderCode,
       partnerId: this.opts.partnerId ?? "",
       hostOrigin: typeof location !== "undefined" ? location.origin : "",
-      accountId: evt.accountId ?? this.session?.accountId,
-      feeBps: this.feeBps,
+      accountId,
+      feeBps: this.orderFeeBps,
       ts: Date.now(),
     };
     try {
-      void fetch(`${this.opts.partnerApi.replace(/\/$/, "")}/v1/events`, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "text/plain" }, keepalive: true }).catch(() => {});
+      const sent = fetch(`${this.opts.partnerApi.replace(/\/$/, "")}/v1/events`, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "text/plain" }, keepalive: true })
+        .then(() => undefined)
+        .catch(() => undefined);
+      return waitMs > 0 ? Promise.race([sent, new Promise<void>((r) => setTimeout(r, waitMs))]) : Promise.resolve();
     } catch {
+      return Promise.resolve();
     }
   }
 }
 
-function clampBps(v: number): number {
-  return Math.max(0, Math.min(MAX_BUILDER_FEE_BPS, Math.round(v)));
+function clampBps(v: number, fallback = 5): number {
+  const n = Number(v);
+  return Math.max(0, Math.min(MAX_BUILDER_FEE_BPS, Math.round(Number.isFinite(n) ? n : fallback)));
 }

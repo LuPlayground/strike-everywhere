@@ -48,14 +48,24 @@ export class Trading {
     await this.http.request("POST", "/v2/leverage", { body: { symbol, leverage: Math.round(leverage) } });
   }
 
-  async placeOrder(spec: MarketSpec, input: PlaceOrderInput, builderFeeBps: number): Promise<PlacedOrder> {
-    const clientOrderId = uuid();
+  static newOrderIds(input: Pick<PlaceOrderInput, "takeProfit" | "stopLoss">): PlacedOrder {
+    const legs: string[] = [];
+    if (input.takeProfit) legs.push(uuid());
+    if (input.stopLoss) legs.push(uuid());
+    return legs.length ? { clientOrderId: uuid(), strategyId: uuid(), legClientOrderIds: legs } : { clientOrderId: uuid() };
+  }
+
+  async placeOrder(spec: MarketSpec, input: PlaceOrderInput, builderFeeBps: number, ids: PlacedOrder = Trading.newOrderIds(input)): Promise<PlacedOrder> {
+    const clientOrderId = ids.clientOrderId;
+    const step = input.type === "market" ? spec.marketStepSize ?? spec.stepSize : spec.stepSize;
+    const size = roundToStep(input.size, step, "floor");
+    if (!(Number(size) > 0)) throw new Error("Order size is below this market's minimum step.");
     const base: Record<string, unknown> = {
       client_order_id: clientOrderId,
       symbol: input.symbol,
       side: input.side,
       type: input.type,
-      size: roundToStep(input.size, spec.stepSize, "floor"),
+      size,
     };
     if (input.type === "limit") {
       if (!input.price) throw new Error("Limit orders need a price.");
@@ -66,17 +76,18 @@ export class Trading {
     if (input.reduceOnly) base.reduce_only = true;
 
     if (input.takeProfit || input.stopLoss) {
-      const strategyId = uuid();
+      const strategyId = ids.strategyId ?? uuid();
       const exitSize = base.size as string;
       const body: Record<string, unknown> = { ...base, strategy_id: strategyId };
       const legClientOrderIds: string[] = [];
+      const legIds = [...(ids.legClientOrderIds ?? [])];
       if (input.takeProfit) {
-        const id = uuid();
+        const id = legIds.shift() ?? uuid();
         legClientOrderIds.push(id);
         body.tp_order = { client_order_id: id, type: "take_profit", size: exitSize, stop_price: roundToStep(input.takeProfit, spec.tickSize), working_type: "mark_price" };
       }
       if (input.stopLoss) {
-        const id = uuid();
+        const id = legIds.shift() ?? uuid();
         legClientOrderIds.push(id);
         body.sl_order = { client_order_id: id, type: "stop", size: exitSize, stop_price: roundToStep(input.stopLoss, spec.tickSize), working_type: "mark_price" };
       }
@@ -93,7 +104,8 @@ export class Trading {
     let delay = 400;
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, delay));
-      const orders = await this.account.orderHistory({ symbol, limit: 25 });
+      const orders = await this.account.orderHistory({ symbol, limit: 50 }).catch(() => null);
+      if (!orders) continue;
       const o = orders.find((x) => x.client_order_id === clientOrderId);
       if (o && o.status !== "pending") {
         if (o.status === "rejected") throw new OrderRejectedError(o);
@@ -108,9 +120,9 @@ export class Trading {
     await this.http.request("DELETE", "/v2/order/cancel", { body: { order_id: orderId, symbol } });
   }
 
-  async closePosition(spec: MarketSpec, position: Position, builderFeeBps: number): Promise<PlacedOrder> {
+  async closePosition(spec: MarketSpec, position: Position, builderFeeBps: number, ids?: PlacedOrder): Promise<PlacedOrder> {
     const size = Math.abs(Number(position.size));
     const side: Side = Number(position.size) > 0 ? "sell" : "buy";
-    return this.placeOrder(spec, { symbol: position.symbol, side, type: "market", size, reduceOnly: true }, builderFeeBps);
+    return this.placeOrder(spec, { symbol: position.symbol, side, type: "market", size, reduceOnly: true }, builderFeeBps, ids);
   }
 }

@@ -9,11 +9,13 @@ interface Head {
 }
 
 export function readHead(b: Uint8Array, i: number): Head {
-  if (i >= b.length) throw new Error(`CBOR: unexpected end at ${i}`);
+  if (!(i >= 0 && i < b.length)) throw new Error(`CBOR: unexpected end at ${i}`);
   const ib = b[i];
   const major = ib >> 5;
   const info = ib & 31;
   if (info < 24) return { major, info, len: info, hdr: 1 };
+  const need = info === 24 ? 2 : info === 25 ? 3 : info === 26 ? 5 : info === 27 ? 9 : 1;
+  if (i + need > b.length) throw new Error(`CBOR: truncated head at ${i}`);
   if (info === 24) return { major, info, len: b[i + 1], hdr: 2 };
   if (info === 25) return { major, info, len: (b[i + 1] << 8) | b[i + 2], hdr: 3 };
   if (info === 26) return { major, info, len: ((b[i + 1] << 24) >>> 0) + (b[i + 2] << 16) + (b[i + 3] << 8) + b[i + 4], hdr: 5 };
@@ -27,7 +29,14 @@ export function readHead(b: Uint8Array, i: number): Head {
 }
 
 export function skipItem(b: Uint8Array, i: number): number {
+  const end = skipItemRaw(b, i);
+  if (end > b.length) throw new Error(`CBOR: item at ${i} runs past the end`);
+  return end;
+}
+
+function skipItemRaw(b: Uint8Array, i: number): number {
   const h = readHead(b, i);
+  if (h.len === -2) throw new Error(`CBOR: length too large at ${i}`);
   let p = i + h.hdr;
   switch (h.major) {
     case 0:
@@ -106,6 +115,8 @@ export type CborValue =
 export function decode(b: Uint8Array, i = 0): [CborValue, number] {
   const h = readHead(b, i);
   let p = i + h.hdr;
+  if ((h.major === 2 || h.major === 3) && h.len >= 0 && p + h.len > b.length) throw new Error(`CBOR: truncated string at ${i}`);
+  if ((h.major === 4 || h.major === 5) && (h.len === -2 || h.len > b.length - p)) throw new Error(`CBOR: bad container length at ${i}`);
   const intVal = (): number | bigint => (h.len === -2 && h.big !== undefined ? h.big : h.len);
   switch (h.major) {
     case 0:

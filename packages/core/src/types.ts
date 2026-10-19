@@ -18,6 +18,7 @@ export interface MarketSpec {
   status: string;
   tickSize: number;
   stepSize: number;
+  marketStepSize?: number;
   minQty: number;
   minNotional: number;
   defaultLeverage: number;

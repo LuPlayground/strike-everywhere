@@ -27,8 +27,14 @@ CREATE TABLE IF NOT EXISTS accounts (
   first_seen INTEGER NOT NULL,
   last_seen INTEGER NOT NULL,
   last_reconciled INTEGER NOT NULL DEFAULT 0,
+  fail_count INTEGER NOT NULL DEFAULT 0,
+  funded_at INTEGER,
+  deposit_usd REAL NOT NULL DEFAULT 0,
   PRIMARY KEY (network, builder_code, account_id)
 );
+CREATE INDEX IF NOT EXISTS accounts_reconcile ON accounts (last_reconciled);
+CREATE INDEX IF NOT EXISTS events_partner ON events (network, builder_code, partner_id, host_origin, ts);
+CREATE INDEX IF NOT EXISTS events_account ON events (network, builder_code, account_id);
 
 CREATE TABLE IF NOT EXISTS orders (
   network TEXT NOT NULL,
@@ -41,6 +47,7 @@ CREATE TABLE IF NOT EXISTS orders (
   ts INTEGER NOT NULL,
   PRIMARY KEY (network, client_order_id)
 );
+CREATE INDEX IF NOT EXISTS orders_account ON orders (network, account_id);
 
 CREATE TABLE IF NOT EXISTS fills (
   network TEXT NOT NULL,
@@ -60,3 +67,4 @@ CREATE TABLE IF NOT EXISTS fills (
   PRIMARY KEY (network, fill_id)
 );
 CREATE INDEX IF NOT EXISTS fills_builder ON fills (network, builder_code, ts);
+CREATE INDEX IF NOT EXISTS fills_partner ON fills (network, builder_code, partner_id, host_origin, ts);

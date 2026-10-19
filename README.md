@@ -3,7 +3,7 @@
 **Strike perps, anywhere Cardano lives.** One HTML tag puts a Strike trade ticket inside any Cardano wallet, dApp or community site.
 - Users connect the wallet they already have with **one signature**, deposit ADA and trade.
 - The host site earns **Strike builder fees** on every fill.
-- A **partner dashboard** shows what each site brought in, verified against Strike's own fill history.
+- A **partner dashboard** shows what each site brought in: volume, fees, funded and trading accounts verified against Strike's public history.
 
 ```html
 <script src="https://strike-everywhere.pages.dev/widget/strike-everywhere.iife.js" defer></script>
@@ -43,10 +43,11 @@ On Hyperliquid, front ends that embed trading, especially wallets, became the la
 | Path | What it is |
 |---|---|
 | `packages/core` | `@strike-everywhere/core`, a browser SDK. It covers Builder Connect (Cardano CIP-30), signed REST, market data, trading, ADA deposits with pre-sign safety checks, the price and user WebSockets, and margin-tier risk maths. It has a unit test suite. |
-| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~31 KB gzipped**. |
-| `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill history** by `client_order_id`. |
+| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~35 KB gzipped**. |
+| `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill and transaction history**: a fill counts only if the widget registered its `client_order_id` before Strike created the order. |
 | `apps/dashboard` | The partner dashboard: wallets → funded → trading accounts, verified volume, builder fees, per-site breakdown, recent activity, and an embed-snippet generator. |
-| `apps/demo-blog`, `apps/demo-portfolio` | Two fictional host sites running the same one-tag widget. |
+| `apps/developers` | The integration page: configurator, live preview in a sample app, HTML / React / wallet-extension snippets. |
+| `apps/demo-blog`, `apps/demo-portfolio`, `apps/demo-wallet` | Fictional hosts running the same one-tag widget: a newsletter, a portfolio tracker (hedge), and a concept wallet with a Perps tab. |
 | `apps/landing` | Landing page. |
 | `docs/` | Integration, security model, fees, architecture, build log. |
 
@@ -62,7 +63,7 @@ Every call goes directly from the user's browser to Strike. Strike's API allows 
 | Account | `GET /v2/account`, `/v2/positions`, `/v2/openOrders`, `/v2/history/order`; user WebSocket `session.logon` + `userstream` |
 | Trade | `POST /v2/leverage`, `POST /v2/order` / `POST /v2/order/strategy` (TP/SL) with header **`X-Builder-Fee-Bps`**, `DELETE /v2/order/cancel` |
 | Deposit ADA | `POST /v2/deposit/quote` → `POST /v2/deposit/build-tx` (with CIP-30 UTxOs) → wallet `signTx` → witness splice → `submitTx` → `POST /v2/deposit` |
-| Attribution | `GET /v2/history/fill?account_id=` (public), matched by `client_order_id` |
+| Attribution | `GET /v2/history/fill`, `/v2/history/order` (create time), `/v2/history/transaction` (settled deposits), all public by `account_id` |
 
 ## Quick start
 
@@ -88,6 +89,7 @@ npm run deploy:api            # Cloudflare Worker (partner API)
 | `max-leverage` | `10` | Site-level leverage ceiling (Strike's margin tiers also apply) |
 | `partner-id` | — | Sub-attribution label shown in the dashboard |
 | `partner-api` | — | Attribution endpoint (omit to disable) |
+| `referral-code` | — | Strike referral code passed at connect (must belong to the builder owner) |
 | `persist` | `memory` | `session` keeps the trading key in this tab's sessionStorage until it expires (12 h) |
 | `width` | `380px` | Widget width |
 
@@ -106,7 +108,7 @@ const order = await se.placeOrder({ symbol: "ADA-USD", side: "buy", type: "marke
 
 - **Trading keys never leave the browser.** No server holds them.
 - **The key cannot take funds.** Strike's builder API wallet can trade but cannot withdraw anywhere except the user's own wallet, and only with the user's wallet signature.
-- **Deposits are verified before signing.** The widget decodes Strike's unsigned transaction and refuses to ask for a signature unless exactly the requested ADA leaves the wallet in one output and no tokens move.
+- **Deposits are verified before signing.** The widget decodes Strike's unsigned transaction and refuses to ask for a signature unless exactly the requested ADA leaves the wallet in one output, no tokens move, nothing else (certificates, withdrawals, governance actions, collateral) is in the transaction, and the datum credits this user's Strike account.
 - **Keys are limited to the session.** Strike issues keys that never expire (`9999-12-31`), so the widget enforces its own lifetime, and reconnecting rotates the key.
 - **Known limit:** a malicious *host page* could misuse the in-memory key to place trades, but not to withdraw.
 

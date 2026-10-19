@@ -1,8 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
-import { DepositSafetyError, StrikeEverywhere, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
-import { KV, Spinner, Step } from "./parts";
+import { DepositRegistrationError, DepositSafetyError, StrikeEverywhere, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
+import { KV, Spinner, Step, decimalInput } from "./parts";
 
-type Phase = "amount" | "preparing" | "review" | "signing" | "crediting" | "done";
+type Phase = "amount" | "preparing" | "review" | "signing" | "registering" | "crediting" | "done";
 
 export function DepositSheet({
   client,
@@ -52,9 +52,26 @@ export function DepositSheet({
       setTxHash(txHash);
       setPhase("crediting");
     } catch (e: any) {
+      if (e instanceof DepositRegistrationError) {
+        setTxHash(e.txHash);
+        setError(e.message);
+        setPhase("registering");
+        return;
+      }
       const msg = String(e?.info || e?.message || e);
-      setError(/declin|reject|cancel/i.test(msg) ? "Transaction was declined in the wallet." : msg);
+      setError(e instanceof DepositSafetyError ? `Safety check failed: ${msg}` : /declin|reject|cancel/i.test(msg) ? "Transaction was declined in the wallet." : msg);
       setPhase("review");
+    }
+  };
+
+  const retryRegister = async () => {
+    if (!prepared || !txHash) return;
+    setError("");
+    try {
+      await client.retryDepositRegistration(prepared.requestId, txHash);
+      setPhase("crediting");
+    } catch (e: any) {
+      setError(e?.message || String(e));
     }
   };
 
@@ -65,7 +82,7 @@ export function DepositSheet({
     const t = setInterval(async () => {
       try {
         const a = await client.account.account();
-        if (Number(a.wallet_balance) > startBalance + 0.5) {
+        if (Number(a.wallet_balance) > startBalance + Math.max(0.5, (prepared?.usdValue ?? 0) * 0.5)) {
           setPhase("done");
           onCredited();
         }
@@ -80,14 +97,14 @@ export function DepositSheet({
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Deposit ADA">
         <h3>
           Deposit ADA
-          <button class="x" onClick={onClose} aria-label="Close" disabled={phase === "signing"}>×</button>
+          <button class="x" onClick={onClose} aria-label="Close" disabled={phase === "signing" || phase === "registering"}>×</button>
         </h3>
 
         {(phase === "amount" || phase === "preparing") && (
           <>
             <div class="field">
-              <label>Amount</label>
-              <input inputMode="decimal" value={ada} placeholder="0" onInput={(e) => setAda((e.target as HTMLInputElement).value.replace(/[^0-9.]/g, ""))} />
+              <label for="se-dep-amt">Amount</label>
+              <input id="se-dep-amt" inputMode="decimal" value={ada} placeholder="0" onInput={(e) => setAda(decimalInput((e.target as HTMLInputElement).value))} />
               <span class="unit">ADA</span>
             </div>
             <KV k="Value" v={<span class="num">≈ {formatUsd(usd)}</span>} />
@@ -103,14 +120,14 @@ export function DepositSheet({
         {prepared && phase !== "amount" && phase !== "preparing" && (
           <>
             <div class="details">
-              <KV k="You send" v={<span class="num">{lovelaceToAda(prepared.lovelace).toLocaleString()} ADA</span>} />
+              <KV k="You send" v={<span class="num">{lovelaceToAda(prepared.lovelace).toLocaleString("en-US")} ADA</span>} />
               <KV k="To (Strike)" v={<span class="addr">{shortAddress(prepared.destination.address, 14, 8)}</span>} hint={prepared.destination.address} />
               <KV k="Credited as" v={<span class="num">≈ {formatUsd(prepared.usdValue)}</span>} />
               <KV k="Network fee" v={<span class="num">{lovelaceToAda(prepared.networkFee).toFixed(3)} ADA</span>} />
               <KV k="Confirmations" v={prepared.confirmationsRequired} />
             </div>
             <div class="note">
-              <b>Checked before signing:</b> exactly {lovelaceToAda(prepared.lovelace)} ADA leaves your wallet in one output, no tokens move, and the change returns to you.
+              <b>Checked before signing:</b> exactly {lovelaceToAda(prepared.lovelace)} ADA leaves your wallet in one output, no tokens move, the change returns to you, and the deposit is tagged for your Strike account and this request.
             </div>
             <div class="steps">
               <Step n={1} state={phase === "review" ? "todo" : phase === "signing" ? "active" : "done"}>Sign in your wallet</Step>
@@ -124,6 +141,7 @@ export function DepositSheet({
               <Step n={3} state={phase === "done" ? "done" : "todo"}>Credited to your Strike balance</Step>
             </div>
             {phase === "review" && <button class="cta" onClick={sign}>Sign deposit</button>}
+            {phase === "registering" && <button class="cta" onClick={retryRegister}>Retry registering with Strike</button>}
             {phase === "crediting" && !slow && <p>This usually takes 3–6 minutes. You can close this; the balance updates on its own.</p>}
             {phase === "crediting" && slow && (
               <div class="warn">

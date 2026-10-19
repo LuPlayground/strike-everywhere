@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234EFAB0'/%3E%3Cpolyline points='8.5,19.75 14.5,13.75 18.25,17.5 23.5,12.25' fill='none' stroke='%2304120c' stroke-width='3.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <title>Perps in your wallet (concept) · Strike Everywhere</title>
 <meta name="description" content="Concept: a Cardano wallet with a native Perpetuals tab powered by Strike Everywhere. Fictional wallet for illustration." />
 <link rel="stylesheet" href="../../assets/theme.css" />
 <style>
   body { overflow-x: hidden; }
-  .stage { position: relative; min-height: calc(100vh - var(--nav-h) - 38px); }
+  .stage { position: relative; min-height: calc(100vh - var(--nav-h) - 38px); overflow: hidden; }
   .hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 56px; align-items: center; padding: 48px 0 64px; }
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mint); }
   h1 { font-size: 44px; line-height: 1.08; letter-spacing: -0.02em; margin: 14px 0 16px; }
@@ -63,13 +64,13 @@
   .dapps i { display: block; width: 30px; height: 30px; margin: 0 auto 8px; border-radius: 9px; }
   .snippet { margin-top: 22px; max-width: 560px; }
   .snippet .lbl { font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
-  @media (max-width: 1080px) { .hero { grid-template-columns: 1fr; } .popup-wrap { justify-self: center; } h1 { font-size: 34px; } }
+  @media (max-width: 1080px) { .hero { grid-template-columns: minmax(0, 1fr); } .popup-wrap { justify-self: center; } h1 { font-size: 34px; } }
   @media (max-width: 460px) { .popup { width: calc(100vw - 32px); height: 720px; } }
 </style>
 </head>
 <body>
 <nav class="se-nav">
-  <a class="se-brand" href="../../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Strike Everywhere</a>
+  <a class="se-brand" href="../../"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="se-name">Strike Everywhere</span></a>
   <div class="se-links"><a href="../../">Overview</a><a class="on" href="../../#demos">Demos</a><a href="../../developers/">Developers</a><a href="../../dashboard/">Dashboard</a></div>
   <span class="sp"></span>
   <span class="chip">Concept · wallet integration</span>
@@ -160,17 +161,18 @@
 (function () {
   SEChrome.ticker(document.getElementById("ticker"));
   var q = new URLSearchParams(location.search);
-  var network = q.get("network") || "testnet", builder = q.get("builder") || "Playground101";
+  var network = SEChrome.network(q.get("network"), "testnet"), builder = q.get("builder") || "Playground101";
   var net = document.getElementById("net");
   net.textContent = network === "mainnet" ? "Mainnet" : "Preprod"; net.className = "w-net" + (network === "mainnet" ? " main" : "");
   var body = document.getElementById("body");
   var perps = document.createElement("div");
   perps.innerHTML = '<p class="perps-intro"><span class="dot"></span><b>Perpetuals</b> · powered by Strike<span class="badge mint">beta</span></p>';
   var w = document.createElement("strike-trade");
-  [["builder-code", builder], ["network", network], ["market", "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["width", "368"], ["max-leverage", "5"], ["partner-api", "https://strike-everywhere-api.strike-everywhere.workers.dev"]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
+  [["builder-code", builder], ["network", network], ["market", "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["width", "368"], ["max-leverage", "5"], ["partner-api", SEChrome.partnerApi(q.get("api"))]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
   perps.appendChild(w);
   var views = {};
   function show(tab) {
+    if (tab !== "perps" && !document.getElementById("tpl-" + tab)) tab = "perps";
     document.querySelectorAll("#nav button").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === tab); });
     Array.from(body.children).forEach(function (c) { c.hidden = true; });
     if (tab === "perps") { if (!perps.parentNode) body.appendChild(perps); perps.hidden = false; return; }

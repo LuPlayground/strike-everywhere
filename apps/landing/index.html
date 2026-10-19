@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234EFAB0'/%3E%3Cpolyline points='8.5,19.75 14.5,13.75 18.25,17.5 23.5,12.25' fill='none' stroke='%2304120c' stroke-width='3.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <title>Strike Everywhere · Strike perps, anywhere Cardano lives</title>
 <meta name="description" content="Embed Strike perps in any Cardano wallet, dApp or community with one HTML tag. One signature to start; builder fees on every fill; verified partner attribution." />
 <link rel="stylesheet" href="assets/theme.css" />
@@ -32,7 +33,9 @@
   @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
   .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: s; }
-  .step { position: relative; height: 300px; overflow: hidden; padding: 22px; cursor: default; outline: none; }
+  .step { position: relative; height: 300px; overflow: hidden; padding: 22px; cursor: default; }
+  .step:focus { outline: none; }
+  .step:focus-visible { outline: 2px solid rgba(var(--mint-rgb), .75); outline-offset: 3px; }
   .step .n { font: 600 12px var(--mono); color: var(--mint); letter-spacing: .08em; }
   .step .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin: 18px 0 16px; background: rgba(var(--mint-rgb), .1); color: var(--mint); border: 1px solid rgba(var(--mint-rgb), .2); transition: transform .3s; }
   .step h3 { margin: 0 0 6px; font-size: 18px; }
@@ -90,7 +93,7 @@
   .reveal-in.vis { opacity: 1; transform: none; }
 
   @media (max-width: 1120px) {
-    .hero .inner { grid-template-columns: 1fr; } .frame { justify-self: start; } .frame .float { display: none; }
+    .hero .inner { grid-template-columns: minmax(0, 1fr); } .frame { justify-self: start; } .frame .float { display: none; }
     .steps { grid-template-columns: repeat(2, 1fr); } .why { grid-template-columns: repeat(2, 1fr); } .integ { grid-template-columns: 1fr; }
   }
   @media (max-width: 720px) {
@@ -102,7 +105,7 @@
 </head>
 <body>
 <nav class="se-nav">
-  <a class="se-brand" href="./"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Strike Everywhere</a>
+  <a class="se-brand" href="./"><span class="se-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M3 10.5 7 6.5l2.5 2.5L13 5.5" stroke="#04120c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="se-name">Strike Everywhere</span></a>
   <div class="se-links"><a href="#how">How it works</a><a href="#demos">Demos</a><a href="#why">Why Strike</a><a href="developers/">Developers</a><a href="dashboard/">Dashboard</a></div>
   <span class="sp"></span>
   <a class="btn btn-ghost btn-sm" href="https://github.com/LuPlayground/strike-everywhere">Docs</a>
@@ -118,7 +121,7 @@
     <div>
       <span class="eyebrow"><span class="dot pulse"></span>Built on Strike Builder Connect</span>
       <h1>Strike perps,<br /><em>anywhere</em> Cardano lives.</h1>
-      <p class="lede">One HTML tag puts Strike's order book inside any wallet, dApp or community. Users connect the wallet they already have with a single signature; partners earn Strike builder fees on every fill, verified on a dashboard.</p>
+      <p class="lede">One HTML tag puts Strike's order book inside any wallet, dApp or community. Users connect the wallet they already have with a single signature; partners earn Strike builder fees on every fill, tracked on a dashboard that checks volume against Strike's own history.</p>
       <div class="cta-row">
         <a class="btn btn-mint" href="#demos">See it live</a>
         <a class="btn btn-ghost" href="#integrate">Embed in 2 minutes</a>
@@ -127,7 +130,7 @@
         <div class="glass kpi"><div class="v num" id="k-markets">31</div><div class="k">live Strike markets</div></div>
         <div class="glass kpi"><div class="v num" id="k-vol">—</div><div class="k">Strike 24h volume</div></div>
         <div class="glass kpi"><div class="v num">1</div><div class="k">signature to start</div></div>
-        <div class="glass kpi"><div class="v num">32<small style="font-size:13px"> KB</small></div><div class="k">one script, no deps</div></div>
+        <div class="glass kpi"><div class="v num">35<small style="font-size:13px"> KB</small></div><div class="k">one script, no deps</div></div>
       </div>
     </div>
     <div class="frame glass">
@@ -150,7 +153,7 @@
         <h3>Drop in one tag</h3><p class="lead">Add the script and a <code style="font-family:var(--mono);color:var(--mint)">&lt;strike-trade&gt;</code> tag with your builder code.</p>
         <div class="hint"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Hover to reveal</div>
         <div class="reveal">
-          <ul><li>Shadow-DOM web component: host CSS can't break it</li><li>Strike's own design language, ~32 KB gzipped</li><li>Live mark prices, funding, 31 markets via Strike WebSockets</li></ul>
+          <ul><li>Shadow-DOM web component: host CSS can't break it</li><li>Strike's own design language, ~35 KB gzipped</li><li>Live mark prices and funding for every Strike market via WebSockets</li></ul>
           <code>&lt;strike-trade builder-code="…"&gt;</code>
         </div>
       </article>
@@ -177,10 +180,10 @@
       <article class="glass step" tabindex="0">
         <div class="n">04 / EARN</div>
         <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M14.5 9.2c-.5-.8-1.4-1.2-2.5-1.2-1.6 0-2.7.8-2.7 2s1.1 1.7 2.7 2 2.7.8 2.7 2-1.1 2-2.7 2c-1.1 0-2-.4-2.5-1.2M12 6.5v11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-        <h3>Verified earnings</h3><p class="lead">Strike credits builder fees on every fill. The dashboard proves where they came from.</p>
+        <h3>Verified volume</h3><p class="lead">Strike charges your builder fee on every fill. The dashboard shows which partner site the volume came from.</p>
         <div class="hint"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Hover to reveal</div>
         <div class="reveal">
-          <ul><li>Fills matched to widget orders by client order id</li><li>Source of truth: Strike's public fill history, not client claims</li><li>Funnel per partner: connected → funded → trading</li></ul>
+          <ul><li>Volume: Strike's public fills on orders the widget registered first</li><li>Funded: settled deposits in Strike's history; connected is widget-reported</li><li>Builder fees computed as notional × fee bps</li></ul>
           <code>GET /v2/history/fill?account_id=…</code>
         </div>
       </article>
@@ -206,7 +209,7 @@
       </a>
       <a class="glass demo" href="dashboard/">
         <div class="shot"><img src="assets/previews/dashboard.jpg" alt="Partner dashboard" loading="lazy" /><div class="over"><span>Open dashboard →</span></div></div>
-        <div class="meta"><div class="top"><h3>Partner dashboard</h3><span class="badge">Builders</span><span class="live"><span class="dot pulse"></span>Live data</span></div><p>Wallets, funded and trading accounts, verified volume and builder fees, per partner site.</p></div>
+        <div class="meta"><div class="top"><h3>Partner dashboard</h3><span class="badge">Builders</span><span class="live"><span class="dot pulse"></span>Live data</span></div><p>Referred wallets, funded and trading accounts, verified volume and estimated builder fees, per partner site.</p></div>
       </a>
     </div>
   </div>
@@ -239,11 +242,13 @@
           <tbody>
             <tr><td>builder-code</td><td>Your Strike builder code (required)</td></tr>
             <tr><td>fee-bps</td><td>Builder fee per fill: 5 = 0.05%</td></tr>
+            <tr><td>max-fee-bps</td><td>Fee cap the user approves at connect; defaults to fee-bps (Strike's hard cap is 100)</td></tr>
             <tr><td>market</td><td>Default market, e.g. ADA-USD, BTC-USD, NVDA-USD</td></tr>
             <tr><td>side</td><td><span class="num">sell</span> for hedging flows</td></tr>
             <tr><td>max-leverage</td><td>Site-level ceiling for your audience</td></tr>
             <tr><td>partner-id</td><td>Attribution label shown on the dashboard</td></tr>
             <tr><td>network</td><td><span class="num">mainnet</span> or <span class="num">testnet</span></td></tr>
+            <tr><td>referral-code</td><td>Optional Strike referral code (yours, as the builder owner) applied when a new user's account is created</td></tr>
           </tbody>
         </table>
       </div>
@@ -269,12 +274,12 @@
 (function () {
   SEChrome.ticker(document.getElementById("ticker"));
   var q = new URLSearchParams(location.search), el = document.getElementById("w");
-  if (q.get("network")) el.setAttribute("network", q.get("network"));
+  el.setAttribute("network", SEChrome.network(q.get("network"), "testnet"));
   if (q.get("builder")) el.setAttribute("builder-code", q.get("builder"));
-  el.setAttribute("partner-api", "https://strike-everywhere-api.strike-everywhere.workers.dev");
+  el.setAttribute("partner-api", SEChrome.partnerApi(q.get("api")));
   SEChrome.strikeStats().then(function (s) {
-    document.getElementById("k-markets").textContent = s.markets;
-    var v = s.volume24h; document.getElementById("k-vol").textContent = v >= 1e6 ? "$" + (v / 1e6).toFixed(1) + "M" : "$" + Math.round(v / 1e3) + "K";
+    if (s.markets > 0) document.getElementById("k-markets").textContent = s.markets;
+    var v = s.volume24h; if (v > 0) document.getElementById("k-vol").textContent = v >= 1e6 ? "$" + (v / 1e6).toFixed(1) + "M" : "$" + Math.round(v / 1e3) + "K";
   }).catch(function () {});
   var src = new URL("widget/strike-everywhere.iife.js", location.href).href;
   var esc = function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
@@ -282,7 +287,7 @@
     '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + esc(src) + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n\n' +
     '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"YOUR_CODE"</span>\n  <span class="a">fee-bps</span>=<span class="s">"5"</span>\n  <span class="a">market</span>=<span class="s">"ADA-USD"</span><span class="k">&gt;</span>\n<span class="k">&lt;/strike-trade&gt;</span>';
   document.getElementById("copy").addEventListener("click", function () {
-    navigator.clipboard.writeText(document.getElementById("snip").textContent).then(function () { var b = document.getElementById("copy"); b.textContent = "Copied ✓"; setTimeout(function () { b.textContent = "Copy snippet"; }, 1500); });
+    SEChrome.copy(document.getElementById("snip"), document.getElementById("copy"), "Copy snippet");
   });
   var rev = document.querySelectorAll(".reveal-in");
   function showAll() { rev.forEach(function (n) { n.classList.add("vis"); }); }
