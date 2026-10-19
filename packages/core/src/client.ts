@@ -215,7 +215,7 @@ export class StrikeEverywhere {
   userEvents(): UserStream | null {
     if (!this.http.key) return null;
     if (!this.userStream) {
-      this.userStream = new UserStream(this.net.wsUser, this.http.key, this.http.clockSkewMs - 500);
+      this.userStream = new UserStream(this.net.wsUser, this.http.key, () => this.http.serverNowMs());
       this.userStream.onMessage((data) => this.emit({ type: "user", data }));
       this.userStream.connect();
     }

@@ -7,6 +7,7 @@ import { estimateLiquidationPrice, maxLeverageFor, previewOrder } from "../src/m
 import type { MarginTier } from "../src/types.js";
 import { StrikeHttp } from "../src/http.js";
 import { NETWORKS } from "../src/config.js";
+import { AccountApi } from "../src/account.js";
 
 const ADA_TIERS: MarginTier[] = [
   { max_notional: "10000", max_leverage: 40, maintenance_margin_rate: "0.005", maintenance_amount: "0" },
@@ -116,5 +117,57 @@ describe("StrikeHttp signing clock", () => {
     http.key = await ApiWalletKey.generate();
     await expect(http.request("POST", "/v2/order", { body: {} })).rejects.toThrow("insufficient_balance");
     expect(n).toBe(1);
+  });
+});
+
+describe("StrikeHttp clock: edge cases", () => {
+  const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status });
+
+  it("ignores nonsense server times (seconds, 0, strings)", async () => {
+    for (const bad of [Math.floor(Date.now() / 1000), 0, "soon", null]) {
+      const http = new StrikeHttp(NETWORKS.testnet, (async () => json({ serverTime: bad })) as unknown as typeof fetch);
+      http.clockSkewMs = 123;
+      await http.syncClock();
+      expect(http.clockSkewMs).toBe(123);
+    }
+  });
+
+  it("is never ahead of the server even when the request leg is slow (asymmetric latency)", async () => {
+    const http = new StrikeHttp(NETWORKS.testnet, (async () => {
+      await new Promise((r) => setTimeout(r, 300));
+      const server = Date.now();
+      return json({ serverTime: server });
+    }) as unknown as typeof fetch);
+    await http.syncClock();
+    expect(http.clockSkewMs).toBeLessThanOrEqual(0);
+    expect(http.serverNowMs()).toBeLessThan(Date.now());
+  });
+
+  it("retries a timestamp rejection exactly once, then throws", async () => {
+    let signed = 0;
+    const http = new StrikeHttp(NETWORKS.testnet, (async (url: string) => {
+      if (url.endsWith("/v2/time")) return json({ serverTime: Date.now() });
+      signed++;
+      return json({ error: "signature expired or invalid timestamp" }, 401);
+    }) as unknown as typeof fetch);
+    http.key = await ApiWalletKey.generate();
+    await expect(http.request("GET", "/v2/account")).rejects.toThrow(/invalid timestamp/);
+    expect(signed).toBe(2);
+  });
+
+  it("does not retry unauthenticated requests", async () => {
+    let n = 0;
+    const http = new StrikeHttp(NETWORKS.testnet, (async () => (n++, json({ error: "invalid timestamp" }, 400))) as unknown as typeof fetch);
+    await expect(http.request("GET", "/v2/markets", { auth: false })).rejects.toThrow();
+    expect(n).toBe(1);
+  });
+});
+
+describe("AccountApi.exists", () => {
+  const api = (status: number) => new AccountApi(new StrikeHttp(NETWORKS.testnet, (async () => new Response(JSON.stringify(status === 200 ? {} : { error: "x" }), { status })) as unknown as typeof fetch));
+  it("maps 200 / 404 / 500 to true / false / null (unknown)", async () => {
+    expect(await api(200).exists("addr_test1x")).toBe(true);
+    expect(await api(404).exists("addr_test1x")).toBe(false);
+    expect(await api(500).exists("addr_test1x")).toBe(null);
   });
 });

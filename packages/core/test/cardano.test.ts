@@ -116,6 +116,14 @@ describe("withdrawals", () => {
   it("refuses a funding transaction that sends more than a min-UTxO", () => {
     expect(() => checkFundingTx(UNSIGNED_TX, { walletAddress: USER_ADDR, validatorAddress: validator })).toThrow(/expected about 1–2/);
   });
+  it("refuses a funding transaction with extra body fields (e.g. collateral, key 13)", () => {
+    const tx = hexToBytes(UNSIGNED_TX);
+    const bodyEnd = skipItem(tx, 1);
+    const body = concatBytes(new Uint8Array([0xa7]), tx.slice(2, bodyEnd), hexToBytes("0d80"));
+    const evil = bytesToHex(concatBytes(tx.slice(0, 1), body, tx.slice(bodyEnd)));
+    expect(() => checkFundingTx(evil, { walletAddress: USER_ADDR, validatorAddress: validator })).toThrow(/unexpected fields \(13\)/);
+  });
+
   it("refuses a funding transaction paying anyone but the quoted validator", () => {
     expect(() => checkFundingTx(UNSIGNED_TX, { walletAddress: USER_ADDR, validatorAddress: USER_ADDR.replace(/.$/, "x") })).toThrow(/unexpected address/);
   });

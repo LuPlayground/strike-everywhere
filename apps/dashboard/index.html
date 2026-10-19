@@ -175,12 +175,22 @@
     if (inflight && inflight.ctl) inflight.ctl.abort();
     var my = ++seq, ctl = typeof AbortController === "function" ? new AbortController() : null;
     inflight = { key: key, ctl: ctl };
+    var timedOut = false, guard = setTimeout(function () { timedOut = true; if (ctl) ctl.abort(); }, 15000);
     history.replaceState(null, "", "?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days + (API !== SEChrome.PARTNER_API ? "&api=" + encodeURIComponent(API) : ""));
     if (key !== lastKey) document.body.classList.add("stale");
     $("banner").innerHTML = '<span class="dot pulse"></span>Loading…';
     fetch(API + "/v1/stats?builder=" + encodeURIComponent(state.builder) + "&network=" + state.network + "&days=" + state.days + (refresh ? "&refresh=1" : ""), ctl ? { signal: ctl.signal } : undefined)
-      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error((j && j.error) || r.status); return j; }); })
+      .then(function (r) {
+        return r.text().then(function (t) {
+          var j = null;
+          try { j = t ? JSON.parse(t) : null; } catch (_) {  }
+          if (!r.ok) throw new Error((j && j.error) || "HTTP " + r.status);
+          if (j === null) throw new Error("unexpected response");
+          return j;
+        });
+      })
       .then(function (j) {
+        clearTimeout(guard);
         if (my !== seq) return;
         inflight = null;
         if (!j || typeof j.totals !== "object" || !j.totals) throw new Error("unexpected response");
@@ -189,8 +199,10 @@
         render(j);
       })
       .catch(function (e) {
+        clearTimeout(guard);
         if (my !== seq) return;
         inflight = null;
+        if (timedOut) e = new Error("the partner API didn't answer within 15 s");
         if (key !== lastKey) reset();
         document.body.classList.add("stale");
         $("banner").innerHTML = '<span class="err">Could not load stats: ' + esc((e && e.message) || e) + "</span>";
@@ -351,14 +363,18 @@
     $("k-feenote").textContent = note; $("k-feenote").hidden = !note;
     return v;
   }
+  function attr(v) { return esc(esc(v)); }
+  var kitCodeTouched = false;
   function syncKit() {
-    if (!$("k-code").value) $("k-code").value = $("builder").value;
-    var code = $("k-code").value.trim() || "YOUR_CODE";
+    if (!kitCodeTouched && !$("k-code").value) $("k-code").value = $("builder").value;
+    var raw = $("k-code").value.trim();
+    var code = /^[A-Za-z0-9_-]{1,64}$/.test(raw) ? raw : "YOUR_CODE";
     var html = '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + esc(WIDGET) + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n' +
-      '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"' + esc(code) + '"</span> <span class="a">fee-bps</span>=<span class="s">"' + kitFee() + '"</span>\n  <span class="a">market</span>=<span class="s">"' + esc($("k-market").value.trim().toUpperCase() || "ADA-USD") + '"</span> <span class="a">partner-id</span>=<span class="s">"' + esc($("k-partner").value.trim() || "my-site") + '"</span>' + (state.kitNet === "testnet" ? ' <span class="a">network</span>=<span class="s">"testnet"</span>' : "") + '\n  <span class="a">partner-api</span>=<span class="s">"' + esc(API) + '"</span><span class="k">&gt;&lt;/strike-trade&gt;</span>';
+      '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"' + attr(code) + '"</span> <span class="a">fee-bps</span>=<span class="s">"' + kitFee() + '"</span>\n  <span class="a">market</span>=<span class="s">"' + attr(($("k-market").value.trim().toUpperCase().match(/^[A-Z0-9]{1,15}-[A-Z]{2,6}$/) || ["ADA-USD"])[0]) + '"</span> <span class="a">partner-id</span>=<span class="s">"' + attr($("k-partner").value.trim().slice(0, 64) || "my-site") + '"</span>' + (state.kitNet === "testnet" ? ' <span class="a">network</span>=<span class="s">"testnet"</span>' : "") + '\n  <span class="a">partner-api</span>=<span class="s">"' + attr(API) + '"</span><span class="k">&gt;&lt;/strike-trade&gt;</span>';
     $("snippet").innerHTML = html;
     $("preview").href = "../demo/blog/?network=" + state.kitNet + "&builder=" + encodeURIComponent(code);
   }
+  $("k-code").addEventListener("input", function () { kitCodeTouched = true; });
   ["k-code", "k-fee", "k-market", "k-partner"].forEach(function (id) { $(id).addEventListener("input", syncKit); });
   $("copy").addEventListener("click", function () { SEChrome.copy($("snippet"), $("copy"), "Copy snippet"); });
   $("f").addEventListener("submit", function (e) { e.preventDefault(); load(false); });

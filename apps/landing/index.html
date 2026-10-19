@@ -247,6 +247,9 @@
             <tr><td>side</td><td><span class="num">sell</span> for hedging flows</td></tr>
             <tr><td>max-leverage</td><td>Site-level ceiling for your audience</td></tr>
             <tr><td>partner-id</td><td>Attribution label shown on the dashboard</td></tr>
+            <tr><td>partner-api</td><td>Where attribution events go; use the snippet's URL to get the dashboard (omit to turn tracking off)</td></tr>
+            <tr><td>persist</td><td><span class="num">session</span> keeps the user connected across reloads in this tab (12 h); default <span class="num">memory</span></td></tr>
+            <tr><td>width</td><td>Panel width in px (default 380)</td></tr>
             <tr><td>network</td><td><span class="num">mainnet</span> or <span class="num">testnet</span></td></tr>
             <tr><td>referral-code</td><td>Optional Strike referral code (yours, as the builder owner) applied when a new user's account is created</td></tr>
           </tbody>
@@ -285,7 +288,7 @@
   var esc = function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
   document.getElementById("snip").innerHTML =
     '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + esc(src) + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n\n' +
-    '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"YOUR_CODE"</span>\n  <span class="a">fee-bps</span>=<span class="s">"5"</span>\n  <span class="a">market</span>=<span class="s">"ADA-USD"</span><span class="k">&gt;</span>\n<span class="k">&lt;/strike-trade&gt;</span>';
+    '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"YOUR_CODE"</span>\n  <span class="a">fee-bps</span>=<span class="s">"5"</span>\n  <span class="a">market</span>=<span class="s">"ADA-USD"</span>\n  <span class="a">partner-api</span>=<span class="s">"' + esc(SEChrome.PARTNER_API) + '"</span><span class="k">&gt;</span>\n<span class="k">&lt;/strike-trade&gt;</span>';
   document.getElementById("copy").addEventListener("click", function () {
     SEChrome.copy(document.getElementById("snip"), document.getElementById("copy"), "Copy snippet");
   });

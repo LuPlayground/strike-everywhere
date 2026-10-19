@@ -81,7 +81,7 @@
       var src = new URL("../../widget/strike-everywhere.iife.js", location.href).href;
       var a = function (n) { return " " + n + '="' + String(el.getAttribute(n)).replace(/&/g, "&amp;").replace(/"/g, "&quot;") + '"'; };
       document.getElementById("snippet").textContent =
-        '<script src="' + src + '"><\/script>\n<strike-trade' + a("builder-code") + a("fee-bps") + (el.getAttribute("network") !== "mainnet" ? a("network") : "") + "></strike-trade>";
+        '<script src="' + src + '"><\/script>\n<strike-trade' + a("builder-code") + a("fee-bps") + (el.getAttribute("network") !== "mainnet" ? a("network") : "") + a("partner-id") + a("partner-api") + "></strike-trade>";
     })();
   </script>
   <script src="../../widget/strike-everywhere.iife.js" defer></script>

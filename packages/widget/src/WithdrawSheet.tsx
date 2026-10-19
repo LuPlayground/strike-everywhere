@@ -116,6 +116,11 @@ export function WithdrawSheet({
               <Step n={3} state={phase === "done" ? "done" : "todo"}>ADA arrives in your wallet</Step>
             </div>
             {phase === "review" && <button class="cta" onClick={sign}>Sign withdrawal</button>}
+            {phase === "review" && (
+              <button class="linkbtn" style={{ justifySelf: "center", fontSize: "12px" }} onClick={() => (setPrepared(null), setError(""), setPhase("amount"))}>
+                Change amount (gets a fresh quote)
+              </button>
+            )}
             {phase === "pending" && <p>Submitted. Large withdrawals can be queued for review by Strike.</p>}
             {phase === "done" && <button class="cta" onClick={onClose}>Done</button>}
           </>

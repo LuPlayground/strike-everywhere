@@ -113,20 +113,22 @@
   ];
   var S = "https://api.strikefinance.org";
   var f = function (v, d) { return v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
+  var getJSON = function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }); };
   function load() {
     Promise.all([
-      fetch(S + "/v2/markets").then(function (r) { return r.json(); }),
-      fetch(S + "/price/v2/klines?symbol=ADA-USD&interval=1h&limit=25&priceType=mark").then(function (r) { return r.json(); }),
+      getJSON(S + "/v2/markets"),
+      getJSON(S + "/price/v2/klines?symbol=ADA-USD&interval=1h&limit=25&priceType=mark").catch(function () { return []; }),
     ]).then(function (res) {
-      var mk = res[0].markets || {}, marks = {};
-      Object.values(mk).forEach(function (m) { marks[m.symbol] = Number(m.mark_price); });
+      var mk = (res[0] && res[0].markets) || {}, marks = {};
+      Object.values(mk).forEach(function (m) { var v = Number(m.mark_price); if (v > 0 && isFinite(v)) marks[m.symbol] = v; });
+      if (!marks["ADA-USD"]) return;
       var total = 0;
       holdings.forEach(function (h) { h.price = h.fixed || marks[h.strike] || 0; h.value = h.bal * h.price; total += h.value; });
       document.getElementById("rows").innerHTML = holdings.map(function (h) {
         var p = total ? (h.value / total) * 100 : 0;
         return '<tr><td><div class="tok"><i style="background:' + h.color + '">' + h.sym.slice(0, 2) + "</i>" + h.sym + " <small>" + h.name + '</small></div></td><td class="r num">' + f(h.bal, h.bal < 1 ? 4 : 0) + '</td><td class="r num">$' + f(h.price, h.price < 1 ? 4 : 2) + '</td><td class="r num">$' + f(h.value, 0) + '</td><td class="r"><div class="alloc"><span class="num soft">' + p.toFixed(1) + '%</span><div class="b"><span style="width:' + p.toFixed(1) + '%"></span></div></div></td></tr>';
       }).join("");
-      var ada = holdings[0], k = res[1] || [], chg = k.length && ada.price ? ((ada.price - Number(k[0][4])) / Number(k[0][4])) * 100 : 0;
+      var ada = holdings[0], k = Array.isArray(res[1]) ? res[1] : [], ref = k.length ? Number(k[0][4]) : 0, chg = ref > 0 && ada.price ? ((ada.price - ref) / ref) * 100 : 0;
       document.getElementById("nw").textContent = "$" + f(total, 0);
       document.getElementById("exp").textContent = total ? ((ada.value / total) * 100).toFixed(0) + "%" : "—";
       document.getElementById("px").textContent = "$" + f(ada.price, 4);

@@ -27,18 +27,20 @@ export class StrikeHttp {
 
   constructor(public readonly net: NetworkConfig, private readonly fetchImpl: typeof fetch = globalThis.fetch.bind(globalThis)) {}
 
-  get clockSkewSec(): number {
-    return Math.round(this.clockSkewMs / 1000);
-  }
-
   async syncClock(): Promise<void> {
-    try {
-      const t0 = Date.now();
-      const j = await this.request<{ serverTime: number }>("GET", "/v2/time", { auth: false });
-      const t1 = Date.now();
-      if (Number.isFinite(j?.serverTime)) this.clockSkewMs = j.serverTime - (t0 + t1) / 2;
-    } catch {
+    let best: number | null = null;
+    for (let i = 0; i < 2; i++) {
+      try {
+        const j = await this.send<{ serverTime: unknown }>("GET", "/v2/time", { auth: false });
+        const t1 = Date.now();
+        const server = Number(j?.serverTime);
+        if (!(server > 1e12) || Math.abs(server - t1) > 86_400_000) continue;
+        const bound = server - t1;
+        if (best === null || bound > best) best = bound;
+      } catch {
+      }
     }
+    if (best !== null) this.clockSkewMs = best;
   }
 
   serverNowMs(): number {

@@ -129,7 +129,7 @@ export class PriceStream extends ReconnectingSocket {
 }
 
 export class UserStream extends ReconnectingSocket {
-  constructor(url: string, private readonly key: ApiWalletKey, private readonly clockSkewMs = 0, WS?: typeof WebSocket) {
+  constructor(url: string, private readonly key: ApiWalletKey, private readonly serverNowMs: () => number = () => Date.now() - 500, WS?: typeof WebSocket) {
     super(url, WS);
     this.onMessage((msg) => {
       if (msg?.result?.authenticated) this.send({ method: "subscribe", channel: "userstream" });
@@ -137,7 +137,7 @@ export class UserStream extends ReconnectingSocket {
   }
 
   protected async onOpen(): Promise<void> {
-    const ts = Date.now() + this.clockSkewMs;
+    const ts = this.serverNowMs();
     const signature = await signLogon(this.key, ts);
     this.send({ method: "session.logon", params: { apiKey: this.key.publicKeyHex, signature, timestamp: ts } });
   }

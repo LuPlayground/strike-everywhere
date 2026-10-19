@@ -196,18 +196,19 @@
   }
 
   function attrs() {
-    var a = [["builder-code", $("c-code").value.trim() || "YOUR_CODE"], ["fee-bps", $("c-fee").value], ["market", $("c-market").value]];
+    var rawCode = $("c-code").value.trim();
+    var a = [["builder-code", /^[A-Za-z0-9_-]{1,64}$/.test(rawCode) ? rawCode : "YOUR_CODE"], ["fee-bps", $("c-fee").value], ["market", $("c-market").value]];
     if (cfg.side === "sell") a.push(["side", "sell"]);
     a.push(["max-leverage", cfg.lev]);
     if (cfg.width !== "380") a.push(["width", cfg.width]);
-    a.push(["partner-id", $("c-partner").value.trim() || "my-app"]);
+    a.push(["partner-id", $("c-partner").value.replace(/[^A-Za-z0-9 _.-]/g, "").trim().slice(0, 64) || "my-app"]);
     if (cfg.net === "testnet") a.push(["network", "testnet"]);
     a.push(["partner-api", API]);
     return a;
   }
 
   var tag = function (a, indent) {
-    return '<span class="k">&lt;strike-trade</span>\n' + a.map(function (p) { return indent + '<span class="a">' + p[0] + '</span>=<span class="s">"' + esc(p[1]) + '"</span>'; }).join("\n") + '<span class="k">&gt;&lt;/strike-trade&gt;</span>';
+    return '<span class="k">&lt;strike-trade</span>\n' + a.map(function (p) { return indent + '<span class="a">' + p[0] + '</span>=<span class="s">"' + esc(esc(p[1])) + '"</span>'; }).join("\n") + '<span class="k">&gt;&lt;/strike-trade&gt;</span>';
   };
 
   function snippet() {
@@ -215,7 +216,7 @@
     if (cfg.tab === "html")
       return '<span class="muted">&lt;!-- 1. Load once, anywhere on the page --&gt;</span>\n<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + WIDGET + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n\n<span class="muted">&lt;!-- 2. Place the panel --&gt;</span>\n' + tag(a, "  ");
     if (cfg.tab === "react")
-      return '<span class="k">import</span> { useEffect } <span class="k">from</span> <span class="s">"react"</span>;\n\n<span class="muted">// TypeScript (.tsx) only: let JSX accept the custom element. Delete this line in plain .jsx.</span>\n<span class="k">declare global</span> { <span class="k">namespace</span> JSX { <span class="k">interface</span> IntrinsicElements { <span class="s">"strike-trade"</span>: any } } }\n\n<span class="k">export function</span> StrikePanel() {\n  <span class="muted">// Load the widget once with a script tag (works in Next.js, Vite and webpack alike).</span>\n  useEffect(() =&gt; {\n    <span class="k">if</span> (customElements.get(<span class="s">"strike-trade"</span>) || document.getElementById(<span class="s">"strike-everywhere-js"</span>)) <span class="k">return</span>;\n    <span class="k">const</span> s = document.createElement(<span class="s">"script"</span>);\n    s.id = <span class="s">"strike-everywhere-js"</span>;\n    s.src = <span class="s">"' + esc(WIDGET) + '"</span>;\n    document.head.appendChild(s);\n  }, []);\n  <span class="k">return</span> (\n    ' + tag(a, "      ").replace(/\n/g, "\n    ") + '\n  );\n}';
+      return '<span class="s">"use client"</span>; <span class="muted">// Next.js App Router: this component runs in the browser</span>\n<span class="k">import</span> { useEffect } <span class="k">from</span> <span class="s">"react"</span>;\n\n<span class="muted">// TypeScript (.tsx) only: let JSX accept the custom element. Delete this in plain .jsx.</span>\n<span class="k">declare module</span> <span class="s">"react"</span> { <span class="k">namespace</span> JSX { <span class="k">interface</span> IntrinsicElements { <span class="s">"strike-trade"</span>: any } } }\n\n<span class="k">export function</span> StrikePanel() {\n  <span class="muted">// Load the widget once with a script tag (works in Next.js, Vite and webpack alike).</span>\n  useEffect(() =&gt; {\n    <span class="k">if</span> (customElements.get(<span class="s">"strike-trade"</span>) || document.getElementById(<span class="s">"strike-everywhere-js"</span>)) <span class="k">return</span>;\n    <span class="k">const</span> s = document.createElement(<span class="s">"script"</span>);\n    s.id = <span class="s">"strike-everywhere-js"</span>;\n    s.src = <span class="s">"' + esc(WIDGET) + '"</span>;\n    document.head.appendChild(s);\n  }, []);\n  <span class="k">return</span> (\n    ' + tag(a, "      ").replace(/\n/g, "\n    ") + '\n  );\n}';
     var wa = a.filter(function (p) { return p[0] !== "width"; }).concat([["width", "368"]]);
     return '<span class="muted">&lt;!-- popup.html: bundle the ESM build if your CSP blocks remote scripts --&gt;</span>\n<span class="k">&lt;script</span> <span class="a">type</span>=<span class="s">"module"</span> <span class="a">src</span>=<span class="s">"./vendor/strike-everywhere.js"</span><span class="k">&gt;&lt;/script&gt;</span>\n<span class="muted">&lt;!-- get it from: ' + esc(WIDGET_ESM) + ' --&gt;</span>\n\n<span class="k">&lt;section</span> <span class="a">id</span>=<span class="s">"perps-tab"</span><span class="k">&gt;</span>\n  ' + tag(wa, "    ").replace(/\n/g, "\n  ") + '\n<span class="k">&lt;/section&gt;</span>';
   }
@@ -228,7 +229,7 @@
     var name = $("c-partner").value.trim() || "my-app";
     $("appName").textContent = name; $("urlApp").textContent = name.replace(/[^a-z0-9-]/gi, "").toLowerCase() + ".app";
     $("regLink").href = cfg.net === "mainnet" ? "https://app.strikefinance.org/builder-codes" : "https://testnet.strikefinance.org/builder-codes";
-    var code = $("c-code").value.trim() || "YOUR_CODE";
+    var code = attrs()[0][1];
     var dash = "../dashboard/?builder=" + encodeURIComponent(code) + "&network=" + cfg.net;
     $("dashLink").href = dash; $("dashLink2").href = dash;
     $("snippet").innerHTML = snippet();
