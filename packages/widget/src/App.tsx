@@ -741,7 +741,7 @@ export function App({ config }: { config: WidgetConfig }) {
           <button class="mkt-pick" data-menu onClick={() => setMenu(menu === "market" ? null : "market")} aria-haspopup="listbox" aria-expanded={menu === "market"}>
             {symbol} <Chevron />
           </button>
-          {testnet && <span class="chip-test">Testnet · play money</span>}
+          {testnet && <span class="chip-test">Testnet</span>}
         </div>
         <div class="mkt-price">
           <div class="big num">{mark ? formatPrice(mark, tick) : "—"}</div>
