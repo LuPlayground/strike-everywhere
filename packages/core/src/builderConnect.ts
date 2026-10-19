@@ -59,7 +59,7 @@ export async function builderConnect(p: ConnectParams): Promise<{ session: Build
     session: {
       accountId: r.account_id,
       builderCode: r.builder_code ?? p.builderCode,
-      feeShareBps: r.fee_share_bps ?? p.feeShareBps,
+      feeShareBps: r.fee_share_bps ?? r.max_fee_bps ?? p.feeShareBps,
       apiWalletId: r.api_wallet_id,
       apiWalletPublicKey: key.publicKeyHex,
       apiWalletExpiresAt: r.api_wallet_expired_at,
