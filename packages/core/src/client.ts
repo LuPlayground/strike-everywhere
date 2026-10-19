@@ -31,7 +31,7 @@ export type ClientEvent =
 
 export interface OnboardingCheck {
   address: string;
-  hasStrikeAccount: boolean;
+  hasStrikeAccount: boolean | null;
   walletAda: number;
   walletUsd: number;
   minFirstDepositUsd: number;
@@ -116,7 +116,7 @@ export class StrikeEverywhere {
     this.wallet = await CardanoWallet.enable(walletId, this.net);
     const [hasStrikeAccount, lovelace, ada] = await Promise.all([
       this.account.exists(this.wallet.address),
-      this.wallet.balanceLovelace(),
+      this.wallet.balanceLovelace().catch(() => 0n),
       this.markPrice("ADA-USD").catch(() => 0),
     ]);
     const walletAda = Number(lovelace) / 1e6;
@@ -127,7 +127,7 @@ export class StrikeEverywhere {
       walletAda,
       walletUsd,
       minFirstDepositUsd: NEW_ACCOUNT_MIN_DEPOSIT_USD,
-      canAffordFirstDeposit: hasStrikeAccount || walletUsd >= NEW_ACCOUNT_MIN_DEPOSIT_USD * 1.02,
+      canAffordFirstDeposit: hasStrikeAccount !== false || walletUsd >= NEW_ACCOUNT_MIN_DEPOSIT_USD * 1.02,
     };
   }
 

@@ -99,7 +99,11 @@ export function ConnectSheet({ client, onClose, onConnected }: { client: StrikeE
         {(phase === "review" || phase === "signing" || phase === "done") && check && (
           <>
             <div class="addr">{shortAddress(check.address, 18, 10)}</div>
-            {check.hasStrikeAccount ? (
+            {check.hasStrikeAccount === null ? (
+              <div class="note">
+                <b>Strike couldn't look up this wallet right now.</b> You can still connect. If it's new to Strike, the first deposit must be at least {formatUsd(check.minFirstDepositUsd, { decimals: 0 })}.
+              </div>
+            ) : check.hasStrikeAccount ? (
               <div class="note">
                 <b>Existing Strike account found.</b> Your balance and positions carry over.
               </div>

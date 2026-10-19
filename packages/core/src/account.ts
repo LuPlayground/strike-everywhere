@@ -28,13 +28,14 @@ export class AccountApi {
     return j.fills ?? [];
   }
 
-  async exists(blockchainAddress: string): Promise<boolean> {
+  async exists(blockchainAddress: string): Promise<boolean | null> {
     try {
       await this.http.request("GET", `/v2/account${query({ blockchain_address: blockchainAddress })}`, { auth: false });
       return true;
     } catch (e) {
       if (e instanceof StrikeApiError && e.status === 404) return false;
-      throw e;
+      console.warn("[strike-everywhere] account lookup failed:", (e as Error)?.message || e);
+      return null;
     }
   }
 }
