@@ -44,6 +44,15 @@ Open **/dashboard/?builder=YOUR_CODE&network=mainnet**. It shows:
 
 Builder fees themselves are **credited by Strike directly to your Strike account balance** on every fill. Strike's own builder-codes page is the source of truth for what was credited; the dashboard's fee figure is an estimate from verified fills.
 
+## Optional: stack Strike's referral program
+Strike's [referral program](https://docs.strikefinance.org/perpetuals/referrals) pays the referrer **20–40% of Strike's trading fees** from referred traders (tier grows with their combined lifetime volume: $0 / $250k / $1M / $5M / $20M), and gives those traders a **4–8% fee discount**. Rewards are claimable from $10 and credited to your Strike balance.
+
+Add `referral-code="YOUR_REFERRAL_CODE"` to the tag and the widget passes it in the Builder Connect request, so a partner can earn the builder fee **and** referral rewards on the same users, while those users trade cheaper than on Strike directly.
+
+Caveats:
+- Strike lets you create a referral code only after **$10,000 of your own trading volume**.
+- Strike's referral docs describe applying codes in its app or via a referral link. Whether a code passed through Builder Connect is honoured, and whether it applies only to new accounts, is **not yet verified** (it can't be tested on testnet, which has no fills).
+
 ## Who should register their own code?
 - **Your own site:** use your own code. Fees go to you.
 - **A network of partner sites you coordinate:** give each a `partner-id` under your code, and settle with them off-chain using the dashboard figures.
