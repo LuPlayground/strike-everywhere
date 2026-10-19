@@ -153,10 +153,17 @@ export function App({ config }: { config: WidgetConfig }) {
   const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const notify = (kind: "ok" | "err", text: string) => {
+  const [ticketMsg, setTicketMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const ticketTimer = useRef<ReturnType<typeof setTimeout>>();
+  const notify = (kind: "ok" | "err", text: string, inline = false) => {
     setToast({ kind, text });
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), kind === "ok" ? 4500 : 8000);
+    if (inline) {
+      setTicketMsg({ kind, text });
+      clearTimeout(ticketTimer.current);
+      ticketTimer.current = setTimeout(() => setTicketMsg(null), kind === "ok" ? 10_000 : 15_000);
+    }
   };
 
   useEffect(() => {
@@ -432,7 +439,7 @@ export function App({ config }: { config: WidgetConfig }) {
           randomize,
           leverage: reduceOnly ? undefined : lev,
         });
-        notify("ok", `TWAP started: ${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base} over ${fmtMin(twapSec / 60)}`);
+        notify("ok", `TWAP started: ${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base} over ${fmtMin(twapSec / 60)}`, true);
         setSizeUsd("");
         setLowerTab("twap");
         refresh(true);
@@ -452,12 +459,12 @@ export function App({ config }: { config: WidgetConfig }) {
       });
       const resting = order.status === "open" || order.status === "untriggered";
       const verb = order.status === "filled" ? "Filled" : order.status === "untriggered" ? "Stop order placed" : order.status === "open" ? "Order placed" : `Order ${order.status}`;
-      notify("ok", `${verb}: ${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base}`);
+      notify("ok", `${verb}: ${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base}`, true);
       setSizeUsd("");
       setLowerTab(resting ? "orders" : "positions");
       refresh();
     } catch (e: any) {
-      notify("err", e instanceof OrderRejectedError ? `Rejected: ${e.message}` : e?.message || String(e));
+      notify("err", e instanceof OrderRejectedError ? `Rejected: ${e.message}` : e?.message || String(e), true);
     } finally {
       setPlacing(false);
     }
@@ -712,7 +719,7 @@ export function App({ config }: { config: WidgetConfig }) {
             ))}
           </div>
         )}
-        {view === "book" && <span class="vnote">Click a price to use it</span>}
+        {view === "book" && <span class="vnote">Tap a price to put it in your order</span>}
       </div>
       {view === "price" && <Sparkline points={sparkPoints} up={chg >= 0} />}
       {view === "chart" && <Chart client={client} symbol={symbol} interval={interval} tick={tick} live={{ mark, last: lv?.last ?? 0, index: lv?.index ?? 0 }} />}
@@ -878,6 +885,12 @@ export function App({ config }: { config: WidgetConfig }) {
           </div>
         )}
         {cta}
+        {ticketMsg && (
+          <div class={`ticket-msg ${ticketMsg.kind}`} role="status">
+            {ticketMsg.kind === "ok" ? "✓ " : ""}
+            {ticketMsg.text}
+          </div>
+        )}
         {fill && !fill.complete && (
           <div class="warn">
             <b>Thin book:</b> only {fmtQty(Number(roundToStep(fill.filled, sizeStep || 1e-8, "floor")))} of {fmtQty(baseSize)} {base} can fill
