@@ -121,6 +121,7 @@ button:disabled { cursor: not-allowed; }
 .lvl:not(.hd):hover { background: var(--se-input); }
 .lvl.hd { color: var(--se-faint); font-size: 11px; cursor: default; }
 .lvl > span { position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book-empty { padding: 10px 14px; color: var(--se-text-2); font-size: 12px; text-align: center; }
 .spread { display: flex; justify-content: space-between; gap: 8px; padding: 3px 14px; margin: 2px 0; background: var(--se-surface); color: var(--se-text-2); font-size: 11px; }
 
 .menu { position: absolute; z-index: 20; top: 50px; left: 10px; right: 10px; max-height: 320px; overflow: auto; background: var(--se-surface-2); border: 1px solid var(--se-border-strong); border-radius: 8px; box-shadow: 0 16px 40px rgba(0,0,0,.6); padding: 6px; }

@@ -31,14 +31,20 @@ export function Book({ book, depth, tick, base, hint, onPick }: { book: BookView
         <span>Size ({base})</span>
         <span>Total</span>
       </div>
-      {[...asks].reverse().map(row("ask"))}
-      <div class="spread num">
-        <span>
-          Spread {formatPrice(book.spread, tick)} ({((book.spread / book.mid) * 100).toFixed(3)}%)
-        </span>
-        <span>Mid {formatPrice(book.mid, tick ? Number((tick / 10).toPrecision(1)) : undefined)}</span>
-      </div>
-      {bids.map(row("bid"))}
+      {asks.length ? [...asks].reverse().map(row("ask")) : <div class="book-empty">No sellers right now</div>}
+      {Number.isFinite(book.spread) ? (
+        <div class="spread num">
+          <span>
+            Spread {formatPrice(book.spread, tick)} ({((book.spread / book.mid) * 100).toFixed(3)}%)
+          </span>
+          <span>Mid {formatPrice(book.mid, tick ? Number((tick / 10).toPrecision(1)) : undefined)}</span>
+        </div>
+      ) : (
+        <div class="spread">
+          <span>Only {book.asks.length ? "sellers" : "buyers"} on this market right now (thin market)</span>
+        </div>
+      )}
+      {bids.length ? bids.map(row("bid")) : <div class="book-empty">No buyers right now</div>}
     </div>
   );
 }

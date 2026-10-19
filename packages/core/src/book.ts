@@ -102,11 +102,12 @@ export class LocalBook {
 }
 
 export function makeView(bids: BookLevel[], asks: BookLevel[]): BookView | null {
-  if (!bids.length || !asks.length) return null;
-  const bestBid = bids[0][0];
-  const bestAsk = asks[0][0];
-  if (!(bestBid < bestAsk)) return null;
-  return { bids, asks, bestBid, bestAsk, mid: (bestBid + bestAsk) / 2, spread: bestAsk - bestBid };
+  if (!bids.length && !asks.length) return null;
+  const bestBid = bids.length ? bids[0][0] : NaN;
+  const bestAsk = asks.length ? asks[0][0] : NaN;
+  const both = bids.length > 0 && asks.length > 0;
+  if (both && !(bestBid < bestAsk)) return null;
+  return { bids, asks, bestBid, bestAsk, mid: both ? (bestBid + bestAsk) / 2 : NaN, spread: both ? bestAsk - bestBid : NaN };
 }
 
 export interface FillEstimate {
@@ -122,7 +123,7 @@ export function estimateMarketFill(book: BookView, side: "buy" | "sell", size: n
   if (!(size > 0)) return null;
   const levels = side === "buy" ? book.asks : book.bids;
   if (!levels.length) return null;
-  const ref = opts.mark && opts.mark > 0 ? opts.mark : book.mid;
+  const ref = opts.mark && opts.mark > 0 ? opts.mark : Number.isFinite(book.mid) ? book.mid : levels[0][0];
   const bound = opts.mark && opts.mark > 0 ? opts.bound ?? 0.05 : Infinity;
   const limit = side === "buy" ? ref * (1 + bound) : ref * (1 - bound);
   let left = size;

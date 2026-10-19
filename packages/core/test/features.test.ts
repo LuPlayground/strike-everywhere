@@ -222,6 +222,16 @@ describe("stop orders", () => {
     expect(roundStopPrice("sell", 0.499996, 0.0001)).toBe(0.4999);
   });
 
+  it("shows one-sided books (thin markets) instead of treating them as broken", () => {
+    const v = makeView([], [[100, 2]])!;
+    expect(v).not.toBeNull();
+    expect(Number.isNaN(v.mid)).toBe(true);
+    expect(v.bestAsk).toBe(100);
+    expect(makeView([], [])).toBeNull();
+    expect(makeView([[101, 1]], [[100, 1]])).toBeNull();
+    expect(estimateMarketFill(v, "buy", 1, {})!.avgPrice).toBe(100);
+  });
+
   it("measures market-order slippage from the mark and stops at Strike's price band", () => {
     const book = { bids: [[82.55, 10]], asks: [[82.67, 10], [100, 10], [104.5, 10], [120, 10]], mid: 82.61, spread: 0.12, bestBid: 82.55, bestAsk: 82.67 } as any;
     const sell = estimateMarketFill(book, "sell", 5, { mark: 104.44, bound: 0.05 })!;
