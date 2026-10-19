@@ -3,6 +3,7 @@ export * from "./bytes.js";
 export * from "./types.js";
 export * from "./format.js";
 export * from "./math.js";
+export * from "./explain.js";
 export { StrikeHttp, StrikeApiError, query } from "./http.js";
 export { ApiWalletKey, canonicalRequestMessage, signRequest, signLogon } from "./signer.js";
 export { builderConnect, type BuilderSession, type Chain } from "./builderConnect.js";

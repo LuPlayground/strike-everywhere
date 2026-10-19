@@ -43,7 +43,7 @@ On Hyperliquid, front ends that embed trading, especially wallets, became the la
 | Path | What it is |
 |---|---|
 | `packages/core` | `@strike-everywhere/core`, a browser SDK. It covers Builder Connect (Cardano CIP-30), signed REST, market data, trading, ADA deposits with pre-sign safety checks, the price and user WebSockets, and margin-tier risk maths. It has a unit test suite. |
-| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~52 KB gzipped**. |
+| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~57 KB gzipped**. |
 | `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill and transaction history**: a fill counts only if the widget registered its `client_order_id` before Strike created the order. |
 | `apps/dashboard` | The partner dashboard: wallets → funded → trading accounts, verified volume, builder fees, per-site breakdown, recent activity, and an embed-snippet generator. |
 | `apps/developers` | The integration page: configurator, live preview in a sample app, HTML / React / wallet-extension snippets. |
@@ -58,7 +58,7 @@ Every call goes directly from the user's browser to Strike. Strike's API allows 
 | Step | Strike endpoint |
 |---|---|
 | Onboard (one signature) | `POST /auth/builder/request-signature` → wallet `signData` (CIP-30, `"{coseSign1}:{coseKey}"`) → `POST /auth/builder/verify-signature` |
-| Detect new users | `GET /v2/account?blockchain_address=` (404 = new account, so the first deposit must be at least $100) |
+| Detect new users | `GET /v2/account?blockchain_address=` (404 = new account; the widget applies Strike's app rule of a $100 first deposit for new accounts) |
 | Markets & prices | `GET /v2/markets`, `/price/v2/ticker/24hr`, `/price/v2/premiumIndex`, `/price/v2/klines`; WebSocket `!markprice@arr`, `!miniticker@arr` |
 | Account | `GET /v2/account`, `/v2/positions`, `/v2/openOrders`, `/v2/history/order`; user WebSocket `session.logon` + `userstream` |
 | Trade | `POST /v2/leverage`, `POST /v2/order` / `POST /v2/order/strategy` (TP/SL) with header **`X-Builder-Fee-Bps`**, `DELETE /v2/order/cancel` |

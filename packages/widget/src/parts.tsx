@@ -1,4 +1,5 @@
 import type { ComponentChildren } from "preact";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 export const Chevron = ({ size = 12 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 12 12" aria-hidden="true">
@@ -16,11 +17,58 @@ export function CoinIcon({ base }: { base: string }) {
   );
 }
 
-export function KV({ k, v, hint, cls }: { k: ComponentChildren; v: ComponentChildren; hint?: string; cls?: string }) {
+let infoSeq = 0;
+
+export function Info({ children, label = "What is this?" }: { children: ComponentChildren; label?: string }) {
+  const [open, setOpen] = useState(false);
+  const [shift, setShift] = useState(0);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const pop = useRef<HTMLSpanElement>(null);
+  const id = useRef(`se-info-${++infoSeq}`).current;
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: Event) => wrap.current && !e.composedPath().includes(wrap.current) && setOpen(false);
+    const root = (wrap.current?.getRootNode() ?? document) as Document | ShadowRoot;
+    const esc = (e: Event) => (e as KeyboardEvent).key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", away, true);
+    root.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", away, true);
+      root.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  useLayoutEffect(() => {
+    if (!open || !pop.current) return setShift(0);
+    const box = (pop.current.closest(".card, .sheet") ?? document.documentElement).getBoundingClientRect();
+    const r = pop.current.getBoundingClientRect();
+    const left = r.left - shift;
+    const right = r.right - shift;
+    setShift(Math.round(right > box.right - 8 ? Math.max(box.left + 8 - left, box.right - 8 - right) : left < box.left + 8 ? box.left + 8 - left : 0));
+  });
+  return (
+    <span class="info" ref={wrap} onKeyDown={(e) => e.key === "Escape" && open && (e.stopPropagation(), setOpen(false))}>
+      <button type="button" class="info-b" aria-label={label} aria-expanded={open} aria-controls={id} onClick={(e) => (e.stopPropagation(), setOpen(!open))}>
+        <svg width="13" height="13" viewBox="0 0 14 14" aria-hidden="true">
+          <circle cx="7" cy="7" r="6.2" fill="none" stroke="currentColor" stroke-width="1.2" />
+          <path d="M7 6.2v3.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+          <circle cx="7" cy="4.2" r=".85" fill="currentColor" />
+        </svg>
+      </button>
+      {open && (
+        <span class="info-pop" id={id} role="tooltip" ref={pop} style={shift ? { transform: `translateX(${shift}px)` } : undefined}>
+          {children}
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function KV({ k, v, hint, info, cls }: { k: ComponentChildren; v: ComponentChildren; hint?: string; info?: ComponentChildren; cls?: string }) {
   return (
     <div class="kv">
       <span class={`k${hint ? " dotted" : ""}`} title={hint}>
         {k}
+        {info && <Info label={typeof k === "string" ? `About ${k}` : undefined}>{info}</Info>}
       </span>
       <span class={`v ${cls ?? ""}`}>{v}</span>
     </div>

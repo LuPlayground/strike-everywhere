@@ -1,18 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
+  MIN_WITHDRAW_USD,
   OrderRejectedError,
   StrikeEverywhere,
   TWAP_MAX_SEC,
   TWAP_MIN_SEC,
+  closePrompt,
+  ctaLabel,
   estimateMarketFill,
+  flipNote,
+  fmtBase,
   formatPct,
   formatPrice,
   formatUsd,
+  fundingWords,
   marginModeOf,
   maxLeverageFor,
+  movePct,
+  orderSummary,
+  positionAfter,
+  positionText,
   previewOrder,
   roundToStep,
   shortAddress,
+  sizeLine,
   stopOrderProblem,
   type Account,
   type BookView,
@@ -23,7 +34,7 @@ import {
   type StrikeEverywhereOptions,
   type TwapStrategy,
 } from "@strike-everywhere/core";
-import { Check, Chevron, CoinIcon, Confirm, KV, PctSlider, Sparkline, Spinner, decimalInput, pageHidden } from "./parts";
+import { Check, Chevron, CoinIcon, Confirm, Info, KV, PctSlider, Sparkline, Spinner, decimalInput, pageHidden } from "./parts";
 import { ConnectSheet } from "./ConnectSheet";
 import { DepositSheet } from "./DepositSheet";
 import { WithdrawSheet } from "./WithdrawSheet";
@@ -52,7 +63,7 @@ type LowerTab = "positions" | "orders" | "twap" | "history" | "account";
 
 const LEVERAGE_STEPS = [1, 2, 3, 5, 10, 15, 20, 25, 40, 50, 75, 100];
 const WALLET_KEY = "strike-everywhere:wallet";
-const PRO_TYPES: Array<[OrderType, string, string]> = [
+const ADVANCED_TYPES: Array<[OrderType, string, string]> = [
   ["stop", "Stop Market", "Market order once the mark price reaches a trigger"],
   ["stop_limit", "Stop Limit", "Limit order once the mark price reaches a trigger"],
   ["twap", "TWAP", "Split into timed market slices over 5 min – 24 h"],
@@ -77,7 +88,7 @@ function storageSet(key: string, value: string): void {
   }
 }
 
-const fmtQty = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 8 });
+const fmtQty = fmtBase;
 const fmtMin = (m: number) => (m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`);
 const fin = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) && v !== null && v !== "" ? Number(v) : fallback);
 
@@ -117,12 +128,16 @@ export function App({ config }: { config: WidgetConfig }) {
   const [slipAck, setSlipAck] = useState("");
   const [pctDraft, setPctDraft] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [advOpen, setAdvOpen] = useState(false);
+  const [bookSwitch, setBookSwitch] = useState<{ from: OrderType; price: string } | null>(null);
 
   const [sheet, setSheet] = useState<null | "connect" | "deposit" | "withdraw">(null);
   const [menu, setMenu] = useState<null | "market" | "leverage" | "ordertype">(null);
   const [query, setQuery] = useState("");
   const [lowerTab, setLowerTab] = useState<LowerTab>("positions");
-  const [ask, setAsk] = useState<null | "margin" | "cancelall">(null);
+  const [ask, setAsk] = useState<null | "margin" | "cancelall" | `close:${number}`>(null);
+  const [flash, setFlash] = useState("");
+  const flashTimer = useRef<ReturnType<typeof setTimeout>>();
   const [marginBusy, setMarginBusy] = useState(false);
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const markBusy = (id: string, on: boolean) =>
@@ -149,6 +164,7 @@ export function App({ config }: { config: WidgetConfig }) {
     setTp("");
     setSl("");
     setAsk(null);
+    setBookSwitch(null);
   }, [symbol]);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -277,6 +293,7 @@ export function App({ config }: { config: WidgetConfig }) {
     () => () => {
       mounted.current = false;
       clearTimeout(refreshTimer.current);
+      clearTimeout(flashTimer.current);
     },
     [],
   );
@@ -360,10 +377,40 @@ export function App({ config }: { config: WidgetConfig }) {
   const preview = spec && px > 0 && usd > 0 ? previewOrder({ side, price: px, notional: baseSize * px, leverage: lev, takerRate, builderFeeBps: feeBps, tiers: spec.marginTiers }) : null;
   const position = positions.find((p) => p.symbol === symbol);
   const posSize = position ? Number(position.size) : 0;
+  const twapSec = (twapMin || Number(twapCustom) || 0) * 60;
+  const sizeText = usd > 0 ? sizeLine({ usd, size: baseSize, price: px, leverage: lev, base, step: sizeStep }) : null;
+  const flip = flipNote({ position: posSize, side, size: baseSize, base, reduceOnly, step: sizeStep });
+  const fmtPx = (v: number) => formatPrice(v, tick);
+  const when =
+    orderType === "limit" && Number(limitPrice) > 0
+      ? ` at ${fmtPx(Number(limitPrice))} or better`
+      : orderType === "stop" && Number(trigger) > 0
+        ? ` once the mark reaches ${fmtPx(Number(trigger))}`
+        : orderType === "stop_limit" && Number(trigger) > 0
+          ? ` at ${Number(limitPrice) > 0 ? fmtPx(Number(limitPrice)) : "your limit"} once the mark reaches ${fmtPx(Number(trigger))}`
+          : orderType === "twap" && twapSec >= TWAP_MIN_SEC && twapSec <= TWAP_MAX_SEC
+            ? ` over ${fmtMin(twapSec / 60)}`
+            : "";
+  const summary =
+    preview && baseSize > 0 && !flip
+      ? orderSummary({
+          side,
+          leverage: lev,
+          base,
+          size: baseSize,
+          notional: preview.notional,
+          margin: preview.margin,
+          entry: px,
+          liqPrice: preview.liquidationPrice,
+          fmtPrice: fmtPx,
+          resting: orderType !== "market",
+          when,
+          reduceOnly,
+        })
+      : null;
   const isNewAccount = !account || (Number(account.wallet_balance) <= 0 && positions.length === 0);
   const bound = Number(raw?.order_limit_price_bound ?? 0.05) || 0.05;
   const marginMode = marginModeOf(account, symbol) ?? "cross";
-  const twapSec = (twapMin || Number(twapCustom) || 0) * 60;
 
   const marketBound = Number(raw?.order_market_price_bound) || bound;
   const fill = orderType === "market" && book && baseSize > 0 ? estimateMarketFill(book, side, baseSize, { mark, bound: marketBound }) : null;
@@ -458,9 +505,20 @@ export function App({ config }: { config: WidgetConfig }) {
         leverage: reduceOnly ? undefined : lev,
       });
       const resting = order.status === "open" || order.status === "untriggered";
-      const verb = order.status === "filled" ? "Filled" : order.status === "untriggered" ? "Stop order placed" : order.status === "open" ? "Order placed" : `Order ${order.status}`;
-      notify("ok", `${verb}: ${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base}`, true);
+      const dir = `${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base}`;
+      if (order.status === "filled") {
+        const avg = fill?.avgPrice ?? px;
+        const after = positionAfter(posSize, side, baseSize, reduceOnly);
+        notify("ok", `Filled: ${dir} at ~${formatPrice(avg, tick)} (~${formatUsd(baseSize * avg)}). ${after ? `You now hold ${positionText(after, base)}` : `Your ${base} position is closed`}`, true);
+        setFlash(symbol);
+        clearTimeout(flashTimer.current);
+        flashTimer.current = setTimeout(() => setFlash(""), 1600);
+      } else {
+        const verb = order.status === "untriggered" ? "Stop order placed" : order.status === "open" ? "Order placed" : `Order ${order.status}`;
+        notify("ok", `${verb}: ${dir}`, true);
+      }
       setSizeUsd("");
+      setBookSwitch(null);
       setLowerTab(resting ? "orders" : "positions");
       refresh();
     } catch (e: any) {
@@ -472,11 +530,13 @@ export function App({ config }: { config: WidgetConfig }) {
 
   const closePosition = async (p: Position) => {
     const id = `pos:${p.id}`;
+    setAsk(null);
     if (busy.has(id)) return;
     markBusy(id, true);
     try {
       const o = await client.closePosition(p);
-      notify("ok", o.status === "filled" ? `Closed ${p.symbol}` : `Close order ${o.status}`);
+      const what = positionText(Number(p.size), p.symbol.split("-")[0]);
+      notify("ok", o.status === "filled" ? `✓ Closed ${what} · PnL ≈ ${formatUsd(Number(p.upnl), { sign: true })}` : `Close order ${o.status}`);
       refresh();
     } catch (e: any) {
       notify("err", e?.message || String(e));
@@ -579,8 +639,18 @@ export function App({ config }: { config: WidgetConfig }) {
     if (orderType === "stop") return setTrigger(v);
     if (orderType === "twap") return setTwapLimit(v);
     setLimitPrice(v);
-    if (!usesLimit) setOrderType("limit");
+    if (!usesLimit) {
+      setBookSwitch({ from: orderType, price: limitPrice });
+      setOrderType("limit");
+    }
   };
+  const undoBookSwitch = () => {
+    if (!bookSwitch) return;
+    setOrderType(bookSwitch.from);
+    setLimitPrice(bookSwitch.price);
+    setBookSwitch(null);
+  };
+  const chooseType = (t: OrderType) => (setOrderType(t), setBookSwitch(null));
 
   const filtered = markets.filter((m) => !query || m.symbol.toLowerCase().includes(query.toLowerCase()) || m.name.toLowerCase().includes(query.toLowerCase()));
   const priceInput = (id: string, label: string, value: string, set: (v: string) => void, placeholder?: string, markBtn = true) => (
@@ -611,10 +681,17 @@ export function App({ config }: { config: WidgetConfig }) {
         </button>
       );
     }
-    const label = orderType === "twap" ? `TWAP ${side === "buy" ? "Long" : "Short"} ${base}` : `${side === "buy" ? "Long" : "Short"} ${base}`;
+    const label = ctaLabel({
+      side,
+      base,
+      type: orderType,
+      price: usesLimit && Number(limitPrice) > 0 ? fmtPx(Number(limitPrice)) : undefined,
+      trigger: isStop && Number(trigger) > 0 ? fmtPx(Number(trigger)) : undefined,
+      notional: usd ? baseSize * px : 0,
+    });
     return (
       <button class={`cta${side === "sell" ? " short" : ""}`} disabled={!!problem || placing} onClick={submit}>
-        {placing ? <><Spinner /> Placing…</> : problem ?? `${label}${usd ? ` · ${formatUsd(baseSize * px)}` : ""}`}
+        {placing ? <><Spinner /> Placing…</> : problem ?? label}
       </button>
     );
   })();
@@ -629,7 +706,13 @@ export function App({ config }: { config: WidgetConfig }) {
     );
   }
 
-  const proLabel = PRO_TYPES.find((t) => t[0] === orderType)?.[1];
+  const advLabel = ADVANCED_TYPES.find((t) => t[0] === orderType)?.[1];
+  const testnet = client.net.network === "testnet";
+  const levRef = px || mark;
+  const levNotional = baseSize > 0 && px > 0 ? baseSize * px : 100;
+  const liqMove = (l: number) =>
+    spec && levRef > 0 ? movePct(levRef, previewOrder({ side, price: levRef, notional: levNotional, leverage: l, takerRate, builderFeeBps: feeBps, tiers: spec.marginTiers }).liquidationPrice) : "";
+  const showAdv = advOpen || reduceOnly;
   const entryHint: Record<OrderType, string> = {
     market: fill ? "Average fill estimated from the live order book" : "Market orders fill near the mark price",
     limit: "Your limit price",
@@ -654,9 +737,12 @@ export function App({ config }: { config: WidgetConfig }) {
     >
       <div class="mkt">
         <CoinIcon base={base} />
-        <button class="mkt-pick" data-menu onClick={() => setMenu(menu === "market" ? null : "market")} aria-haspopup="listbox" aria-expanded={menu === "market"}>
-          {symbol} <Chevron />
-        </button>
+        <div class="mkt-id">
+          <button class="mkt-pick" data-menu onClick={() => setMenu(menu === "market" ? null : "market")} aria-haspopup="listbox" aria-expanded={menu === "market"}>
+            {symbol} <Chevron />
+          </button>
+          {testnet && <span class="chip-test">Testnet · play money</span>}
+        </div>
         <div class="mkt-price">
           <div class="big num">{mark ? formatPrice(mark, tick) : "—"}</div>
           <div class={`chg num ${chg >= 0 ? "pos" : "neg"}`}>{lv ? formatPct(chg) : ""}</div>
@@ -689,12 +775,16 @@ export function App({ config }: { config: WidgetConfig }) {
       )}
       <div class="stats">
         <div class="stat">
-          <div class="k dotted" title="Strike's index: a weighted average of external spot prices">Index</div>
+          <div class="k">
+            Index<Info label="About the index price">The average {base} spot price on major external exchanges. Strike's price is kept close to it.</Info>
+          </div>
           <div class="v num">{lv ? formatPrice(lv.index, tick) : "—"}</div>
         </div>
         <div class="stat">
-          <div class="k dotted" title="Hourly funding rate paid between longs and shorts">Funding / 1h</div>
-          <div class={`v num ${lv && lv.funding < 0 ? "neg" : "pos"}`}>{lv ? `${(lv.funding * 100).toFixed(4)}%` : "—"}</div>
+          <div class="k">
+            Funding<Info label="About funding">Every hour, one side pays the other to keep the price close to the index. Positive: longs pay shorts; negative: shorts pay longs.</Info>
+          </div>
+          <div class={`v fund ${lv && lv.funding < 0 ? "neg" : "pos"}`}>{lv ? fundingWords(lv.funding) : "—"}</div>
         </div>
         <div class="stat">
           <div class="k">24h Volume</div>
@@ -719,33 +809,50 @@ export function App({ config }: { config: WidgetConfig }) {
             ))}
           </div>
         )}
-        {view === "book" && <span class="vnote">Tap a price to put it in your order</span>}
       </div>
       {view === "price" && <Sparkline points={sparkPoints} up={chg >= 0} />}
       {view === "chart" && <Chart client={client} symbol={symbol} interval={interval} tick={tick} live={{ mark, last: lv?.last ?? 0, index: lv?.index ?? 0 }} />}
-      {view === "book" && <Book book={book} depth={BOOK_DEPTH} tick={tick} base={base} onPick={pickPrice} />}
+      {view === "book" && (
+        <Book
+          book={book}
+          depth={BOOK_DEPTH}
+          tick={tick}
+          base={base}
+          onPick={pickPrice}
+          hint={orderType === "stop" || orderType === "stop_limit" ? "Tap a price to use it in your stop order" : orderType === "twap" ? "Tap a price to set the TWAP limit" : "Tap a price to place a Limit order there"}
+        />
+      )}
 
       <div class="ticket">
         <div class="pills">
-          <button
-            class="pill"
-            disabled={!session || !account || marginBusy || !!position || orders.some((o) => o.symbol === symbol)}
-            aria-label={`Margin mode: ${marginMode}`}
-            title={
-              !session
-                ? "Cross margin (Strike's default). Connect to change it."
-                : position || orders.some((o) => o.symbol === symbol)
-                  ? "Close this market's position and open orders to change margin mode"
-                  : "Switch between cross and isolated margin for this market"
-            }
-            onClick={() => setAsk(ask === "margin" ? null : "margin")}
-          >
-            {marginBusy ? <Spinner /> : marginMode === "cross" ? "Cross" : "Isolated"}
-          </button>
-          <button class="pill" data-menu onClick={() => setMenu(menu === "leverage" ? null : "leverage")} aria-label={`Leverage ${lev}x, change`} title="Leverage: tap to change">
-            <span class="pill-k">Leverage</span> {lev}x
-          </button>
-          <span class="pill static">One-Way</span>
+          <span class="pillx">
+            <button
+              class="pill"
+              disabled={!session || !account || marginBusy || !!position || orders.some((o) => o.symbol === symbol)}
+              aria-label={`Margin mode: ${marginMode}`}
+              title={
+                !session
+                  ? "Cross margin (Strike's default). Connect to change it."
+                  : position || orders.some((o) => o.symbol === symbol)
+                    ? "Close this market's position and open orders to change margin mode"
+                    : "Switch between cross and isolated margin for this market"
+              }
+              onClick={() => setAsk(ask === "margin" ? null : "margin")}
+            >
+              {marginBusy ? <Spinner /> : marginMode === "cross" ? "Cross margin" : "Isolated margin"}
+            </button>
+            <Info label="Cross vs isolated margin">
+              <b>Cross:</b> your whole balance backs your positions, so liquidation is further away, but a big loss can use all of it. <b>Isolated:</b> each position can only lose the margin you put in it.
+            </Info>
+          </span>
+          <span class="pillx">
+            <button class="pill" data-menu onClick={() => setMenu(menu === "leverage" ? null : "leverage")} aria-label={`Leverage ${lev}x, change`} title="Leverage: tap to change">
+              <span class="pill-k">Leverage</span> {lev}x
+            </button>
+            <Info label="About leverage">
+              Leverage multiplies your position: at {lev}x, $10 of your balance controls ${10 * lev} of {base}. Gains and losses grow {lev}x too, and liquidation comes closer.
+            </Info>
+          </span>
         </div>
         {ask === "margin" &&
           (posSize ? (
@@ -769,39 +876,50 @@ export function App({ config }: { config: WidgetConfig }) {
         {menu === "leverage" && (
           <div class="menu inl">
             <div class="t muted" style={{ padding: "4px 8px 6px", fontSize: "11.5px" }}>
-              Max {levCap}x for this size{config.maxLeverage < tierCap ? ` (site limit ${config.maxLeverage}x)` : ""}
+              Max {levCap}x for this size{config.maxLeverage < tierCap ? ` (site limit ${config.maxLeverage}x)` : ""} · % = price move to liquidation
+              {baseSize > 0 && px > 0 ? "" : " (for a $100 position)"}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", padding: "0 4px 4px" }}>
+            <div class="levs">
               {LEVERAGE_STEPS.filter((l) => l <= levCap).map((l) => (
-                <button key={l} class="pill" style={l === lev ? { background: "rgba(78,250,176,.18)", color: "var(--se-accent)" } : undefined} onClick={() => (setLeverage(l), setMenu(null))}>
+                <button key={l} class={`pill${l === lev ? " on" : ""}`} onClick={() => (setLeverage(l), setMenu(null))} aria-label={`${l}x leverage, liquidation about ${liqMove(l) || "unknown"} away`}>
                   {l}x
+                  <span class="lq num">{liqMove(l) || "—"}</span>
                 </button>
               ))}
+            </div>
+            <div class="t muted" style={{ padding: "6px 8px 2px", fontSize: "11.5px" }}>
+              Higher leverage = bigger gains and losses, and liquidation comes closer.
             </div>
           </div>
         )}
         <div class="tabs" role="tablist" aria-label="Order type">
           {(["market", "limit"] as const).map((t) => (
-            <button key={t} role="tab" aria-selected={orderType === t} class={`tab${orderType === t ? " on" : ""}`} onClick={() => setOrderType(t)}>
+            <button key={t} role="tab" aria-selected={orderType === t} class={`tab${orderType === t ? " on" : ""}`} onClick={() => chooseType(t)}>
               {t === "market" ? "Market" : "Limit"}
             </button>
           ))}
           <button
             role="tab"
-            aria-selected={!!proLabel}
+            aria-selected={!!advLabel}
             aria-haspopup="menu"
             aria-expanded={menu === "ordertype"}
             data-menu
-            class={`tab${proLabel ? " on" : ""}`}
+            class={`tab${advLabel ? " on" : ""}`}
             onClick={() => setMenu(menu === "ordertype" ? null : "ordertype")}
           >
-            {proLabel ?? "Pro"} <Chevron size={10} />
+            {advLabel ?? "Advanced"} <Chevron size={10} />
           </button>
         </div>
+        {bookSwitch && orderType === "limit" && (
+          <div class="helper" role="status">
+            Switched to a Limit order{Number(limitPrice) > 0 ? ` at ${fmtPx(Number(limitPrice))}` : ""} ·{" "}
+            <button class="linkbtn" onClick={undoBookSwitch}>Undo</button>
+          </div>
+        )}
         {menu === "ordertype" && (
           <div class="menu inl" role="menu" aria-label="Advanced order types">
-            {PRO_TYPES.map(([t, label, desc]) => (
-              <button key={t} role="menuitem" class={`menu-row${orderType === t ? " on" : ""}`} onClick={() => (setOrderType(t), setMenu(null))}>
+            {ADVANCED_TYPES.map(([t, label, desc]) => (
+              <button key={t} role="menuitem" class={`menu-row${orderType === t ? " on" : ""}`} onClick={() => (chooseType(t), setMenu(null))}>
                 <span>
                   <div class="n">{label}</div>
                   <div class="t">{desc}</div>
@@ -814,16 +932,39 @@ export function App({ config }: { config: WidgetConfig }) {
           <button class={`long${side === "buy" ? " on" : ""}`} onClick={() => setSide("buy")}>Long/Buy</button>
           <button class={`short${side === "sell" ? " on" : ""}`} onClick={() => setSide("sell")}>Short/Sell</button>
         </div>
-        <KV k="Available to Trade" v={session ? <span class="num">{formatUsd(available)}</span> : "—"} />
-        <KV k="Current Position" v={posSize ? <span class={`num ${posSize > 0 ? "pos" : "neg"}`}>{posSize > 0 ? "+" : ""}{fmtQty(posSize)} {base}</span> : "—"} />
+        <div class="helper seg-hint">
+          Long = profit if {base} goes up · Short = <span class="w">profit </span>if it goes down
+        </div>
+        <KV
+          k={
+            <>
+              Available to Trade
+              {session && (
+                <button class="linkbtn dep" onClick={openDeposit}>
+                  + Deposit
+                </button>
+              )}
+            </>
+          }
+          v={session ? <span class="num">{formatUsd(available)}</span> : "—"}
+        />
+        <KV
+          k="Current Position"
+          v={posSize ? <span class={`num ${posSize > 0 ? "pos" : "neg"}`}>{positionText(posSize, base)}{mark ? ` (~${formatUsd(Math.abs(posSize) * mark)})` : ""}</span> : "—"}
+        />
         {isStop && priceInput("se-trigger", "Trigger", trigger, setTrigger)}
         {usesLimit && priceInput("se-price", "Price", limitPrice, setLimitPrice)}
         <div class="field">
           <label for="se-size">Size</label>
-          <input id="se-size" inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd(decimalInput((e.target as HTMLInputElement).value))} aria-label="Order size in USD" />
+          <input id="se-size" inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd(decimalInput((e.target as HTMLInputElement).value))} aria-label="Order size in USD" aria-describedby={sizeText ? "se-size-line" : undefined} />
           <span class="unit">USD</span>
         </div>
-        <div class="slider-row" title="Order size as a % of your buying power (available balance × leverage)">
+        {sizeText && (
+          <div class="helper" id="se-size-line">
+            {sizeText}
+          </div>
+        )}
+        <div class="slider-row">
           <PctSlider value={pct} onChange={setPct} />
           <label class="pct num">
             <input
@@ -842,8 +983,10 @@ export function App({ config }: { config: WidgetConfig }) {
             />
             %
           </label>
+          <Info label="About the size slider">
+            The slider sets your order size as a % of your buying power (available balance × leverage). Change leverage with the Leverage button above.
+          </Info>
         </div>
-        <div class="hint-row">Slider = size as % of buying power · leverage is set above</div>
         {orderType === "twap" && (
           <>
             <div class="durs" role="radiogroup" aria-label="TWAP duration">
@@ -868,10 +1011,18 @@ export function App({ config }: { config: WidgetConfig }) {
           </>
         )}
         <div class="checks">
-          <Check on={reduceOnly} label="Reduce Only" onToggle={() => setReduceOnly(!reduceOnly)} />
           {tpslOk && <Check on={tpsl} label="TP/SL" onToggle={() => setTpsl(!tpsl)} />}
           {orderType === "twap" && <Check on={randomize} label="Randomize" onToggle={() => setRandomize(!randomize)} />}
+          <button class="linkbtn adv" aria-expanded={showAdv} aria-controls="se-adv" disabled={reduceOnly} onClick={() => setAdvOpen(!advOpen)}>
+            Advanced options <Chevron size={10} />
+          </button>
         </div>
+        {showAdv && (
+          <div class="checks" id="se-adv">
+            <Check on={reduceOnly} label="Reduce Only" onToggle={() => setReduceOnly(!reduceOnly)} />
+            <span class="helper">Only shrinks an open position, never opens or flips one</span>
+          </div>
+        )}
         {tpsl && tpslOk && (
           <div class="tpsl">
             <div class="field">
@@ -884,6 +1035,8 @@ export function App({ config }: { config: WidgetConfig }) {
             </div>
           </div>
         )}
+        {flip && <div class={baseSize > Math.abs(posSize) + sizeStep / 2 ? "warn" : "note"}>{flip}</div>}
+        {summary && <div class="helper summary">{summary}</div>}
         {cta}
         {ticketMsg && (
           <div class={`ticket-msg ${ticketMsg.kind}`} role="status">
@@ -922,19 +1075,19 @@ export function App({ config }: { config: WidgetConfig }) {
           {fill && <KV k="Est. Slippage" hint="Average fill vs the mark price, from the live book" v={<span class={`num ${fill.slippage > SLIP_WARN ? "neg" : ""}`}>{(fill.slippage * 100).toFixed(2)}%</span>} />}
           {orderType === "twap" && <KV k="Duration" v={<span class="num">{twapSec >= TWAP_MIN_SEC && twapSec <= TWAP_MAX_SEC ? fmtMin(twapSec / 60) : "—"}</span>} />}
           <KV
-            k="Est. Liquidation Price"
-            hint={
+            k="Liq. price (worst case)"
+            info={
               marginMode === "isolated"
-                ? "Estimate for an isolated position backed by size ÷ leverage of margin. Fees and funding move it slightly."
-                : "Conservative estimate treating this position as isolated. In cross margin your whole balance backs it, so the real price is usually further away."
+                ? "If the price reaches this, the position is closed and you lose its margin. Estimated for this position alone, backed by size ÷ leverage of margin; fees and funding move it slightly. The position card shows Strike's actual price once it's open."
+                : "If the price reaches this, the position is closed and you lose its margin. Worst case: it assumes this position alone, backed only by size ÷ leverage. In cross margin your whole balance backs it, so Strike's actual price (shown on the position card) is usually further away."
             }
             v={<span class="num">{preview && !reduceOnly ? formatPrice(preview.liquidationPrice, tick) : "—"}</span>}
           />
-          <KV k="Margin" v={<span class="num">{preview ? formatUsd(preview.margin) : "—"}</span>} />
+          <KV k="Margin" info="The part of your balance set aside for this position: size ÷ leverage." v={<span class="num">{preview ? formatUsd(preview.margin) : "—"}</span>} />
           <KV k="Order Size" v={<span class="num">{baseSize ? `${fmtQty(baseSize)} ${base}` : "—"}</span>} />
           <KV
             k="Fees"
-            hint={`Strike taker fee ${(takerRate * 100).toFixed(3)}% + builder fee ${(feeBps / 100).toFixed(2)}% (${config.builderCode})`}
+            info={`Paid when the order fills: Strike's taker fee ${(takerRate * 100).toFixed(3)}% + builder fee ${(feeBps / 100).toFixed(2)}% (${config.builderCode}), on the order's size.`}
             v={<span class="num">{preview ? formatUsd(preview.totalFee, { decimals: preview.totalFee < 0.1 ? 4 : 2 }) : "—"}</span>}
           />
         </div>
@@ -949,7 +1102,22 @@ export function App({ config }: { config: WidgetConfig }) {
           ))}
         </div>
         <div class="list" role="tabpanel">
-          {lowerTab === "positions" && (session ? <PositionsList positions={positions} marks={marks} ticks={ticks} busy={busy} onClose={closePosition} /> : connectPrompt("positions"))}
+          {lowerTab === "positions" &&
+            (session ? (
+              <PositionsList
+                positions={positions}
+                marks={marks}
+                ticks={ticks}
+                busy={busy}
+                flash={flash}
+                confirming={ask?.startsWith("close:") ? Number(ask.slice(6)) : null}
+                onAsk={(p) => setAsk(p ? `close:${p.id}` : null)}
+                onClose={closePosition}
+                closeText={(p) => closePrompt({ size: Number(p.size), base: p.symbol.split("-")[0], mark: marks[p.symbol] ?? Number(p.entry_price), upnl: Number(p.upnl) })}
+              />
+            ) : (
+              connectPrompt("positions")
+            ))}
           {lowerTab === "orders" &&
             (session ? (
               <>
@@ -993,11 +1161,12 @@ export function App({ config }: { config: WidgetConfig }) {
                 <>
                   <AccountMetrics key={session.accountId} client={client} account={account} />
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "4px" }}>
-                    <button class="cta" style={{ height: "34px", fontSize: "13px" }} onClick={openDeposit}>Deposit ADA</button>
-                    <button class="cta ghost" style={{ height: "34px", fontSize: "13px" }} disabled={available < 5} onClick={() => openWalletSheet("withdraw")}>
+                    <button class="cta" style={{ minHeight: "34px", fontSize: "13px" }} onClick={openDeposit}>Deposit ADA</button>
+                    <button class="cta ghost" style={{ minHeight: "34px", fontSize: "13px" }} disabled={available < MIN_WITHDRAW_USD} onClick={() => openWalletSheet("withdraw")}>
                       Withdraw
                     </button>
                   </div>
+                  {account && available < MIN_WITHDRAW_USD && <div class="helper" style={{ textAlign: "right" }}>Minimum {formatUsd(MIN_WITHDRAW_USD, { decimals: 0 })} to withdraw</div>}
                   {referralMissing && client.referralLink() && (
                     <div class="note">
                       Save on Strike's trading fees: apply referral code <b>{config.referralCode}</b>.{" "}

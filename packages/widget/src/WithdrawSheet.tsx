@@ -83,6 +83,7 @@ export function WithdrawSheet({
         </h3>
         {(phase === "amount" || phase === "quoting") && (
           <>
+            <p>Paid out in ADA (or USDM where Strike only supports it) to the wallet you connected. Minimum {formatUsd(minUsd, { decimals: 0 })}.</p>
             <div class="field">
               <label for="se-wd-amt">Amount</label>
               <input id="se-wd-amt" inputMode="decimal" value={usd} placeholder="0.00" onInput={(e) => setUsd(decimalInput((e.target as HTMLInputElement).value))} />

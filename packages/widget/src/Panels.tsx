@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import {
+  fillDirection,
   formatPct,
   formatPrice,
   formatUsd,
@@ -121,7 +122,7 @@ export function HistoryPanel({ client, ticks }: { client: StrikeEverywhere; tick
         ))}
       </div>
       {cur?.error && <div class="warn">Strike: {cur.error}</div>}
-      {cur?.loaded && !cur.items.length && !cur.error && <div class="empty">Nothing here yet</div>}
+      {cur?.loaded && !cur.items.length && !cur.error && <div class="empty">{kind === "fills" || kind === "orders" ? "Your trades will appear here after your first order." : "Nothing here yet"}</div>}
       {cur?.items.map((it) =>
         kind === "fills" ? <FillItem key={it.id} f={it} tick={ticks[it.symbol]} /> : kind === "funding" ? <FundingItem key={it.id} f={it} /> : kind === "closed" ? <ClosedItem key={it.id} p={it} /> : <OrderItem key={it.id} o={it} tick={ticks[it.symbol]} />,
       )}
@@ -153,7 +154,7 @@ function FillItem({ f, tick }: { f: FillRow; tick?: number }) {
   return (
     <Hist
       sym={f.symbol}
-      badge={f.side === "buy" ? "Buy" : f.side === "sell" ? "Sell" : ""}
+      badge={fillDirection(f.side, pnl)}
       long={f.side ? f.side === "buy" : null}
       right={`${fmtSize(f.size)} @ ${f.price === null ? "—" : formatPrice(f.price, tick)}`}
       sub={[`Fee ${usd(f.fee)}`, pnl ? `PnL ${usd(pnl, true)}` : "", f.autoClose ? f.autoClose.replace(/_/g, " ") : "", fmtTime(f.time)].filter(Boolean).join(" · ")}
@@ -200,7 +201,14 @@ function OrderItem({ o, tick }: { o: OrderHistoryEntry; tick?: number }) {
       long={o.side === "buy"}
       right={String(o.status ?? "—")}
       rightCls={o.status === "rejected" ? "neg" : ""}
-      sub={[`${fmtSize(num(o.filled))} / ${fmtSize(num(o.size))}`, price ? `@ ${formatPrice(price, tick)}` : stop ? `trigger ${formatPrice(stop, tick)}` : "market", fmtTime(Number(o.create_timestamp))].join(" · ")}
+      sub={[
+        o.reduce_only ? `closes ${o.side === "buy" ? "Short" : "Long"}` : "",
+        `${fmtSize(num(o.filled))} / ${fmtSize(num(o.size))}`,
+        price ? `@ ${formatPrice(price, tick)}` : stop ? `trigger ${formatPrice(stop, tick)}` : "market",
+        fmtTime(Number(o.create_timestamp)),
+      ]
+        .filter(Boolean)
+        .join(" · ")}
     />
   );
 }

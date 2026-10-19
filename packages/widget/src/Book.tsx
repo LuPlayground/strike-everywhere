@@ -1,7 +1,7 @@
 import { formatPrice, type BookLevel, type BookView } from "@strike-everywhere/core";
 import { fmtSize } from "./parts";
 
-export function Book({ book, depth, tick, base, onPick }: { book: BookView | null | undefined; depth: number; tick?: number; base: string; onPick: (price: number) => void }) {
+export function Book({ book, depth, tick, base, hint, onPick }: { book: BookView | null | undefined; depth: number; tick?: number; base: string; hint: string; onPick: (price: number) => void }) {
   if (!book) return <div class="book"><div class="chart-msg">{book === null ? "Order book unavailable right now…" : "Loading order book…"}</div></div>;
   const cum = (levels: BookLevel[]) => {
     let t = 0;
@@ -11,7 +11,7 @@ export function Book({ book, depth, tick, base, onPick }: { book: BookView | nul
   const bids = cum(book.bids);
   const max = Math.max(asks[asks.length - 1]?.[2] ?? 0, bids[bids.length - 1]?.[2] ?? 0) || 1;
   const row = (side: "ask" | "bid") => ([p, q, t]: readonly [number, number, number]) => (
-    <button key={p} class={`lvl ${side}`} onClick={() => onPick(p)} title="Use this price for a limit order">
+    <button key={p} class={`lvl ${side}`} onClick={() => onPick(p)} title={hint}>
       <span class="bar" style={{ width: `${(t / max) * 100}%` }} />
       <span class="num px">{formatPrice(p, tick)}</span>
       <span class="num">{fmtSize(q)}</span>
@@ -20,6 +20,12 @@ export function Book({ book, depth, tick, base, onPick }: { book: BookView | nul
   );
   return (
     <div class="book" role="group" aria-label="Order book">
+      <div class="book-cap">
+        <span>{hint}</span>
+        <span>
+          <span class="neg">Red</span> = sellers · <span class="pos">Green</span> = buyers
+        </span>
+      </div>
       <div class="lvl hd">
         <span>Price</span>
         <span>Size ({base})</span>

@@ -5,7 +5,7 @@ For wallets, dApps, portfolio trackers, communities and publications that want S
 ## 1. Get a builder code (5 minutes)
 1. Open **app.strikefinance.org/builder-codes**, or testnet.strikefinance.org/builder-codes for testing.
 2. Connect a wallet and register a code (1–64 letters, digits, `-` or `_`) and a **max fee**. Strike allows at most 1%; we recommend 0.10%.
-3. Strike requires the registering account to have made a **first deposit of at least $100** (an undocumented rule as of Oct 2026).
+3. Strike requires the account registering a builder code to hold at least **$100** (deposited in Strike; on testnet, test funds work). Undocumented as of Oct 2026.
 
 ## 2. Embed
 ```html

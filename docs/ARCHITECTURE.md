@@ -37,10 +37,10 @@ Host page (any origin)
 | The docs' mainnet user WebSocket host does not connect | `wss://api.strikefinance.org/ws/user-api` |
 | `/v2/openOrders` is PascalCase; history is snake_case | `normalizeOrder` |
 | Builder API wallets never expire | Widget-enforced session lifetime |
-| New accounts need a first deposit of at least $100 (undocumented) | Detected via `GET /v2/account?blockchain_address=` (404) and explained before connecting and depositing |
+| New accounts: Strike's app requires a $100 first deposit (the API quotes smaller ones; crediting unverified) | Detected via `GET /v2/account?blockchain_address=` (404) and explained before connecting and depositing |
 | Reference repo field `max_fee_bps` | Docs field `fee_share_bps` |
 | Cloudflare blocks default script user agents | The Worker sends a descriptive User-Agent |
 
 ## Bundle
-- `strike-everywhere.iife.js`: ~156 KB minified, **~52 KB gzipped**. It includes Preact, the SDK, Ed25519 and bech32.
+- `strike-everywhere.iife.js`: ~172 KB minified, **~57 KB gzipped**. It includes Preact, the SDK, Ed25519 and bech32.
 - `strike-everywhere.js`: ESM build for bundlers.
