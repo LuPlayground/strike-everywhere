@@ -68,7 +68,7 @@ export async function builderConnect(p: ConnectParams): Promise<{ session: Build
       body: { address: p.address, chain: p.chain, nonce: challenge.nonce, wallet_signature: walletSignature },
     });
   } catch (e: any) {
-    if (/expir|nonce|challenge/i.test(e?.message ?? "")) throw new Error("The signature request expired (Strike allows about 3 minutes). Click Sign & connect to get a new one.");
+    if (/expir|nonce|challenge/i.test(e?.message ?? "")) throw new Error("The signature request expired (Strike allows a few minutes). Click Sign & connect to get a new one.");
     throw e;
   }
   if (r.api_wallet_public_key && r.api_wallet_public_key !== key.publicKeyHex) {

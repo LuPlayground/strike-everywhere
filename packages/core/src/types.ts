@@ -55,7 +55,10 @@ export interface Account {
   maintenance_margin: string;
   default_margin_mode: "cross" | "isolated";
   default_leverage: number;
+  symbol_settings?: Record<string, { margin_mode?: MarginMode; leverage?: number }>;
 }
+
+export type MarginMode = "cross" | "isolated";
 
 export interface Position {
   id: number;
@@ -118,4 +121,80 @@ export interface Kline {
   low: number;
   close: number;
   volume: number;
+}
+
+
+export interface Page<T> {
+  items: T[];
+  next: number | null;
+}
+
+export interface FillRow {
+  id: number;
+  orderId: number;
+  symbol: string;
+  side: Side | "";
+  role: string;
+  price: number | null;
+  size: number | null;
+  fee: number | null;
+  realizedPnl: number | null;
+  autoClose: string;
+  time: number;
+}
+
+export interface FundingRow {
+  id: number;
+  symbol: string;
+  positionSide: string;
+  positionSize: number | null;
+  rate: number | null;
+  amount: number | null;
+  time: number;
+}
+
+export interface ClosedPositionRow {
+  id: number;
+  symbol: string;
+  marginMode: string;
+  openTime: number;
+  closeTime: number;
+  realizedPnl: number | null;
+}
+
+export interface TwapStrategy {
+  id: string;
+  symbol: string;
+  side: Side;
+  status: string;
+  totalSize: number | null;
+  filledSize: number | null;
+  durationSec: number | null;
+  slicesFired: number | null;
+  nominalSlices: number | null;
+  createdAt: number;
+  lastError: string;
+}
+
+export interface PortfolioSummary {
+  realizedPnl: number | null;
+  volume: number | null;
+  fees: number | null;
+  feeTier: number | null;
+  takerRate: number | null;
+  makerRate: number | null;
+  referralDiscountPct: number | null;
+  stakingDiscount: number | null;
+}
+
+export interface Vault {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  tvl: number | null;
+  aprPct: number | null;
+  periodReturnPct: number | null;
+  allTimePnl: number | null;
+  depositors: number | null;
 }

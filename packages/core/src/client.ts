@@ -8,9 +8,11 @@ import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
 import { ApiWalletKey } from "./signer.js";
-import { OrderRejectedError, Trading, type PlacedOrder, type PlaceOrderInput } from "./trading.js";
-import type { MarketSpec, OrderHistoryEntry, Position } from "./types.js";
+import { OrderRejectedError, Trading, stopOrderProblem, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
+import type { MarginMode, MarketSpec, OrderHistoryEntry, Position } from "./types.js";
 import { PriceStream, UserStream } from "./ws.js";
+import { OrderBookFeed } from "./book.js";
+import { isUuid } from "./parse.js";
 
 export interface StrikeEverywhereOptions {
   network?: Network;
@@ -228,8 +230,62 @@ export class StrikeEverywhere {
   async placeOrder(input: PlaceOrderInput & { leverage?: number }): Promise<OrderHistoryEntry> {
     const spec = this.spec(input.symbol);
     if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
-    const price = input.price ?? Number(this.raw(input.symbol)?.mark_price ?? 0);
+    if (input.type === "stop" || input.type === "stop_limit") {
+      const mark = await this.markPrice(input.symbol).catch(() => 0);
+      const problem = stopOrderProblem({ ...input, mark, priceBound: Number(this.raw(input.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
+      if (problem) throw new Error(mark > 0 ? `${problem}. Order not sent.` : "Couldn't check the trigger against the current mark price. Order not sent.");
+    }
+    const price = input.price ?? input.stopPrice ?? Number(this.raw(input.symbol)?.mark_price ?? 0);
     return this.submitTracked(input.symbol, Trading.newOrderIds(input), input.side, input.size * price, (ids) => this.trading.placeOrder(spec, input, this.orderFeeBps, ids));
+  }
+
+  cancelAll(symbol?: string): Promise<number | null> {
+    return this.trading.cancelAll(symbol);
+  }
+
+  async placeTwap(input: TwapInput & { leverage?: number }): Promise<{ strategyId: string; status: string }> {
+    const spec = this.spec(input.symbol);
+    if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
+    const mark = await this.markPrice(input.symbol).catch(() => 0);
+    if (!(mark > 0)) throw new Error("Couldn't get the current mark price. TWAP not started.");
+    if (input.limitPrice !== undefined) {
+      const bound = Number(this.raw(input.symbol)?.order_limit_price_bound) || 0.05;
+      if (!(input.limitPrice > 0) || Math.abs(input.limitPrice - mark) / mark > bound) {
+        throw new Error(`TWAP limit price must be within ${(bound * 100).toFixed(0)}% of the mark price. TWAP not started.`);
+      }
+    }
+    const r = await this.trading.createTwap(spec, input, this.orderFeeBps);
+    const price = mark;
+    if (isUuid(r.strategyId)) {
+      void this.beacon({ type: "order", status: "twap", clientOrderId: r.strategyId, symbol: input.symbol, side: input.side, notional: input.size * price, reduceOnly: !!input.reduceOnly });
+    }
+    return r;
+  }
+
+  async setMarginMode(symbol: string, mode: MarginMode): Promise<void> {
+    let pos: Position[];
+    try {
+      pos = await this.account.positions();
+    } catch {
+      throw new Error("Couldn't check your open positions. Margin mode not changed; try again.");
+    }
+    if (pos.some((p) => p.symbol === symbol && Number(p.size) !== 0)) throw new Error(`Close your ${symbol} position first: Strike only changes margin mode with no open position.`);
+    if ((await this.account.symbolMarginMode(symbol).catch(() => null)) === mode) return;
+    await this.trading.setMarginMode(symbol, mode);
+    const deadline = Date.now() + 5000;
+    for (;;) {
+      if ((await this.account.symbolMarginMode(symbol).catch(() => null)) === mode) return;
+      if (Date.now() > deadline) throw new Error("Strike hasn't confirmed the margin mode change yet. Check it again before trading.");
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  }
+
+  orderBook(symbol: string): OrderBookFeed {
+    return new OrderBookFeed(this.market, this.prices(), symbol).start();
+  }
+
+  vaultUrl(vaultId: string): string {
+    return this.appUrl(isUuid(vaultId) ? `/vaults/${vaultId}` : "/vaults");
   }
 
   async closePosition(position: Position): Promise<OrderHistoryEntry> {

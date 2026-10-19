@@ -1,5 +1,33 @@
 import { StrikeHttp, query } from "./http.js";
-import type { FeeTiers, Kline, MarginTier, MarketSpec, PremiumIndex, Ticker24h } from "./types.js";
+import { parseDepthSnapshot, parseJsonKeepingIds, type DepthSnapshot } from "./book.js";
+import { listFrom, numOrNull } from "./parse.js";
+import type { FeeTiers, Kline, MarginTier, MarketSpec, PremiumIndex, Ticker24h, Vault } from "./types.js";
+
+export function parseKlines(rows: unknown): Kline[] {
+  if (!Array.isArray(rows)) return [];
+  const out: Kline[] = [];
+  for (const r of rows) {
+    if (!Array.isArray(r)) continue;
+    const k = { openTime: Number(r[0]), open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5] || 0 };
+    if ([k.openTime, k.open, k.high, k.low, k.close].every((n) => Number.isFinite(n) && n > 0)) out.push(k);
+  }
+  return out.sort((a, b) => a.openTime - b.openTime);
+}
+
+export function parseVault(v: any): Vault | null {
+  if (!v || typeof v.vault_id !== "string" || typeof v.name !== "string") return null;
+  return {
+    id: v.vault_id,
+    name: v.name,
+    type: String(v.type ?? ""),
+    status: String(v.status ?? ""),
+    tvl: numOrNull(v.equity),
+    aprPct: numOrNull(v.apr),
+    periodReturnPct: numOrNull(v.period_return),
+    allTimePnl: numOrNull(v.all_time_pnl),
+    depositors: numOrNull(v.depositors),
+  };
+}
 
 export interface RawMarket {
   symbol: string;
@@ -15,6 +43,7 @@ export interface RawMarket {
   order_market_step_size: string;
   order_min_notional: string;
   order_limit_price_bound: string;
+  order_market_price_bound?: string;
   mark_price: string;
   index_price: string;
   last_price: string;
@@ -61,8 +90,25 @@ export class MarketData {
   }
 
   async klines(symbol: string, interval = "1h", limit = 48, priceType: "last" | "mark" | "index" = "last"): Promise<Kline[]> {
-    const rows = await this.http.request<any[][]>("GET", `/v2/klines${query({ symbol, interval, limit, priceType: priceType === "last" ? undefined : priceType })}`, { base: "price", auth: false });
-    return rows.map((r) => ({ openTime: Number(r[0]), open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5] }));
+    const rows = await this.http.request<unknown>("GET", `/v2/klines${query({ symbol, interval, limit, priceType: priceType === "last" ? undefined : priceType })}`, { base: "price", auth: false });
+    return parseKlines(rows);
+  }
+
+  async depth(symbol: string, limit = 20): Promise<DepthSnapshot> {
+    const j = await this.http.request<unknown>("GET", `/v2/depth${query({ symbol, limit: Math.max(1, Math.min(1000, Math.round(limit))) })}`, {
+      base: "price",
+      auth: false,
+      parse: parseJsonKeepingIds,
+    });
+    const snap = parseDepthSnapshot(j);
+    if (!snap) throw new Error("Malformed order book from Strike");
+    if (snap.bids.length && snap.asks.length && snap.bids[0][0] >= snap.asks[0][0]) throw new Error("Crossed order book from Strike");
+    return snap;
+  }
+
+  async vaults(limit = 20): Promise<Vault[]> {
+    const j = await this.http.request<unknown>("GET", `/v2/vaults${query({ limit })}`, { auth: false });
+    return listFrom(j, "vaults").map(parseVault).filter((v): v is Vault => v !== null);
   }
 
   async feeTiers(): Promise<FeeTiers> {

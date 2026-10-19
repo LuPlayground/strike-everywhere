@@ -51,7 +51,7 @@ Add `referral-code="YOUR_REFERRAL_CODE"` to the tag and the widget passes it in 
 
 Caveats:
 - Strike lets you create a referral code only after **$10,000 of your own trading volume**.
-- Strike's referral docs describe applying codes in its app or via a referral link. Whether a code passed through Builder Connect is honoured, and whether it applies only to new accounts, is **not yet verified** (it can't be tested on testnet, which has no fills).
+- Builder Connect accepts `referral_code` (verified on testnet: Strike shows "Referral attribution" in the consent text and rejects codes that don't exist with a 400; the widget then connects without it and offers an "Apply on Strike" link). Whether it applies to accounts that already exist, and how rewards show up, is not yet verified.
 
 ## Who should register their own code?
 - **Your own site:** use your own code. Fees go to you.

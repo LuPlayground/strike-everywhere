@@ -43,7 +43,7 @@ On Hyperliquid, front ends that embed trading, especially wallets, became the la
 | Path | What it is |
 |---|---|
 | `packages/core` | `@strike-everywhere/core`, a browser SDK. It covers Builder Connect (Cardano CIP-30), signed REST, market data, trading, ADA deposits with pre-sign safety checks, the price and user WebSockets, and margin-tier risk maths. It has a unit test suite. |
-| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~38 KB gzipped**. |
+| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~52 KB gzipped**. |
 | `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill and transaction history**: a fill counts only if the widget registered its `client_order_id` before Strike created the order. |
 | `apps/dashboard` | The partner dashboard: wallets → funded → trading accounts, verified volume, builder fees, per-site breakdown, recent activity, and an embed-snippet generator. |
 | `apps/developers` | The integration page: configurator, live preview in a sample app, HTML / React / wallet-extension snippets. |
@@ -92,6 +92,14 @@ npm run deploy:api            # Cloudflare Worker (partner API)
 | `referral-code` | — | Strike referral code passed at connect (must belong to the builder owner) |
 | `persist` | `memory` | `session` keeps the trading key in this tab's sessionStorage until it expires (12 h) |
 | `width` | `380px` | Widget width |
+
+### Features
+
+- **Market views**: a compact sparkline by default, plus a **Chart** (SVG candles + volume; 15m / 1h / 4h / 1D; Mark / Last / Index; crosshair with OHLC) and a live **Book** (depth stream synced to REST snapshots; click a price to use it).
+- **Order types**: Market, Limit, TP/SL, **Stop Market**, **Stop Limit** (mark-price triggers, checked against the live mark) and **TWAP** (5 min – 24 h, optional limit, randomize).
+- **Market-order slippage estimate** from the live book, with a warning above 0.5% and an extra confirm above 2%.
+- **Cross / isolated margin** toggle per market, applied and confirmed asynchronously like leverage.
+- Lower panel: positions, open orders with **Cancel all**, active **TWAPs** with progress, **History** (fills, funding, closed positions with realized PnL, order history) and **Account** (margin ratio with Strike's risk levels, equity, all-time PnL and volume, fee tier) with a read-only list of **Strike vaults**.
 
 ### SDK only
 

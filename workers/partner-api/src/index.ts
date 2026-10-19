@@ -225,7 +225,7 @@ async function stats(url: URL, env: Env): Promise<Response> {
               (SELECT COUNT(*) FROM fills WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3) AS fills,
               (SELECT COUNT(*) FROM events WHERE network = ?1 AND builder_code = ?2 AND type = 'deposit' AND ts >= ?3) AS deposits_reported`,
     ).bind(network, builder, since),
-    env.DB.prepare(`SELECT COUNT(*) AS orders, SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) AS rejected FROM events WHERE network = ? AND builder_code = ? AND type = 'order' AND ts >= ?`).bind(network, builder, since),
+    env.DB.prepare(`SELECT COUNT(*) AS orders, SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) AS rejected FROM events WHERE network = ? AND builder_code = ? AND type = 'order' AND COALESCE(status, '') <> 'twap' AND ts >= ?`).bind(network, builder, since),
     env.DB.prepare(
       `SELECT e.partner_id, e.host_origin,
               COUNT(DISTINCT e.account_id) AS wallets,
@@ -233,7 +233,7 @@ async function stats(url: URL, env: Env): Promise<Response> {
               MAX(e.ts) AS last_seen,
               (SELECT COUNT(DISTINCT x.account_id) FROM events x JOIN accounts a ON a.network = x.network AND a.builder_code = x.builder_code AND a.account_id = x.account_id
                 WHERE x.network = ?1 AND x.builder_code = ?2 AND x.partner_id = e.partner_id AND x.host_origin = e.host_origin AND x.ts >= ?3 AND a.funded_at IS NOT NULL) AS funded,
-              SUM(CASE WHEN e.type = 'order' THEN 1 ELSE 0 END) AS orders,
+              SUM(CASE WHEN e.type = 'order' AND COALESCE(e.status, '') <> 'twap' THEN 1 ELSE 0 END) AS orders,
               (SELECT COUNT(DISTINCT f.account_id) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS traders,
               (SELECT COALESCE(SUM(f.notional), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS volume,
               (SELECT COALESCE(SUM(f.builder_fee), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS fees

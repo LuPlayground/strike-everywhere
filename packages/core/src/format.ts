@@ -13,6 +13,7 @@ export function roundToStep(value: number, step: number, mode: "floor" | "ceil" 
 }
 
 export function formatUsd(v: number, opts: { sign?: boolean; decimals?: number } = {}): string {
+  if (!isFinite(v)) return "—";
   const d = opts.decimals ?? (Math.abs(v) >= 1000 ? 0 : 2);
   const s = Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   const sign = v < 0 ? "-" : opts.sign && v > 0 ? "+" : "";
@@ -26,5 +27,6 @@ export function formatPrice(v: number, tick?: number): string {
 }
 
 export function formatPct(v: number, decimals = 2): string {
+  if (!isFinite(v)) return "—";
   return `${v > 0 ? "+" : ""}${v.toFixed(decimals)}%`;
 }

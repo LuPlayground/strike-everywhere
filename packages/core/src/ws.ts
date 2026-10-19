@@ -1,5 +1,6 @@
 import type { ApiWalletKey } from "./signer.js";
 import { signLogon } from "./signer.js";
+import { parseJsonKeepingIds } from "./book.js";
 
 type Listener = (msg: any) => void;
 
@@ -59,7 +60,7 @@ abstract class ReconnectingSocket {
         if (!t) continue;
         let msg: any;
         try {
-          msg = JSON.parse(t);
+          msg = this.parse(t);
         } catch {
           continue;
         }
@@ -106,10 +107,18 @@ abstract class ReconnectingSocket {
   }
 
   protected abstract onOpen(): Promise<void>;
+
+  protected parse(text: string): any {
+    return JSON.parse(text);
+  }
 }
 
 export class PriceStream extends ReconnectingSocket {
   private subs = new Map<string, Record<string, unknown>>();
+
+  protected parse(text: string): any {
+    return text.includes('"depthUpdate"') ? parseJsonKeepingIds(text) : JSON.parse(text);
+  }
 
   subscribe(channel: string, symbol?: string): void {
     const key = `${channel}|${symbol ?? ""}`;

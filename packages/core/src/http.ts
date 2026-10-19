@@ -17,6 +17,7 @@ export interface RequestOptions {
   builderFeeBps?: number;
   base?: Base;
   signal?: AbortSignal;
+  parse?: (text: string) => unknown;
 }
 
 const TIMESTAMP_REJECTED = /signature expired|invalid timestamp/i;
@@ -77,7 +78,7 @@ export class StrikeHttp {
     const text = await res.text();
     let json: any = text;
     try {
-      json = text ? JSON.parse(text) : null;
+      json = text ? (res.ok && opts.parse ? opts.parse(text) : JSON.parse(text)) : null;
     } catch {
     }
     if (!res.ok) {

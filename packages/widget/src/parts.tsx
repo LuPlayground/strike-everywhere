@@ -95,6 +95,28 @@ export function Step({ state, n, children }: { state: "todo" | "active" | "done"
   );
 }
 
+export function fmtSize(v: number | null | undefined): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return "—";
+  const a = Math.abs(v);
+  return v.toLocaleString("en-US", a >= 1000 ? { maximumFractionDigits: 0 } : a >= 1 ? { maximumFractionDigits: 2 } : { maximumSignificantDigits: 4 });
+}
+
+export function fmtTime(ms: number, dateOnly = false): string {
+  if (!(ms > 0)) return "—";
+  return new Date(ms).toLocaleString("en-US", dateOnly ? { month: "short", day: "numeric" } : { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+}
+
+export const pageHidden = () => typeof document !== "undefined" && document.hidden;
+
+export function Confirm({ children, actions }: { children: ComponentChildren; actions: ComponentChildren }) {
+  return (
+    <div class="confirm" role="alertdialog">
+      <div>{children}</div>
+      <div class="confirm-a">{actions}</div>
+    </div>
+  );
+}
+
 export function decimalInput(v: string): string {
   const s = v.replace(/,/g, ".").replace(/[^0-9.]/g, "");
   const i = s.indexOf(".");
