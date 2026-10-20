@@ -80,6 +80,7 @@
   .hist-h { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--k-line); }
   .hist-h .t { height: 30px; padding: 0 12px; border-radius: 9px; border: 0; background: none; color: var(--k-muted); font-weight: 500; font-size: 13px; cursor: pointer; }
   .hist-h .t:hover { color: #fff; }
+  .hist-h .t { white-space: nowrap; }
   .hist-h .t.on { background: rgba(255, 255, 255, .07); color: #fff; }
   .hist .none { padding: 28px 14px; color: var(--k-muted); font-size: 13px; }
   .hist-h .sub { margin-left: auto; font-size: 12px; color: var(--k-muted); }
@@ -178,7 +179,7 @@
     .k-search { display: none; }
     .chart { height: 300px; }
   }
-  @media (max-width: 560px) { .k-wrap { padding: 0 12px; } .k-nav { padding: 0 12px; gap: 12px; } .k-cta span { display: none; } .pair-h .src { display: none; } .perps-pane { height: 720px; } }
+  @media (max-width: 560px) { .hist-h { flex-wrap: wrap; } .hist-h .sub { flex-basis: 100%; margin-left: 0; padding: 2px 2px 0; } .k-wrap { padding: 0 12px; } .k-nav { padding: 0 12px; gap: 12px; } .k-cta span { display: none; } .pair-h .src { display: none; } .perps-pane { height: 720px; } }
 </style>
 </head>
 <body>
