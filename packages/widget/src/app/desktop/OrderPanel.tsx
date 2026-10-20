@@ -4,7 +4,8 @@ import { cleanDecimal } from "../../parts";
 import { pctText, priceText, qtyText, usdText } from "../markets";
 import { ORDER_TYPES, marginForFraction, pnlForPrice, sizeDraft, type AppOrderType, type AutoMode, type Draft, type DraftCtx, type Tif, type Unit } from "../order";
 import type { Mkt, PerpsState } from "../state";
-import { Icon, Slider, Spin, pref } from "../ui";
+import { Calculator } from "../Calculator";
+import { Icon, Sheet, Slider, Spin, pref } from "../ui";
 import { GridForm } from "./GridForm";
 
 const SLIP_CONFIRM = 0.02;
@@ -38,6 +39,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
   const [auto, setAuto] = useState(false);
   const [autoMode, setAutoMode] = useState<AutoMode>("price");
   const [tp, setTp] = useState("");
+  const [calc, setCalc] = useState(false);
   const [sl, setSl] = useState("");
   const [armed, setArmed] = useState("");
   const [placing, setPlacing] = useState(false);
@@ -345,6 +347,9 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
               <span title={`Strike taker ${(s.takerRate * 100).toFixed(3)}% + builder ${(s.client.orderFeeBps / 100).toFixed(2)}%. A limit order that waits on the book pays Strike's lower maker fee.`}>{type === "market" ? "Fees" : "Fees (up to)"}</span>
               <span class="num">{z.size > 0 ? usdText(z.fee, { decimals: z.fee < 0.1 ? 4 : 2 }) : `${(z.feeRate * 100).toFixed(3)}%`}</span>
             </div>
+            <button class="pd-calc" onClick={() => setCalc(true)}>
+              <Icon n="sliders" size={14} /> Calculator
+            </button>
             {isMarket && (
               <div class="pd-kv muted">
                 <span>Max slippage</span>
@@ -432,6 +437,11 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
             {cta}
           </div>
         </>
+      )}
+      {calc && m && (
+        <Sheet title="Calculator" onClose={() => setCalc(false)}>
+          <Calculator m={m} />
+        </Sheet>
       )}
     </div>
   );

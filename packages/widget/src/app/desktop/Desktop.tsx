@@ -7,16 +7,25 @@ import { filterMarkets, sortMarkets } from "../mobile/Markets";
 import type { Mkt, PerpsState } from "../state";
 import { Coin, Icon, Sheet } from "../ui";
 import { BookTrades } from "./BookTrades";
+import { DepthChart, FundingChart, MarketDetails } from "./ChartTabs";
 import { Bottom } from "./Bottom";
 import { AccountCard, OrderPanel } from "./OrderPanel";
 
 const IVS: Interval[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"];
+type View = "chart" | "funding" | "depth" | "details";
+const VIEWS: Array<[View, string]> = [
+  ["chart", "Chart"],
+  ["funding", "Funding"],
+  ["depth", "Depth"],
+  ["details", "Details"],
+];
 type Cat = "all" | "crypto" | "tradfi";
 
 export function Desktop({ s, width }: { s: PerpsState; width: number }) {
   const [sym, setSym] = useState(s.config.market);
   const [side, setSide] = useState<Side>(s.config.side ?? "buy");
   const [iv, setIv] = useState<Interval>("15m");
+  const [view, setView] = useState<View>("chart");
   const [book, setBook] = useState<BookView | null | undefined>(undefined);
   const [pick, setPick] = useState<{ p: number; n: number } | null>(null);
   const [listOpen, setListOpen] = useState(false);
@@ -90,14 +99,28 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
         )}
       </div>
       <div class="pd-panel pd-chart">
-        <div class="pd-ivs" role="radiogroup" aria-label="Candle interval">
-          {IVS.map((i) => (
-            <button key={i} role="radio" aria-checked={iv === i} class={iv === i ? "on" : ""} onClick={() => setIv(i)}>
-              {i === "1d" ? "1D" : i === "1w" ? "1W" : i}
-            </button>
-          ))}
+        <div class="pd-ctabs">
+          <span class="tabs" role="tablist" aria-label="Chart view">
+            {VIEWS.map(([v, label]) => (
+              <button key={v} role="tab" aria-selected={view === v} class={view === v ? "on" : ""} onClick={() => setView(v)}>
+                {label}
+              </button>
+            ))}
+          </span>
+          {view === "chart" && (
+            <span class="pd-ivs flat" role="radiogroup" aria-label="Candle interval">
+              {IVS.map((i) => (
+                <button key={i} role="radio" aria-checked={iv === i} class={iv === i ? "on" : ""} onClick={() => setIv(i)}>
+                  {i === "1d" ? "1D" : i === "1w" ? "1W" : i}
+                </button>
+              ))}
+            </span>
+          )}
         </div>
-        {m && <ChartFill s={s} m={m} iv={iv} />}
+        {m && view === "chart" && <ChartFill s={s} m={m} iv={iv} />}
+        {m && view === "funding" && <FundingChart s={s} sym={sym} />}
+        {m && view === "depth" && <DepthChart book={book} base={m.base} tick={tickSize} />}
+        {m && view === "details" && <MarketDetails s={s} m={m} />}
       </div>
       {showBook && m && <BookTrades s={s} sym={sym} base={m.base} tick={tickSize} book={book} onPrice={(p) => setPick({ p, n: Date.now() })} />}
       <div class="pd-right">

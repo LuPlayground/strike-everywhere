@@ -62,6 +62,11 @@ export interface RawMarket {
   order_min_notional: string;
   order_limit_price_bound: string;
   order_market_price_bound?: string;
+  order_limit_max_size?: string;
+  order_market_min_size?: string;
+  order_market_max_size?: string;
+  liquidation_fee_rate?: string;
+  trigger_protect?: string;
   mark_price: string;
   index_price: string;
   last_price: string;
