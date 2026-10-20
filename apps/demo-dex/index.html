@@ -149,7 +149,7 @@
   .modal.open { display: grid; }
   .picker { width: min(420px, calc(100vw - 32px)); max-height: min(560px, 80vh); display: flex; flex-direction: column; border-radius: 18px; background: var(--k-panel); border: 1px solid var(--k-line); box-shadow: 0 30px 80px rgba(0, 0, 0, .6); }
   .picker-h { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 10px; font-size: 16px; font-weight: 600; }
-  .picker .srch { margin: 0 16px; height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .14); }
+  .picker .srch { flex: none; margin: 0 16px; height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .14); }
   .picker .srch svg { width: 15px; height: 15px; color: var(--k-muted); }
   .picker .srch input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #fff; font: 14px var(--k-font); }
   .picker .list { padding: 10px 8px 12px; overflow-y: auto; display: grid; gap: 2px; scrollbar-width: thin; scrollbar-color: rgba(255, 181, 71, .35) transparent; }
@@ -289,7 +289,7 @@
   var by = {}; TOKENS.forEach(function (t) { by[t.sym] = t; });
   var st = { base: "ADA", pay: "ADA", recv: "USDM", tab: "market", iv: "1h", marks: {}, chg: {}, vol: {} };
   var fmt = function (v, d) { return v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
-  var pxFmt = function (v) { return v >= 1000 ? fmt(v, 2) : v >= 1 ? fmt(v, 4) : fmt(v, 5); };
+  var pxFmt = function (v) { return v >= 100 ? fmt(v, 2) : v >= 1 ? fmt(v, 4) : fmt(v, 5); };
   var usdOf = function (sym) { var t = by[sym]; return t.usd || (t.strike && st.marks[t.strike]) || 0; };
   window.kairoIcon = function (el) {
     if (/\.webp$/.test(el.src)) { el.src = el.src.replace(/\.webp$/, ".svg"); return; }
@@ -392,7 +392,7 @@
     $("modal").setAttribute("aria-label", $("pickTitle").textContent);
     $("pickQ").placeholder = mode === "pair" ? "Search pairs, e.g. SOL or Bitcoin" : "Search by token name or symbol";
     $("pickQ").value = term || ""; renderPick(); $("modal").classList.add("open");
-    setTimeout(function () { var i = $("pickQ"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 30);
+    var i = $("pickQ"); i.focus(); i.setSelectionRange(i.value.length, i.value.length);
   }
   function closePick() { $("modal").classList.remove("open"); }
   $("payTok").addEventListener("click", function () { openPick("token", "pay"); });
@@ -402,8 +402,7 @@
   $("pickQ").addEventListener("keydown", function (e) { if (e.key === "Enter") { var f = $("pickList").querySelector(".it"); if (f) f.click(); } });
   $("closePick").addEventListener("click", closePick);
   $("modal").addEventListener("click", function (e) { if (e.target === $("modal")) closePick(); });
-  $("navSearch").addEventListener("input", function () { var v = this.value; this.value = ""; this.blur(); openPick("pair", null, v); });
-  $("navSearch").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); var v = this.value; this.value = ""; this.blur(); openPick("pair", null, v); } });
+  $("navSearch").addEventListener("focus", function () { var v = this.value; this.value = ""; this.blur(); openPick("pair", null, v); });
   addEventListener("keydown", function (e) {
     if (e.key === "Escape") closePick();
     if (e.key === "/" && document.activeElement.tagName !== "INPUT") { e.preventDefault(); $("navSearch").focus(); }
