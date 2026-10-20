@@ -54,7 +54,7 @@ export function Market({ s, nav, sym, onLearn }: { s: PerpsState; nav: Nav; sym:
       <div class="pa-top">
         <RoundBtn n="back" label="Back" onClick={nav.back} />
         <span class="sp" />
-        {s.testnet && <span class="pa-chip-test">Testnet</span>}
+        {s.testnet && <span class="pa-net">Testnet</span>}
       </div>
       <div class="pa-scroll">
         <div class="pa-coinhead">

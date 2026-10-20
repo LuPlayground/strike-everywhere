@@ -70,7 +70,7 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
               </span>
               {!showList && <Icon n="down" size={16} />}
             </button>
-            {s.testnet && <span class="pa-chip-test">Testnet</span>}
+            {s.testnet && <span class="pa-net">Testnet</span>}
             <div class="pd-stats">
             <Stat k="Mark" v={priceText(m.mark, tickSize)} />
             <Stat k="Index" v={priceText(m.index, tickSize)} title="Index price: average spot price on major external exchanges" />
@@ -155,7 +155,7 @@ function ChartFill({ s, m, iv }: { s: PerpsState; m: Mkt; iv: Interval }) {
   );
 }
 
-function MarketList({ s, sym, onPick, compact }: { s: PerpsState; sym: string; onPick: (s: string) => void; compact?: boolean }) {
+export function MarketList({ s, sym, onPick, compact }: { s: PerpsState; sym: string; onPick: (s: string) => void; compact?: boolean }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<Cat>("all");
   const rows = sortMarkets(filterMarkets(s.markets, q), "volume", true).filter((m) => cat === "all" || (cat === "crypto" ? kindOf(m.base) === "crypto" : kindOf(m.base) !== "crypto"));

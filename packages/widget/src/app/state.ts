@@ -14,7 +14,7 @@ import { displayName } from "./markets";
 import { ORDER_TYPES, toOrderInput, type Draft, type Sized } from "./order";
 
 export interface AppConfig extends WidgetConfig {
-  layout: "auto" | "mobile" | "desktop";
+  layout: "auto" | "mobile" | "desktop" | "panel";
   closable: boolean;
 }
 

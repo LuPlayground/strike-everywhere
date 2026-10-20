@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ConnectSheet } from "../ConnectSheet";
 import { AddFunds, Withdraw } from "./Funds";
 import { Desktop } from "./desktop/Desktop";
+import { Panel } from "./desktop/Panel";
 import { Mobile, type Screen } from "./mobile/Mobile";
 import { usePerps, type AppConfig } from "./state";
 import { Banner } from "./ui";
@@ -28,9 +29,9 @@ export function PerpsApp({ config, host, screen }: { config: AppConfig; host: HT
   const start: Screen | undefined = screen === "market" ? { k: "market", sym: config.market } : screen === "trade" ? { k: "trade", sym: config.market, side: config.side ?? "buy" } : undefined;
 
   return (
-    <div class={`pa${layout === "desktop" ? " desk" : ""}`} ref={box}>
+    <div class={`pa${layout === "desktop" || layout === "panel" ? " desk" : ""}`} ref={box}>
       <Banner toast={s.toast} onDismiss={s.dismissToast} />
-      {layout === "mobile" ? <Mobile s={s} onClose={onClose} start={start} /> : <Desktop s={s} width={w} />}
+      {layout === "mobile" ? <Mobile s={s} onClose={onClose} start={start} /> : layout === "panel" ? <Panel s={s} /> : <Desktop s={s} width={w} />}
       {s.sheet === "connect" && <ConnectSheet client={s.client} onClose={() => s.setSheet(null)} onConnected={s.onConnected} />}
       {s.sheet === "deposit" && (
         <AddFunds

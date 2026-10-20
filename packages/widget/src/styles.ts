@@ -134,6 +134,8 @@ button:disabled { cursor: not-allowed; }
 .menu-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 7px 8px; border-radius: var(--se-radius-sm); }
 .menu-row:hover, .menu-row.on { background: var(--se-input); }
 .menu-row .n { font-weight: 600; }
+.menu-row .menu-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.menu-row .menu-id .coin { width: 24px; height: 24px; }
 .menu-row .t { font-size: 11px; color: var(--se-muted); }
 .menu.inl { position: relative; top: auto; left: 0; right: 0; margin-top: -6px; }
 .menu.inl .menu-row { grid-template-columns: 1fr; }

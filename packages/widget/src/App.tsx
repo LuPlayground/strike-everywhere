@@ -47,6 +47,7 @@ export interface WidgetConfig extends StrikeEverywhereOptions {
   market: string;
   maxLeverage: number;
   side?: "buy" | "sell";
+  amount?: number;
 }
 
 interface Live {
@@ -781,7 +782,6 @@ export function App({ config }: { config: WidgetConfig }) {
           <button class="mkt-pick" data-menu onClick={() => setMenu(menu === "market" ? null : "market")} aria-haspopup="listbox" aria-expanded={menu === "market"}>
             {symbol} <Chevron />
           </button>
-          {testnet && <span class="chip-test">Testnet</span>}
         </div>
         <div class="mkt-price">
           <div class="big num">{mark ? formatPrice(mark, tick) : "—"}</div>
@@ -796,9 +796,12 @@ export function App({ config }: { config: WidgetConfig }) {
             const c = l && l.open ? ((l.mark - l.open) / l.open) * 100 : 0;
             return (
               <button key={m.symbol} class={`menu-row${m.symbol === symbol ? " on" : ""}`} role="option" aria-selected={m.symbol === symbol} onClick={() => (setSymbol(m.symbol), setMenu(null), setQuery(""))}>
-                <span>
-                  <div class="n">{m.symbol}</div>
-                  <div class="t">{m.name} · {m.maxLeverage}x</div>
+                <span class="menu-id">
+                  <CoinIcon base={m.baseAsset ?? m.symbol.split("-")[0]} />
+                  <span>
+                    <div class="n">{m.symbol}</div>
+                    <div class="t">{m.name} · {m.maxLeverage}x</div>
+                  </span>
                 </span>
                 <span class="num">{l ? formatPrice(l.mark, m.tickSize) : ""}</span>
                 <span class={`num ${c >= 0 ? "pos" : "neg"}`}>{l ? formatPct(c) : ""}</span>

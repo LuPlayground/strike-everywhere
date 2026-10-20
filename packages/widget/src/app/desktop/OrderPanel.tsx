@@ -43,6 +43,9 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
   const [placing, setPlacing] = useState(false);
   const [marginBusy, setMarginBusy] = useState(false);
 
+  useEffect(() => {
+    if (s.config.amount && s.config.amount > 0) (setUnit("usd"), setAmt(String(Math.round(s.config.amount * 100) / 100)));
+  }, [s.config.amount]);
   useEffect(() => (setLimitStr(""), setTrigger(""), setActivation(""), setTwapLimit(""), setTp(""), setSl(""), setArmed("")), [sym]);
   useEffect(() => {
     if (!limitPick || !m) return;

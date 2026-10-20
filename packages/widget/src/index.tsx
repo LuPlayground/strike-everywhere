@@ -7,7 +7,7 @@ import { APP_FONT_HREF, FONT_HREF, css } from "./styles";
 
 export const VERSION = "0.2.0";
 
-const ATTRS = ["builder-code", "fee-bps", "max-fee-bps", "market", "network", "partner-id", "partner-api", "max-leverage", "persist", "referral-code", "width", "side", "variant", "layout", "closable", "height", "screen"] as const;
+const ATTRS = ["builder-code", "fee-bps", "max-fee-bps", "market", "network", "partner-id", "partner-api", "max-leverage", "persist", "referral-code", "width", "side", "variant", "layout", "closable", "height", "screen", "amount"] as const;
 
 function ensureFont(href = FONT_HREF, key = "font"): void {
   if (document.querySelector(`link[data-strike-everywhere-${key}]`)) return;
@@ -78,6 +78,7 @@ export class StrikeTradeElement extends HTMLElement {
       maxLeverage: Math.max(1, num("max-leverage", 10)),
       persist: attr("persist") === "session" ? "session" : "memory",
       side: attr("side") === "sell" ? "sell" : "buy",
+      amount: num("amount", 0) > 0 ? num("amount", 0) : undefined,
     };
   }
 
@@ -107,7 +108,7 @@ export class StrikeTradeElement extends HTMLElement {
     if (variant === "app") {
       ensureFont(APP_FONT_HREF, "app-font");
       const layout = (this.getAttribute("layout") ?? "").trim().toLowerCase();
-      const appCfg = { ...cfg, layout: layout === "mobile" || layout === "desktop" ? layout : "auto", closable: this.hasAttribute("closable") } as const;
+      const appCfg = { ...cfg, layout: layout === "mobile" || layout === "desktop" || layout === "panel" ? layout : "auto", closable: this.hasAttribute("closable") } as const;
       render(<PerpsApp key={key} config={appCfg} host={this} screen={this.getAttribute("screen") ?? undefined} />, mount);
       return;
     }

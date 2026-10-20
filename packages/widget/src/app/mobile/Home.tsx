@@ -17,7 +17,7 @@ export function Home({ s, nav, onClose, onLearn, onDisclosures }: { s: PerpsStat
         {onClose ? <RoundBtn n="x" label="Close Perps" onClick={onClose} /> : null}
         <div class="pa-title">
           Perps
-          {s.testnet && <span class="pa-chip-test">Testnet</span>}
+          {s.testnet && <span class="pa-net">Testnet</span>}
         </div>
         <span class="sp" />
         {s.session && <RoundBtn n="clock" label="History" onClick={() => nav.push({ k: "history" })} />}
