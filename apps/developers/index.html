@@ -177,7 +177,7 @@
     <h2 class="rv">What happens next</h2>
     <div class="grid3">
       <div class="rv"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="5.5" width="14" height="10" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 10.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><h3>Users connect once</h3><p>Any CIP-30 wallet: Lace, Eternl, Vespr, Typhon and others. One signature creates their Strike account and a trading key that can't withdraw.</p></div>
-      <div class="rv"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M12.3 7.6c-.4-.7-1.2-1.1-2.3-1.1-1.4 0-2.4.7-2.4 1.8s1 1.5 2.4 1.8 2.4.7 2.4 1.8-1 1.8-2.4 1.8c-1 0-1.8-.4-2.3-1.1M10 5v10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h3>Strike pays you</h3><p>Your builder fee is added to each order and credited by Strike to your account on every fill. Users always see it before they confirm.</p></div>
+      <div class="rv"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M12.3 7.6c-.4-.7-1.2-1.1-2.3-1.1-1.4 0-2.4.7-2.4 1.8s1 1.5 2.4 1.8 2.4.7 2.4 1.8-1 1.8-2.4 1.8c-1 0-1.8-.4-2.3-1.1M10 5v10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h3>You earn on every fill</h3><p>Your builder fee is added to each order. Strike collects it on every fill and credits it to your Strike account. Users always see it before they confirm.</p></div>
       <div class="rv"><svg viewBox="0 0 20 20" fill="none"><path d="M3 15 7.5 10l3 3L17 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Track every integration</h3><p>Traders and volume per app, verified against Strike's public fill history; connected wallets as reported by the widget.</p><a class="go" id="dashLink2" style="margin-top:14px">Open dashboard <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
     </div>
   </div>
@@ -190,7 +190,7 @@
       <details><summary>Do I need a backend or API keys?<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><p>No. The panel talks directly to Strike from the user's browser. Your only credential is your public builder code.</p></details>
       <details><summary>Can my app access user funds?<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><p>No. The trading key created at connect can place orders but can't withdraw: withdrawals need the user's own wallet signature and only go back to their wallet. Deposits are checked before the user signs.</p></details>
       <details><summary>What should I charge?<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><p>5 bps (0.05%) is a good place to start. Strike allows up to 100 bps, and the panel shows every fee before the user confirms, so low fees tend to win volume.</p></details>
-      <details><summary>Full app or trade ticket?<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><p>The ticket fits next to your own content. The full app (<span class="chip2">variant="app"</span>) needs a whole screen, like a wallet's Perps tab: markets, chart, order book, every order type and position tools, with a mobile flow under 900 px.</p></details>
+      <details><summary>Full app or trade ticket?<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><p>The ticket fits next to your own content. The full app (<span class="chip2">variant="app"</span>) needs a whole screen, like a wallet's Perps tab: markets, chart, order book, every order type and position tools. On narrow screens it switches to a phone layout by itself.</p></details>
       <details><summary>Does it work in a wallet extension or mobile wallet?<svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></summary><p>Yes, it's a standard web component. In an extension popup set <span class="chip2">width="368"</span>; if your CSP blocks remote scripts, bundle the ESM build (<span class="chip2">strike-everywhere.js</span>) instead.</p></details>
     </div>
   </div>
@@ -201,7 +201,7 @@
     <div class="brandcol">
       <a class="se-brand" href="../"><img class="se-logo" src="../assets/logo-mark.svg" alt="" width="28" height="28" /><span class="se-name">Strike <b>On</b></span></a>
       <p>An independent hackathon project built on Strike's public Builder API. Not affiliated with or endorsed by Strike Finance. Perpetual futures are leveraged and risky; Strike is unavailable in restricted regions.</p>
-      <span class="status" id="status"><i></i>Checking Strike…</span>
+      <span class="status" id="status"><span class="dot off"></span>Checking Strike…</span>
     </div>
     <div><h4>Product</h4><a class="f" href="../#embed">Trade ticket</a><a class="f" href="../#app">App layout</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere#sdk-only">TypeScript SDK</a><a class="f" href="../dashboard/">Partner dashboard</a></div>
     <div><h4>Demos</h4><a class="f" href="../demo/wallet/">Wallet</a><a class="f" href="../demo/portfolio/">Portfolio tracker</a></div>
@@ -236,7 +236,7 @@
     $("host").classList.toggle("app", app);
     $("widthFld").style.display = app ? "none" : "";
     $("sideFld").style.display = app ? "none" : "";
-    $("variantHelp").textContent = app ? "A complete perps app for a whole screen, like a wallet's Perps tab. Mobile flow under 900 px." : "A compact panel for a sidebar, a modal or a page.";
+    $("variantHelp").textContent = app ? "A complete perps app for a whole screen, like a wallet's Perps tab. It adapts to phone screens on its own." : "A compact panel for a sidebar, a modal or a page.";
   }
 
   var MARKETS = { mainnet: "https://api.strikefinance.org/v2/markets", testnet: "https://api-v2-testnet.strikefinance.org/v2/markets" };
@@ -337,8 +337,8 @@
   });
 
   var status = $("status");
-  SEChrome.getJSON("https://api.strikefinance.org/v2/markets", 8000).then(function () { status.classList.add("ok"); status.innerHTML = "<i></i>Strike API live"; })
-    .catch(function () { status.innerHTML = "<i></i>Strike API unreachable"; });
+  SEChrome.getJSON("https://api.strikefinance.org/v2/markets", 8000).then(function () { status.classList.add("ok"); status.innerHTML = '<span class="dot"></span>Strike API live'; })
+    .catch(function () { status.innerHTML = '<span class="dot off"></span>Strike API unreachable'; });
 
   layout(); update(); loadMarkets();
   SEChrome.reveal();

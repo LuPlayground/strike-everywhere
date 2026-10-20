@@ -20,8 +20,8 @@ export function Bottom({ s, onPick }: { s: PerpsState; onPick: (sym: string) => 
     ["closed", "Position History"],
     ["ohist", "Order History"],
     ["fills", "Trade History"],
-    ["funding", "Funding History"],
-    ["transfers", "Deposits & Withdrawals"],
+    ["funding", "Funding"],
+    ["transfers", "Transfers"],
   ];
   return (
     <div class="pd-panel pd-bottom">

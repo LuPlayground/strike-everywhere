@@ -59,22 +59,21 @@
 
   .left-h { max-width: 760px; }
   .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 56px; }
-  .reqlog { position: absolute; inset: 34px 30px 0; font: 13px/1 var(--mono); display: grid; gap: 14px; align-content: start; mask-image: linear-gradient(180deg, #000 70%, transparent); -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); }
-  .reqlog .net { display: inline-flex; align-self: start; justify-self: start; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(0, 0, 0, .4); color: #cfd3d2; font-family: var(--font); font-size: 13px; }
-  .reqlog .net i { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px rgba(var(--mint-rgb), .8); }
-  .reqlog .r { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 12px; color: #c9cecc; }
-  .reqlog .r .m { color: #7cc7ff; }
+  .reqlog { position: absolute; inset: 30px 28px 0; display: grid; gap: 10px; align-content: start; font-variant-numeric: tabular-nums; mask-image: linear-gradient(180deg, #000 72%, transparent); -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent); }
+  .reqlog .net { display: inline-flex; align-self: start; justify-self: start; align-items: center; gap: 8px; height: 30px; padding: 0 12px; margin-bottom: 6px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(0, 0, 0, .4); color: #cfd3d2; font-size: 13px; }
+  .reqlog .r { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; height: 40px; padding: 0 12px; border-radius: 11px; background: rgba(255, 255, 255, .025); border: 1px solid rgba(255, 255, 255, .05); font-size: 14px; color: #d7dbd9; }
+  .reqlog .r .m { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: #9cc8ff; background: rgba(124, 199, 255, .1); border-radius: 6px; padding: 3px 7px; }
   .reqlog .r .p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .reqlog .r .st { color: var(--mint); }
+  .reqlog .r .st { font-size: 13.5px; font-weight: 600; color: var(--mint); }
   .reqlog .r .st.bad { color: #fb7185; }
-  .reqlog .r .st .ms { color: #6b7371; margin-left: 8px; }
-  .evlog { position: absolute; inset: 34px 30px 0; display: grid; gap: 16px; align-content: start; }
-  .ev { display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start; }
+  .reqlog .r .st .ms { color: #6b7371; font-weight: 400; margin-left: 8px; }
+  .evlog { position: absolute; inset: 30px 28px 0; display: grid; gap: 12px; align-content: start; }
+  .ev { display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start; padding: 14px; border-radius: 14px; background: rgba(255, 255, 255, .025); border: 1px solid rgba(255, 255, 255, .05); }
   .ev .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .03); }
   .ev .ic svg { width: 16px; height: 16px; color: var(--mint); }
-  .ev .t { font: 13px var(--mono); color: #fff; }
-  .ev .t span { font: 500 12px var(--font); color: #6b7371; margin-left: 10px; }
-  .ev .d { margin-top: 7px; font: 12.5px/1.6 var(--mono); color: #a9b0ad; }
+  .ev .t { font-size: 14.5px; font-weight: 600; color: #fff; }
+  .ev .t span { font-size: 12.5px; font-weight: 500; color: #6b7371; margin-left: 8px; }
+  .ev .d { margin-top: 5px; font-size: 13.5px; line-height: 1.5; color: #a9b0ad; }
   .ev .d i { font-style: normal; color: #9effd2; }
 
   .appwin { margin: 56px auto 0; max-width: 1240px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .1); background: #050605; box-shadow: 0 60px 160px rgba(0, 0, 0, .8), 0 0 120px rgba(var(--mint-rgb), .06); }
@@ -99,14 +98,15 @@
   .fee .op { color: #6b7371; }
   .fee .cap { font-size: 13.5px; color: #8e9392; text-align: center; max-width: 360px; line-height: 1.5; }
 
-  .demos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin-top: 56px; }
+  .demos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 56px; }
   .demo { display: block; text-decoration: none; border-radius: 22px; overflow: hidden; border: 1px solid var(--hair); background: var(--card); transition: border-color .25s, transform .25s; }
-  .demo:hover { border-color: rgba(var(--mint-rgb), .35); transform: translateY(-3px); }
+  .demo:hover { border-color: rgba(255, 255, 255, .16); background: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .015)); }
   .demo .shot { aspect-ratio: 16 / 9.4; overflow: hidden; border-bottom: 1px solid rgba(255, 255, 255, .06); background: #050505; }
   .demo .shot img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform .6s cubic-bezier(.2, .8, .2, 1); }
   .demo:hover .shot img { transform: scale(1.035); }
   .demo .meta { padding: 22px 26px 26px; }
-  .demo .kind { font-size: 13px; color: #7d8281; }
+  .demo .kind { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: #cfd3d2; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .08); }
+  .demo .top { margin-top: 14px; }
   .demo .top { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
   .demo h3 { margin: 0; font-size: 19px; font-weight: 500; color: #fff; }
   .demo .top .go { margin-left: auto; }
@@ -142,6 +142,7 @@
   .final + .foot2 { margin-top: 0; }
 
   @media (max-width: 1100px) {
+    .demos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero-in { grid-template-columns: minmax(0, 1fr); padding-top: 80px; }
     .hero-copy { padding-left: 0; }
     .hero { min-height: 0; padding-bottom: 40px; }
@@ -163,7 +164,7 @@
     .sw { scale: .62; }
     .stage .label { bottom: 18px; }
     .reqlog, .evlog { inset: 24px 18px 0; }
-    .reqlog .r { grid-template-columns: 40px minmax(0, 1fr) auto; }
+    .reqlog .r { font-size: 13px; }
     .final { padding: 150px 0 160px; }
     .final .display { font-size: 42px; }
     .stat .v { font-size: 50px; }
@@ -216,7 +217,7 @@
 <section id="embed">
   <div class="wrap center">
     <div class="tile rv"><svg viewBox="0 0 24 24" fill="none"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-    <h2 class="rv">Embed it <em>tonight</em></h2>
+    <h2 class="rv">Embed it <em>now</em></h2>
     <p class="lead rv">One script and one tag. It fits any stack: plain HTML, React or any framework, or the TypeScript SDK when you want your own interface.</p>
     <div class="codewin rv">
       <div class="bar" role="tablist" aria-label="Code examples">
@@ -244,7 +245,7 @@
       <article class="fcard rv">
         <div class="vis">
           <div class="reqlog" id="reqlog">
-            <span class="net"><i></i>This page, calling Strike testnet now</span>
+            <span class="net"><span class="dot"></span>This page, calling Strike testnet now</span>
           </div>
         </div>
         <div class="txt">
@@ -257,7 +258,7 @@
       <article class="fcard rv">
         <div class="vis">
           <div class="evlog">
-            <div class="ev"><div class="ic"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="t">strike-session <span>example</span></div><div class="d">{ connected: <i>true</i>, address: <i>"addr1q9…k3"</i>, accountId: <i>"…"</i> }</div></div></div>
+            <div class="ev"><div class="ic"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="t">strike-session <span>example</span></div><div class="d">connected <i>true</i> · address <i>addr1q9…k3</i> · accountId <i>…</i></div></div></div>
             <div class="ev"><div class="ic"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><div><div class="t">strike-close <span>example</span></div><div class="d">user tapped × on the Perps home</div></div></div>
             <div class="ev"><div class="ic"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v4M8 10v4M2 8h4M10 8h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div><div><div class="t">attributes <span>live updates</span></div><div class="d">market · side · fee-bps · max-leverage · layout · screen</div></div></div>
           </div>
@@ -278,7 +279,7 @@
   <div class="wrap center">
     <div class="tile rv"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17 9 11l4 4 8-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <h2 class="rv">A full perps app, inside yours</h2>
-    <p class="lead rv">Give it a screen and <span class="chip2">variant="app"</span> becomes a complete trading app on Strike: markets, live chart, order book, every Strike order type and the position tools. Under 900 px it turns into a mobile flow.</p>
+    <p class="lead rv">Give it a screen and <span class="chip2">variant="app"</span> becomes a complete trading app on Strike: markets, live chart, order book, every Strike order type and the position tools.</p>
   </div>
   <div class="wrap">
     <div class="appwin rv">
@@ -294,7 +295,7 @@
 <section id="earn">
   <div class="wrap">
     <h2 class="left-h rv">Go beyond<br />the trade ticket</h2>
-    <p class="lead rv" style="max-width:640px">Know which of your pages bring traders, and get paid by Strike for the volume they trade.</p>
+    <p class="lead rv" style="max-width:640px">See which of your pages bring traders, and earn your builder fee on every trade they make. Strike collects it and credits it to your account.</p>
     <div class="duo">
       <article class="fcard rv">
         <div class="vis">
@@ -333,18 +334,19 @@
 <section id="demos">
   <div class="glowline"></div>
   <div class="wrap">
-    <h2 class="rv">Same tag,<br />very different hosts</h2>
+    <h2 class="rv">One embed,<br />very different apps</h2>
     <p class="lead rv" style="max-width:640px">Every demo runs the real widget against Strike. Testnet by default; add <span class="chip2">?network=mainnet&amp;builder=CODE</span> to go live.</p>
     <div class="demos">
-      <a class="demo rv" href="demo/wallet/"><div class="shot"><img src="assets/previews/wallet.jpg" alt="Concept wallet with a Perps tab" loading="lazy" /></div><div class="meta"><div class="kind">Wallet · concept</div><div class="top"><h3>Wallet-native perps</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>A wallet with a Perps tab on desktop and mobile, running the full app layout.</p></div></a>
-      <a class="demo rv" href="demo/portfolio/"><div class="shot"><img src="assets/previews/portfolio.jpg" alt="Portfolio tracker with a hedge panel" loading="lazy" /></div><div class="meta"><div class="kind">Portfolio tracker</div><div class="top"><h3>Hedge ADA in one click</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>Values holdings at Strike marks and offers a hedge with the ticket pre-set to Short, without unstaking.</p></div></a>
+      <a class="demo rv" href="demo/wallet/"><div class="shot"><img src="assets/previews/wallet.jpg" alt="Concept wallet with a Perps tab" loading="lazy" /></div><div class="meta"><div class="kind">Wallet concept</div><div class="top"><h3>Wallet-native perps</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>A wallet with a Perps tab on desktop and mobile, running the full app layout.</p></div></a>
+      <a class="demo rv" href="demo/portfolio/"><div class="shot"><img src="assets/previews/portfolio.jpg" alt="Portfolio tracker with a hedge panel" loading="lazy" /></div><div class="meta"><div class="kind">dApp</div><div class="top"><h3>Hedge ADA in one click</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>Values holdings at Strike marks and offers a hedge with the ticket pre-set to Short, without unstaking.</p></div></a>
+      <a class="demo rv" href="dashboard/"><div class="shot"><img src="assets/previews/dashboard.jpg" alt="Partner dashboard" loading="lazy" /></div><div class="meta"><div class="kind">For builders</div><div class="top"><h3>Partner dashboard</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>Referred wallets, funded and trading accounts, verified volume and estimated builder fees, per partner site.</p></div></a>
     </div>
   </div>
 </section>
 
 <section id="security">
   <div class="wrap">
-    <h2 class="left-h rv">Safe by<br />construction</h2>
+    <h2 class="left-h rv">Safe by<br />default</h2>
     <p class="lead rv" style="max-width:640px">Trading inside someone else's website changes the trust boundaries. These are ours, stated plainly.</p>
     <div class="grid3">
       <div class="rv"><svg viewBox="0 0 20 20" fill="none"><rect x="4" y="8.5" width="12" height="8.5" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 8.5V6.5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5"/></svg><h3>Keys stay in the browser</h3><p>The trading key is generated client-side and never leaves it. No server, ours included, ever holds it.</p></div>
@@ -397,7 +399,7 @@
     <div class="brandcol">
       <a class="se-brand" href="./"><img class="se-logo" src="assets/logo-mark.svg" alt="" width="28" height="28" /><span class="se-name">Strike <b>On</b></span></a>
       <p>An independent hackathon project built on Strike's public Builder API. Not affiliated with or endorsed by Strike Finance. Perpetual futures are leveraged and risky; Strike is unavailable in restricted regions.</p>
-      <span class="status" id="status"><i></i>Checking Strike…</span>
+      <span class="status" id="status"><span class="dot off"></span>Checking Strike…</span>
     </div>
     <div><h4>Product</h4><a class="f" href="#embed">Trade ticket</a><a class="f" href="#app">App layout</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere#sdk-only">TypeScript SDK</a><a class="f" href="dashboard/">Partner dashboard</a></div>
     <div><h4>Demos</h4><a class="f" href="demo/wallet/">Wallet</a><a class="f" href="demo/portfolio/">Portfolio tracker</a></div>
@@ -445,7 +447,7 @@
   var origin = new URL(".", location.href).href;
   var EX = {
     html: '<script src="' + origin + 'widget/strike-everywhere.iife.js" defer></' + 'script>\n\n<strike-trade\n  builder-code="YOUR_CODE"\n  fee-bps="5"\n  market="ADA-USD"\n  partner-id="homepage"\n  partner-api="' + SEChrome.PARTNER_API + '">\n</strike-trade>',
-    app: '<!-- a whole screen: a full perps app (mobile flow under 900px) -->\n<strike-trade\n  variant="app"\n  builder-code="YOUR_CODE"\n  fee-bps="5"\n  closable\n  style="display:block; height:100%">\n</strike-trade>\n\n<script>\n  const perps = document.querySelector("strike-trade");\n  perps.addEventListener("strike-session", (e) => showAccount(e.detail)); // your header\n  perps.addEventListener("strike-close", () => goHome());                 // back to your app\n</' + 'script>',
+    app: '<!-- give it a whole screen: a full perps app -->\n<strike-trade\n  variant="app"\n  builder-code="YOUR_CODE"\n  fee-bps="5"\n  closable\n  style="display:block; height:100%">\n</strike-trade>\n\n<script>\n  const perps = document.querySelector("strike-trade");\n  perps.addEventListener("strike-session", (e) => showAccount(e.detail)); // your header\n  perps.addEventListener("strike-close", () => goHome());                 // back to your app\n</' + 'script>',
     react: 'import { useEffect } from "react";\n\nexport function Trade() {\n  useEffect(() => {\n    import("' + origin + 'widget/strike-everywhere.js");\n  }, []);\n\n  return <strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD" />;\n}',
     sdk: 'import { StrikeOn } from "@strike-everywhere/core";\n\nconst strike = new StrikeOn({ network: "mainnet", builderCode: "YOUR_CODE", feeBps: 5 });\nawait strike.init();\nawait strike.loadMarkets();\n\nawait strike.connect("eternl"); // one CIP-30 signature\n\nconst order = await strike.placeOrder({\n  symbol: "ADA-USD", side: "buy", type: "market", size: 50, leverage: 2,\n});'
   };
@@ -504,8 +506,8 @@
   });
 
   var status = document.getElementById("status");
-  SEChrome.getJSON(STRIKE + "/v2/markets", 8000).then(function () { status.classList.add("ok"); status.innerHTML = "<i></i>Strike API live"; })
-    .catch(function () { status.innerHTML = "<i></i>Strike API unreachable"; });
+  SEChrome.getJSON(STRIKE + "/v2/markets", 8000).then(function () { status.classList.add("ok"); status.innerHTML = '<span class="dot"></span>Strike API live'; })
+    .catch(function () { status.innerHTML = '<span class="dot off"></span>Strike API unreachable'; });
 
   SEChrome.reveal();
   if (!("IntersectionObserver" in window)) { runLog(); mountApp(); }
