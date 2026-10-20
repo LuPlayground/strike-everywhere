@@ -228,7 +228,8 @@ button:disabled { cursor: not-allowed; }
 .row-g.pos-g { grid-template-columns: repeat(2, 1fr); }
 .pos-g .wide { grid-column: 1 / -1; }
 .of { font-family: var(--se-font); font-size: 11.5px; color: var(--se-text-2); letter-spacing: 0; }
-.row.flash { animation: flash 1.5s ease-out; }
+.row.flash, .field.flash { animation: flash 1.5s ease-out; }
+.chart-note { position: absolute; left: 8px; right: 60px; top: 34px; font-size: 11.5px; color: var(--se-text-2); background: rgba(10,10,10,.78); padding: 4px 8px; border-radius: var(--se-radius-sm); pointer-events: none; }
 @keyframes flash { 0%, 35% { background: rgba(var(--se-accent-rgb), .13); border-color: rgba(var(--se-accent-rgb), .6); } 100% { background: transparent; border-color: var(--se-border); } }
 .mini { height: 26px; padding: 0 10px; border-radius: var(--se-radius-sm); background: var(--se-raised); font-weight: 600; font-size: 12px; margin-left: auto; }
 .mini:hover:not(:disabled) { background: #303030; }

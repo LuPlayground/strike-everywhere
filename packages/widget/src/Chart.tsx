@@ -121,9 +121,15 @@ export function Chart({ client, symbol, interval, tick, live }: { client: Strike
     setHover({ i: Math.max(0, Math.min(n - 1, Math.floor(x / step))), y: yy });
   };
 
+  const flat = vis.length > 1 && hi - lo - 2 * pad <= (tick ?? 0) / 2;
   return (
-    <div class="chart" ref={box} style={{ height: `${h}px` }}>
+    <div class="chart" ref={box} style={{ height: `${h}px`, position: "relative" }}>
       {types}
+      {flat && (
+        <div class="chart-note">
+          {priceType === "last" ? "No trades in this period, so the last-traded price hasn't moved. Mark follows the market." : "The price hasn't moved in this period."}
+        </div>
+      )}
       {hc && (
         <div class="ohlc num" aria-live="polite">
           <span class="muted">{fmtTime(hc.openTime)}</span> O <b>{formatPrice(hc.open, tick)}</b> H <b>{formatPrice(hc.high, tick)}</b> L <b>{formatPrice(hc.low, tick)}</b> C{" "}

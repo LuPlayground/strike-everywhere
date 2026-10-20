@@ -126,6 +126,7 @@ export function App({ config }: { config: WidgetConfig }) {
   const [twapLimit, setTwapLimit] = useState("");
   const [randomize, setRandomize] = useState(false);
   const [slipAck, setSlipAck] = useState("");
+  const cardRef = useRef<HTMLDivElement>(null);
   const [pctDraft, setPctDraft] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [advOpen, setAdvOpen] = useState(false);
@@ -636,13 +637,24 @@ export function App({ config }: { config: WidgetConfig }) {
 
   const pickPrice = (p: number) => {
     const v = roundToStep(p, tick ?? 0.0001);
-    if (orderType === "stop") return setTrigger(v);
-    if (orderType === "twap") return setTwapLimit(v);
-    setLimitPrice(v);
-    if (!usesLimit) {
-      setBookSwitch({ from: orderType, price: limitPrice });
-      setOrderType("limit");
+    if (orderType === "stop") setTrigger(v);
+    else if (orderType === "twap") setTwapLimit(v);
+    else {
+      setLimitPrice(v);
+      if (!usesLimit) {
+        setBookSwitch({ from: orderType, price: limitPrice });
+        setOrderType("limit");
+      }
     }
+    setTimeout(() => {
+      const field = cardRef.current?.querySelector<HTMLElement>(orderType === "stop" ? "#se-trigger" : orderType === "twap" ? "#se-twap-limit" : "#se-price");
+      const target = (field?.closest(".field") as HTMLElement | null) ?? field;
+      if (!target) return;
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      target.classList.remove("flash");
+      void target.offsetWidth;
+      target.classList.add("flash");
+    }, 50);
   };
   const undoBookSwitch = () => {
     if (!bookSwitch) return;
@@ -731,6 +743,7 @@ export function App({ config }: { config: WidgetConfig }) {
 
   return (
     <div
+      ref={cardRef}
       class="card"
       onClick={(e) => menu && !(e.target as HTMLElement).closest(".menu, [data-menu]") && setMenu(null)}
       onKeyDown={(e) => e.key === "Escape" && (menu ? setMenu(null) : ask ? setAsk(null) : slipAck ? setSlipAck("") : sheet && setSheet(null))}
@@ -784,7 +797,7 @@ export function App({ config }: { config: WidgetConfig }) {
           <div class="k">
             Funding<Info label="About funding">Every hour, one side pays the other to keep the price close to the index. Positive: longs pay shorts; negative: shorts pay longs.</Info>
           </div>
-          <div class={`v fund ${lv && lv.funding < 0 ? "neg" : "pos"}`}>{lv ? fundingWords(lv.funding) : "—"}</div>
+          <div class={`v fund ${!lv || !lv.funding ? "" : lv.funding < 0 ? "neg" : "pos"}`}>{lv ? fundingWords(lv.funding) : "—"}</div>
         </div>
         <div class="stat">
           <div class="k">24h Volume</div>
