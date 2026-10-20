@@ -14,6 +14,7 @@
 |---|---|
 | Live landing + demos | https://strike-everywhere.pages.dev |
 | Demo host: concept wallet with a Perps tab | https://strike-everywhere.pages.dev/demo/wallet/ |
+| Demo host: DEX with a Perps tab | https://strike-everywhere.pages.dev/demo/dex/ |
 | Demo host: portfolio tracker (hedge ADA) | https://strike-everywhere.pages.dev/demo/portfolio/ |
 | Partner dashboard | https://strike-everywhere.pages.dev/dashboard/ |
 | Partner API | https://strike-everywhere-api.strike-everywhere.workers.dev/v1/health |
@@ -47,7 +48,7 @@ On Hyperliquid, front ends that embed trading, especially wallets, became the la
 | `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill and transaction history**: a fill counts only if the widget registered its `client_order_id` before Strike created the order. |
 | `apps/dashboard` | The partner dashboard: wallets → funded → trading accounts, verified volume, builder fees, per-site breakdown, recent activity, and an embed-snippet generator. |
 | `apps/developers` | The integration page: configurator, live preview in a sample app, HTML / React / wallet-extension snippets. |
-| `apps/demo-portfolio`, `apps/demo-wallet` | Fictional hosts running the same one-tag widget: a portfolio tracker (hedge) and a concept wallet with a Perps tab. |
+| `apps/demo-portfolio`, `apps/demo-wallet`, `apps/demo-dex` | Fictional hosts running the same one-tag widget: a portfolio tracker (hedge), a concept wallet with a Perps tab, and a DEX with a Perps tab. |
 | `apps/landing` | Landing page. |
 | `docs/` | Integration, security model, fees, architecture, build log. |
 

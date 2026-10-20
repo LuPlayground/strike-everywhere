@@ -69,6 +69,7 @@ export function Panel({ s }: { s: PerpsState }) {
           </div>
         )}
       </div>
+      {s.config.chart !== false && (
       <div class="pd-panel pp-chart">
         <div class="pd-ivs" role="radiogroup" aria-label="Candle interval">
           {IVS.map((i) => (
@@ -79,6 +80,7 @@ export function Panel({ s }: { s: PerpsState }) {
         </div>
         {m && <Chart client={s.client} symbol={m.symbol} interval={iv} tick={m.spec.tickSize} height={170} live={{ mark: m.mark, last: m.last, index: m.index }} />}
       </div>
+      )}
       <div class="pd-right pp-right">
         <OrderPanel s={s} m={m} book={book} side={side} setSide={setSide} limitPick={null} />
         <AccountCard s={s} />

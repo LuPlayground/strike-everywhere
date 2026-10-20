@@ -48,6 +48,7 @@ export interface WidgetConfig extends StrikeEverywhereOptions {
   maxLeverage: number;
   side?: "buy" | "sell";
   amount?: number;
+  chart?: boolean;
 }
 
 interface Live {

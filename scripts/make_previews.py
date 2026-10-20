@@ -1,6 +1,6 @@
 """Capture demo preview images for the landing page.
 usage: python -I scripts/make_previews.py <base_url> <out_dir>
-Writes portfolio.jpg, wallet.jpg, dashboard.jpg (1600x940, JPEG q84)."""
+Writes dex.jpg, portfolio.jpg, wallet.jpg, dashboard.jpg (1600x940, JPEG q84)."""
 import pathlib
 import sys
 from playwright.sync_api import sync_playwright
@@ -11,6 +11,7 @@ out.mkdir(parents=True, exist_ok=True)
 pages = {
     "wallet": "/demo/wallet/",
     "portfolio": "/demo/portfolio/?network=mainnet",
+    "dex": "/demo/dex/",
     "dashboard": "/dashboard/?builder=Playground101&network=testnet",
 }
 with sync_playwright() as p:

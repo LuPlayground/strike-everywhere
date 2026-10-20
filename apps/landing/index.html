@@ -101,7 +101,7 @@
   .fee .op { color: #6b7371; }
   .fee .cap { font-size: 13.5px; color: #8e9392; text-align: center; max-width: 360px; line-height: 1.5; }
 
-  .demos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 56px; }
+  .demos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin-top: 56px; }
   .demo { display: block; text-decoration: none; border-radius: 22px; overflow: hidden; border: 1px solid var(--hair); background: var(--card); transition: border-color .25s, transform .25s; }
   .demo:hover { border-color: rgba(255, 255, 255, .16); background: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .015)); }
   .demo .shot { aspect-ratio: 16 / 9.4; overflow: hidden; border-bottom: 1px solid rgba(255, 255, 255, .06); background: #050505; }
@@ -151,7 +151,6 @@
   .final + .foot2 { margin-top: 0; }
 
   @media (max-width: 1100px) {
-    .demos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero-in { grid-template-columns: minmax(0, 1fr); padding-top: 80px; }
     .hero-copy { padding-left: 0; }
     .hero { min-height: 0; padding-bottom: 40px; }
@@ -348,6 +347,7 @@
     <p class="lead rv" style="max-width:640px">Every demo runs the real widget against Strike. Testnet by default; add <span class="chip2">?network=mainnet&amp;builder=CODE</span> to go live.</p>
     <div class="demos">
       <a class="demo lit rv" href="demo/wallet/"><div class="shot"><img src="assets/previews/wallet.jpg" alt="Concept wallet with a Perps tab" loading="lazy" /></div><div class="meta"><div class="kind">Wallet concept</div><div class="top"><h3>Wallet-native perps</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>A wallet with a Perps tab on desktop and mobile, running the full app layout.</p></div></a>
+      <a class="demo lit rv" href="demo/dex/"><div class="shot"><img src="assets/previews/dex.jpg" alt="DEX with a Perps tab" loading="lazy" /></div><div class="meta"><div class="kind">DEX</div><div class="top"><h3>Swap, or go Perps</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>A Cardano DEX whose trade card gets a Perps tab next to Market and Limit, running Strike in the DEX's own colours.</p></div></a>
       <a class="demo lit rv" href="demo/portfolio/"><div class="shot"><img src="assets/previews/portfolio.jpg" alt="Portfolio tracker with a hedge panel" loading="lazy" /></div><div class="meta"><div class="kind">dApp</div><div class="top"><h3>Hedge ADA in one click</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>Values holdings at Strike marks and offers a hedge with the ticket pre-set to Short, without unstaking.</p></div></a>
       <a class="demo lit rv" href="dashboard/"><div class="shot"><img src="assets/previews/dashboard.jpg" alt="Partner dashboard" loading="lazy" /></div><div class="meta"><div class="kind">For builders</div><div class="top"><h3>Partner dashboard</h3><span class="go">Open <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><p>Referred wallets, funded and trading accounts, verified volume and estimated builder fees, per partner site.</p></div></a>
     </div>
@@ -413,7 +413,7 @@
       <span class="status" id="status"><span class="dot off"></span>Checking Strike…</span>
     </div>
     <div><h4>Product</h4><a class="f" href="#embed">Trade ticket</a><a class="f" href="#app">App layout</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere#sdk-only">TypeScript SDK</a><a class="f" href="dashboard/">Partner dashboard</a></div>
-    <div><h4>Demos</h4><a class="f" href="demo/wallet/">Wallet</a><a class="f" href="demo/portfolio/">Portfolio tracker</a></div>
+    <div><h4>Demos</h4><a class="f" href="demo/wallet/">Wallet</a><a class="f" href="demo/dex/">DEX</a><a class="f" href="demo/portfolio/">Portfolio tracker</a></div>
     <div><h4>Developers</h4><a class="f" href="developers/">Configurator</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/INTEGRATION.md">Integration guide</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/SECURITY.md">Security</a></div>
     <div><h4>Project</h4><a class="f" href="https://github.com/LuPlayground/strike-everywhere">GitHub</a><a class="f" href="https://docs.strikefinance.org">Strike docs</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/LICENSE">License</a></div>
   </div>
