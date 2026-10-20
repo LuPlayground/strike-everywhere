@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Fragment+Mono&display=swap");
 
 :root {
   --bg: #0a0a0a;
@@ -27,18 +27,19 @@
   --radius: 6px;
   --radius-lg: 12px;
   --font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --mono: "Fragment Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
   --nav-h: 64px;
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+code, pre, .code, .chip2, .num { font-variant-ligatures: none; }
 a { color: inherit; }
 button, input, select { font: inherit; color: inherit; }
 ::selection { background: rgba(var(--mint-rgb), 0.3); }
 :focus-visible { outline: 2px solid rgba(var(--mint-rgb), 0.75); outline-offset: 2px; }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.num { font-family: var(--font); font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .pos { color: var(--mint); }
 .neg { color: var(--rose); }
 .muted { color: var(--muted); }
@@ -60,7 +61,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .se-ticker { height: 38px; display: flex; align-items: center; gap: 26px; padding: 0 24px; border-bottom: 1px solid var(--line); overflow: hidden; white-space: nowrap; font-size: 13px; mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
 .se-ticker .t { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
-.se-ticker .t .c { font-family: var(--mono); font-weight: 500; }
+.se-ticker .t .c { font-variant-numeric: tabular-nums; font-weight: 500; }
 .se-ticker .star { color: var(--gold); }
 .se-ticker .live { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-weight: 500; }
 .se-ticker .off { color: var(--muted); font-size: 12.5px; font-weight: 500; }

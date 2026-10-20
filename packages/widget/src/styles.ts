@@ -1,4 +1,4 @@
-export const FONT_HREF = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
+export const FONT_HREF = "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Fragment+Mono&display=swap";
 export const APP_FONT_HREF = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap";
 
 export const css =  `:host {
@@ -26,7 +26,9 @@ export const css =  `:host {
   --se-radius: 6px;
   --se-radius-sm: 4px;
   --se-font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --se-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --se-num: var(--se-font);
+  --se-mono: "Fragment Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   display: block;
   width: var(--se-width, 380px);
@@ -42,7 +44,7 @@ button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; border: 0; background: none; padding: 0; }
 button:disabled { cursor: not-allowed; }
 :focus-visible { outline: 2px solid rgba(var(--se-accent-rgb), .7); outline-offset: 1px; }
-.num { font-family: var(--se-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.num { font-family: var(--se-num); font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .pos { color: var(--se-accent); }
 .neg { color: var(--se-neg); }
 .muted { color: var(--se-muted); }
@@ -91,7 +93,7 @@ button:disabled { cursor: not-allowed; }
 .vtabs button:hover, .ivs button:hover, .ptype button:hover, .chips button:hover, .durs button:hover { color: var(--se-text); }
 .vtabs button.on, .ivs button.on, .ptype button.on, .chips button.on, .durs button.on { background: var(--se-raised); color: var(--se-text); }
 .ivs { margin-left: auto; }
-.ivs button { padding: 0 6px; font-family: var(--se-mono); font-size: 11.5px; }
+.ivs button { padding: 0 6px; font-family: var(--se-num); font-variant-numeric: tabular-nums; font-size: 11.5px; }
 .chart { position: relative; border-bottom: 1px solid var(--se-border); overflow: hidden; touch-action: pan-y; user-select: none; }
 .chart svg { display: block; }
 .ptype { position: absolute; left: 8px; top: 5px; background: rgba(10,10,10,.85); border-radius: var(--se-radius-sm); z-index: 1; }
@@ -101,16 +103,16 @@ button:disabled { cursor: not-allowed; }
 .ohlc b.pos { color: var(--se-accent); } .ohlc b.neg { color: var(--se-neg); }
 .chart-msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--se-muted); font-size: 12.5px; text-align: center; padding: 0 20px; }
 .chart .gl { stroke: #1d1d1d; }
-.chart .ax { fill: var(--se-faint); font: 10px var(--se-mono); }
+.chart .ax { fill: var(--se-faint); font: 10px var(--se-num); font-variant-numeric: tabular-nums; }
 .chart .cu { stroke: var(--se-accent); fill: var(--se-accent); }
 .chart .cd { stroke: var(--se-neg); fill: var(--se-neg); }
 .chart .vol { stroke: none; opacity: .28; }
 .chart .now { stroke-dasharray: 3 3; opacity: .8; }
-.chart .tag { fill: var(--se-accent-ink); stroke: none; font: 600 10px var(--se-mono); }
+.chart .tag { fill: var(--se-accent-ink); stroke: none; font: 600 10px var(--se-num); font-variant-numeric: tabular-nums; }
 .chart .cd .tag { fill: #fff; }
 .chart .xh line { stroke: rgba(255,255,255,.35); stroke-dasharray: 2 3; }
 .chart .xh rect { fill: #3a3a3a; }
-.chart .xh text { fill: #fff; font: 10px var(--se-mono); }
+.chart .xh text { fill: #fff; font: 10px var(--se-num); font-variant-numeric: tabular-nums; }
 .book { position: relative; min-height: 120px; padding: 4px 0 6px; border-bottom: 1px solid var(--se-border); font-size: 11.5px; }
 .book-cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 10px; padding: 2px 14px 4px; font-size: 11px; color: var(--se-faint); }
 .book-cap .pos, .book-cap .neg { font-weight: 600; }
@@ -164,7 +166,7 @@ button:disabled { cursor: not-allowed; }
 .field { display: flex; align-items: center; height: 40px; background: var(--se-input); border-radius: var(--se-radius); padding: 0 10px; border: 1px solid transparent; }
 .field:focus-within { border-color: rgba(var(--se-accent-rgb), .55); }
 .field label { color: var(--se-text-2); margin-right: 8px; white-space: nowrap; }
-.field input { flex: 1; min-width: 0; background: none; border: 0; outline: none; text-align: right; font-family: var(--se-mono); font-size: 14px; }
+.field input { flex: 1; min-width: 0; background: none; border: 0; outline: none; text-align: right; font-family: var(--se-num); font-variant-numeric: tabular-nums; font-size: 14px; }
 .field .unit { margin-left: 8px; font-weight: 600; color: var(--se-text-soft); }
 .field input::placeholder { color: rgba(255,255,255,.35); }
 .slider-row { display: grid; grid-template-columns: 1fr 64px auto; gap: 10px; align-items: center; }

@@ -304,7 +304,7 @@
     for (var g = 0; g <= ticks; g++) {
       var v = (max / ticks) * g, yy = y(v);
       s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + yy + '" y2="' + yy + '" stroke="#1d1d1d"/>';
-      s += '<text x="' + (padL - 10) + '" y="' + (yy + 4) + '" fill="#8a8a8a" font-size="11" text-anchor="end" font-family="IBM Plex Mono, monospace">' + fmtAxis(v, max) + "</text>";
+      s += '<text x="' + (padL - 10) + '" y="' + (yy + 4) + '" fill="#8a8a8a" font-size="11" text-anchor="end" font-family="IBM Plex Sans, sans-serif" style="font-variant-numeric:tabular-nums">' + fmtAxis(v, max) + "</text>";
     }
     var every = Math.ceil(data.length / (W < 480 ? 5 : 8));
     data.forEach(function (d, i) {
@@ -314,7 +314,7 @@
         s += '<path class="b" data-i="' + i + '" fill="#1aa673" d="M' + x + "," + y(0) + " V" + (top + r) + " Q" + x + "," + top + " " + (x + r) + "," + top + " H" + (x + bw - r) + " Q" + (x + bw) + "," + top + " " + (x + bw) + "," + (top + r) + " V" + y(0) + ' Z"/>';
       }
       s += '<rect class="hit" data-i="' + i + '" x="' + (padL + i * step) + '" y="' + padT + '" width="' + step + '" height="' + ih + '" fill="transparent"/>';
-      if (i % every === 0) s += '<text x="' + (x + bw / 2) + '" y="' + (H - 6) + '" fill="#8a8a8a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono, monospace">' + d.day.slice(5) + "</text>";
+      if (i % every === 0) s += '<text x="' + (x + bw / 2) + '" y="' + (H - 6) + '" fill="#8a8a8a" font-size="11" text-anchor="middle" font-family="IBM Plex Sans, sans-serif" style="font-variant-numeric:tabular-nums">' + d.day.slice(5) + "</text>";
     });
     s += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#363636"/>';
     if (!data.some(function (d) { return d[m] > 0; })) s += '<text x="' + (padL + iw / 2) + '" y="' + (padT + ih / 2) + '" fill="#8a8a8a" font-size="13" text-anchor="middle">No attributed fills in this range yet</text>';
@@ -372,7 +372,7 @@
     var html = '<span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"' + esc(WIDGET) + '"</span> <span class="a">defer</span><span class="k">&gt;&lt;/script&gt;</span>\n' +
       '<span class="k">&lt;strike-trade</span>\n  <span class="a">builder-code</span>=<span class="s">"' + attr(code) + '"</span> <span class="a">fee-bps</span>=<span class="s">"' + kitFee() + '"</span>\n  <span class="a">market</span>=<span class="s">"' + attr(($("k-market").value.trim().toUpperCase().match(/^[A-Z0-9]{1,15}-[A-Z]{2,6}$/) || ["ADA-USD"])[0]) + '"</span> <span class="a">partner-id</span>=<span class="s">"' + attr($("k-partner").value.trim().slice(0, 64) || "my-site") + '"</span>' + (state.kitNet === "testnet" ? ' <span class="a">network</span>=<span class="s">"testnet"</span>' : "") + '\n  <span class="a">partner-api</span>=<span class="s">"' + attr(API) + '"</span><span class="k">&gt;&lt;/strike-trade&gt;</span>';
     $("snippet").innerHTML = html;
-    $("preview").href = "../demo/blog/?network=" + state.kitNet + "&builder=" + encodeURIComponent(code);
+    $("preview").href = "../demo/portfolio/?network=" + state.kitNet + "&builder=" + encodeURIComponent(code);
   }
   $("k-code").addEventListener("input", function () { kitCodeTouched = true; });
   ["k-code", "k-fee", "k-market", "k-partner"].forEach(function (id) { $(id).addEventListener("input", syncKit); });

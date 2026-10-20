@@ -13,7 +13,6 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 cpSync(dist, join(out, "widget"), { recursive: true });
 cpSync(join(root, "apps", "landing"), out, { recursive: true });
-cpSync(join(root, "apps", "demo-blog"), join(out, "demo", "blog"), { recursive: true });
 cpSync(join(root, "apps", "demo-portfolio"), join(out, "demo", "portfolio"), { recursive: true });
 cpSync(join(root, "apps", "demo-wallet"), join(out, "demo", "wallet"), { recursive: true });
 cpSync(join(root, "apps", "dashboard"), join(out, "dashboard"), { recursive: true });
