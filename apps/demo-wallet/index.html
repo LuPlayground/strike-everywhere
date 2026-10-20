@@ -39,8 +39,8 @@
   .wl-search { flex: 1; max-width: 420px; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 12px; background: var(--w-panel-2); color: var(--w-muted); font-size: 14px; }
   .wl-search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--w-ink); font: inherit; }
   .wl-sp { flex: 1; }
-  .wl-net { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(255,185,25,.13); color: var(--w-amber); white-space: nowrap; }
-  .wl-net.main { background: rgba(78,250,176,.12); color: var(--mint); }
+  .wl-net { display: inline-flex; align-items: center; height: 24px; font-size: 12px; font-weight: 500; padding: 0 10px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #f2cf86; white-space: nowrap; }
+  .wl-net.main { color: #9effd2; }
   .wl-view { display: flex; padding: 3px; border-radius: 10px; background: var(--w-panel-2); }
   .wl-view button { height: 30px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--w-muted); display: inline-flex; align-items: center; gap: 6px; }
   .wl-view button.on { background: #36363a; color: var(--w-ink); }
@@ -48,8 +48,8 @@
   .wl-acct .av { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(from 90deg, var(--w-blue), var(--mint), var(--w-amber), var(--w-blue)); }
   .wl-acct b { font-size: 13.5px; font-weight: 600; display: block; line-height: 1.15; }
   .wl-acct span { font-size: 11.5px; color: var(--w-muted); display: flex; align-items: center; gap: 5px; }
-  .wl-acct .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--w-faint); }
-  .wl-acct .dot.on { background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+  .wl-acct .dot { display: inline-block; width: 12px; height: 9px; background: var(--w-faint); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 5h2.6l1.9-3.6 3 7.2L10.4 5H13' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 5h2.6l1.9-3.6 3 7.2L10.4 5H13' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; box-shadow: none; }
+  .wl-acct .dot.on { background: var(--mint); }
 
   .wl-main { height: calc(100vh - var(--nav-h) - 60px); min-height: 720px; }
   .wl-main > section { height: 100%; }

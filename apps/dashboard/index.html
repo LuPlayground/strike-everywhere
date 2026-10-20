@@ -224,7 +224,7 @@
 
   function render(j) {
     var t = j.totals;
-    $("banner").innerHTML = '<span class="dot ' + (j.network === "testnet" ? "gold" : "") + '"></span>' + (j.network === "testnet" ? "Testnet" : "Mainnet") + ' · <span class="num">' + esc(j.builder) + "</span>";
+    $("banner").innerHTML = '<span class="net-badge' + (j.network === "testnet" ? "" : " main") + '">' + (j.network === "testnet" ? "Testnet" : "Mainnet") + '</span> <span class="num">' + esc(j.builder) + "</span>";
     $("updated").textContent = "updated " + new Date(num(j.generatedAt) || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     $("t-integrations").textContent = int(t.integrations);
     $("t-active").textContent = int(t.activeIntegrations) + " active (7d) · reported";

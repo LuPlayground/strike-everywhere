@@ -3,141 +3,224 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141633'/%3E%3Crect x='7' y='7' width='8' height='8' rx='2.2' fill='%235b8cff'/%3E%3Crect x='17' y='7' width='8' height='8' rx='2.2' fill='%23b4a6ff'/%3E%3Crect x='7' y='17' width='8' height='8' rx='2.2' fill='%238b7cff'/%3E%3Crect x='17' y='17' width='8' height='8' rx='2.2' fill='%235b8cff'/%3E%3C/svg%3E" />
 <title>Tessera · Portfolio (demo) · Strike On</title>
 <meta name="description" content="A fictional Cardano portfolio tracker that lets users hedge ADA with Strike perps in-app (Strike On demo)." />
 <link rel="stylesheet" href="../../assets/theme.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
 <style>
-  .demo-bar { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12.5px; color: var(--ink-2); padding: 7px 16px; border-bottom: 1px solid var(--line); background: linear-gradient(90deg, rgba(var(--mint-rgb), .06), transparent 40%, transparent 60%, rgba(var(--mint-rgb), .06)); }
-  .demo-bar a { color: var(--mint); text-decoration: none; font-weight: 600; }
-  .t-mark { flex: none; width: 28px; height: 28px; border-radius: 8px; background: conic-gradient(from 200deg, #4efab0, #1aa673, #0f5c3a, #4efab0); }
-  .wallet-pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: var(--radius); border: 1px solid var(--line-2); font-size: 13px; color: var(--ink-soft); }
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; padding: 18px 0 40px; }
-  .hdr { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .hdr .c { padding: 16px 18px; border-right: 1px solid var(--line); }
-  .hdr .c:last-child { border-right: 0; }
-  .hdr .k { font-size: 12px; color: var(--ink-2); }
-  .hdr .v { font-size: 24px; font-weight: 600; margin-top: 4px; }
-  .hdr .s { font-size: 12px; margin-top: 2px; }
-  .tok { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-  .tok i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #04120c; flex: none; }
-  .tok small { color: var(--ink-2); font-weight: 400; font-size: 12.5px; }
+  :root { --t-bg: #0a0b14; --t-card: #11131f; --t-card-2: #171a2a; --t-line: rgba(255, 255, 255, .07); --t-ink: #eef0ff; --t-soft: #b9bdd6; --t-muted: #7c81a0; --t-accent: #8b7cff; --t-accent-2: #5b8cff; --t-accent-rgb: 139, 124, 255; --t-font: "Inter", ui-sans-serif, system-ui, sans-serif; }
+  body { background: radial-gradient(1100px 600px at 80% -10%, rgba(var(--t-accent-rgb), .12), transparent 60%), radial-gradient(900px 500px at -10% 30%, rgba(91, 140, 255, .07), transparent 60%), var(--t-bg); color: var(--t-ink); font-family: var(--t-font); font-size: 14px; }
+  .num { font-family: var(--t-font); }
+  .wrap { max-width: 1280px; }
+
+  .demo-note { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 8px 16px; font-size: 12.5px; color: var(--t-muted); border-bottom: 1px solid var(--t-line); background: rgba(255, 255, 255, .015); text-align: center; }
+  .demo-note .tag { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .12); color: var(--t-soft); font-weight: 500; font-size: 11.5px; }
+  .demo-note a { color: var(--t-soft); text-decoration: underline; text-underline-offset: 2px; }
+  .demo-note a:hover { color: #fff; }
+
+  .t-nav { position: sticky; top: 0; z-index: 40; height: 64px; display: flex; align-items: center; gap: 28px; padding: 0 24px; background: rgba(10, 11, 20, .82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--t-line); }
+  .t-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: #fff; text-decoration: none; }
+  .t-brand svg { width: 28px; height: 28px; flex: none; }
+  .t-links { display: flex; gap: 4px; }
+  .t-links a { height: 34px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 9px; color: var(--t-muted); text-decoration: none; font-weight: 500; }
+  .t-links a:hover { color: var(--t-ink); }
+  .t-links a.on { color: #fff; background: rgba(255, 255, 255, .06); }
+  .t-nav .sp { flex: 1; }
+  .wallet-pill { display: inline-flex; align-items: center; gap: 9px; height: 38px; padding: 0 14px 0 6px; border-radius: 999px; border: 1px solid var(--t-line); background: rgba(255, 255, 255, .03); font-size: 13px; color: var(--t-soft); }
+  .wallet-pill .av { width: 26px; height: 26px; border-radius: 50%; background: conic-gradient(from 210deg, #8b7cff, #5b8cff, #b4a6ff, #8b7cff); }
+
+  .se-ticker { background: rgba(255, 255, 255, .015); border-bottom-color: var(--t-line); }
+  .se-ticker .lab { border-right-color: var(--t-line); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; padding: 28px 0 56px; align-items: start; }
+  .col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
+  .card { border-radius: 20px; background: var(--t-card); border: 1px solid var(--t-line); }
+  .card-h { display: flex; align-items: center; gap: 10px; padding: 18px 22px; border-bottom: 1px solid var(--t-line); }
+  .card-h h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .card-h .sub { margin-left: auto; font-size: 12.5px; color: var(--t-muted); }
+  .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500; color: var(--t-soft); background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .08); }
+
+  .overview { padding: 26px 26px 22px; position: relative; overflow: hidden; }
+  .overview::after { content: ""; position: absolute; right: -80px; top: -120px; width: 420px; height: 320px; border-radius: 50%; background: radial-gradient(closest-side, rgba(var(--t-accent-rgb), .18), transparent); pointer-events: none; }
+  .overview .k { font-size: 13px; color: var(--t-muted); }
+  .overview .nw { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .overview .delta { margin-top: 4px; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 22px; position: relative; z-index: 1; }
+  .stats > div { padding: 14px 16px; border-radius: 14px; background: var(--t-card-2); border: 1px solid var(--t-line); }
+  .stats .k { font-size: 12.5px; }
+  .stats .v { margin-top: 6px; font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stats .s { margin-top: 2px; font-size: 12px; color: var(--t-muted); font-variant-numeric: tabular-nums; }
+  .up { color: #7ee2b8; } .down { color: #ff8fa3; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 500; font-size: 12.5px; color: var(--t-muted); padding: 12px 22px; border-bottom: 1px solid var(--t-line); white-space: nowrap; }
+  td { padding: 14px 22px; border-bottom: 1px solid var(--t-line); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(255, 255, 255, .02); }
+  .r { text-align: right; }
+  .tok { display: flex; align-items: center; gap: 12px; }
+  .tok img, .tok .ph { width: 32px; height: 32px; border-radius: 50%; flex: none; background: #1d2033; object-fit: cover; }
+  .tok .ph { display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5b8cff, #8b7cff); }
+  .tok b { display: block; font-weight: 600; }
+  .tok small { display: block; color: var(--t-muted); font-size: 12.5px; margin-top: 1px; }
   .alloc { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
-  .alloc .b { width: 110px; height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; }
-  .alloc .b span { display: block; height: 100%; background: linear-gradient(90deg, var(--mint-deep), var(--mint)); border-radius: 3px; }
-  .hedge { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 18px; }
-  .hedge .ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: rgba(var(--mint-rgb), .12); color: var(--mint); }
-  .hedge h3 { margin: 0 0 4px; font-size: 15px; }
-  .hedge p { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
-  .hedge .kv { display: flex; gap: 22px; margin-top: 12px; flex-wrap: wrap; }
-  .hedge .kv div { font-size: 12px; color: var(--ink-2); }
-  .hedge .kv b { display: block; color: var(--ink); font-family: var(--mono); font-weight: 500; font-size: 14px; margin-top: 2px; }
-  .side { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 10px; align-content: start; position: sticky; top: calc(var(--nav-h) + 16px); }
-  .side .lbl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); }
-  .risk { color: var(--muted); font-size: 12px; padding: 12px 18px; border-top: 1px solid var(--line); }
-  .scroll-x { overflow-x: auto; max-width: 100%; }
-  @media (max-width: 1080px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { position: static; } .hdr { grid-template-columns: repeat(2, 1fr); } .hdr .c:nth-child(2) { border-right: 0; } .hdr .c:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
-  @media (max-width: 560px) { .alloc .b { display: none; } .hdr .c { padding: 14px; min-width: 0; } }
+  .alloc .b { width: 96px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .07); overflow: hidden; }
+  .alloc .b span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--t-accent-2), var(--t-accent)); }
+  .scroll-x { overflow-x: auto; }
+
+  .hedge { padding: 22px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; }
+  .hedge .ic { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: rgba(var(--t-accent-rgb), .14); color: #b4a6ff; }
+  .hedge h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .hedge p { margin: 0; color: var(--t-soft); font-size: 14px; line-height: 1.55; }
+  .hedge .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .hedge .kv div { padding: 12px 14px; border-radius: 12px; background: var(--t-card-2); border: 1px solid var(--t-line); font-size: 12.5px; color: var(--t-muted); }
+  .hedge .kv b { display: block; margin-top: 4px; font-size: 15px; font-weight: 600; color: var(--t-ink); font-variant-numeric: tabular-nums; }
+  .hedge .go { margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 12px; border: 0; cursor: pointer; font: 600 14px var(--t-font); color: #fff; background: linear-gradient(135deg, #5b8cff, #8b7cff); }
+  .hedge .go:hover { filter: brightness(1.08); }
+  .risk { padding: 14px 22px; border-top: 1px solid var(--t-line); color: var(--t-muted); font-size: 12.5px; line-height: 1.5; }
+
+  .side { position: sticky; top: 84px; display: grid; gap: 10px; }
+  .side .lbl { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 13px; color: var(--t-muted); }
+  .side .lbl b { color: var(--t-soft); font-weight: 600; }
+  .panel-frame { height: 780px; border-radius: 22px; overflow: hidden; border: 1px solid var(--t-line); background: #000; box-shadow: 0 30px 80px rgba(0, 0, 0, .5); }
+  .panel-frame strike-trade { display: block; height: 100%; }
+
+  .t-foot { border-top: 1px solid var(--t-line); color: var(--t-muted); font-size: 12.5px; padding: 22px 0 36px; }
+  .t-foot .row { display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+  .t-foot a { color: var(--t-soft); }
+
+  @media (max-width: 1100px) { .layout { grid-template-columns: minmax(0, 1fr); } .side { position: static; } .panel-frame { max-width: 460px; width: 100%; justify-self: center; } }
+  @media (max-width: 760px) { .t-links { display: none; } .stats, .hedge .kv { grid-template-columns: minmax(0, 1fr); } .overview .nw { font-size: 36px; } .alloc .b { display: none; } th, td { padding: 12px 14px; } .wrap { padding: 0 16px; } .t-nav { padding: 0 16px; } .hedge { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
-<div class="demo-bar"><span class="badge gold">Demo app</span> <b>Tessera</b> is a fictional portfolio tracker built to show <a href="../../">Strike On</a>. Holdings are sample data; the hedge panel is live Strike.</div>
-<nav class="se-nav">
-  <a class="se-brand" href="#"><span class="t-mark"></span><span class="se-name">Tessera</span></a>
-  <div class="se-links"><a class="on" href="#">Portfolio</a><a href="#">Activity</a><a href="#">Staking</a><a href="#">Hedge</a><a href="#">Insights</a></div>
+<div class="demo-note"><span class="tag">Demo</span><span>Tessera is a fictional portfolio tracker built to show <a href="../../">Strike On</a>. Holdings are sample data; the Strike panel is live.</span></div>
+<nav class="t-nav">
+  <a class="t-brand" href="#"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#141633"/><rect x="7" y="7" width="8" height="8" rx="2.2" fill="#5b8cff"/><rect x="17" y="7" width="8" height="8" rx="2.2" fill="#b4a6ff"/><rect x="7" y="17" width="8" height="8" rx="2.2" fill="#8b7cff"/><rect x="17" y="17" width="8" height="8" rx="2.2" fill="#5b8cff"/></svg>Tessera</a>
+  <div class="t-links"><a class="on" href="#">Portfolio</a><a href="#">Activity</a><a href="#">Staking</a><a href="#hedge">Hedge</a><a href="#">Insights</a></div>
   <span class="sp"></span>
-  <span class="wallet-pill"><span class="dot"></span><span class="num">addr1…sample</span></span>
+  <span class="wallet-pill"><span class="av"></span><span>addr1…sample</span></span>
 </nav>
 <div class="se-ticker" id="ticker"></div>
 
 <main class="wrap">
   <div class="layout">
-    <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-content:start;min-width:0">
-      <section class="panel">
-        <div class="hdr">
-          <div class="c"><div class="k dotted">Net worth</div><div class="v num" id="nw">—</div><div class="s muted">sample portfolio</div></div>
-          <div class="c"><div class="k dotted">ADA exposure</div><div class="v num" id="exp">—</div><div class="s muted">of portfolio value</div></div>
-          <div class="c"><div class="k dotted">ADA mark price</div><div class="v num" id="px">—</div><div class="s num" id="pxChg">&nbsp;</div></div>
-          <div class="c"><div class="k dotted">ADA 1-day move on your bag</div><div class="v num" id="pnl">—</div><div class="s muted">at today's change</div></div>
+    <div class="col">
+      <section class="card overview">
+        <div class="k">Net worth</div>
+        <div class="nw" id="nw">—</div>
+        <div class="delta" id="nwDelta">&nbsp;</div>
+        <div class="stats">
+          <div><div class="k">ADA exposure</div><div class="v" id="exp">—</div><div class="s">of portfolio value</div></div>
+          <div><div class="k">ADA price</div><div class="v" id="px">—</div><div class="s" id="pxChg">&nbsp;</div></div>
+          <div><div class="k">ADA move on your bag, 24h</div><div class="v" id="pnl">—</div><div class="s">at today's change</div></div>
         </div>
       </section>
 
-      <section class="panel">
-        <div class="panel-h"><h3>Holdings</h3><span class="badge">sample data</span><span class="sp" style="flex:1"></span><span class="sub">Prices: Strike mark</span></div>
+      <section class="card">
+        <div class="card-h"><h2>Holdings</h2><span class="chip">Sample data</span><span class="sub">Prices from Strike</span></div>
         <div class="scroll-x">
-          <table class="tbl">
-            <thead><tr><th><span>Asset</span></th><th class="r"><span>Balance</span></th><th class="r"><span>Price</span></th><th class="r"><span>Value</span></th><th class="r"><span>Allocation</span></th></tr></thead>
+          <table>
+            <thead><tr><th>Asset</th><th class="r">Balance</th><th class="r">Price</th><th class="r">Value</th><th class="r">Allocation</th></tr></thead>
             <tbody id="rows"></tbody>
           </table>
         </div>
       </section>
 
-      <section class="panel">
+      <section class="card" id="hedge">
         <div class="hedge">
-          <div class="ic"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2.5 3.5 5v4.6c0 3.7 2.7 6.9 6.5 7.9 3.8-1 6.5-4.2 6.5-7.9V5L10 2.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m7 10 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M10 2.5 3.5 5v4.6c0 3.7 2.7 6.9 6.5 7.9 3.8-1 6.5-4.2 6.5-7.9V5L10 2.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m7 10 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div>
             <h3>Hedge your ADA without unstaking</h3>
-            <p id="hedgeText">Short ADA-USD perps on Strike to offset part of your exposure while your ADA keeps earning staking rewards. The panel on the right is set to Short.</p>
+            <p>Short ADA-USD perps on Strike to offset part of your exposure while your ADA keeps earning staking rewards. The Strike panel opens on a Short.</p>
             <div class="kv">
               <div>Suggested hedge (25%)<b id="hUsd">—</b></div>
-              <div>Contracts<b id="hAda">—</b></div>
-              <div>Funding / 1h<b id="hFund">—</b></div>
+              <div>Size<b id="hAda">—</b></div>
+              <div>Funding, 1h<b id="hFund">—</b></div>
             </div>
+            <button class="go" id="goHedge" type="button">Open the hedge</button>
           </div>
         </div>
-        <div class="risk">Hedging with perps has its own risks: funding costs, and liquidation if ADA rallies sharply. The panel shows fees and an estimated liquidation price before you confirm.</div>
+        <div class="risk">Hedging with perps has its own risks: funding costs, and liquidation if ADA rallies sharply. The Strike panel shows fees and an estimated liquidation price before you confirm.</div>
       </section>
     </div>
 
     <aside class="side">
-      <div class="lbl"><span class="dot pulse"></span>Hedge in-app · powered by Strike</div>
-      <strike-trade id="w" builder-code="Playground101" network="testnet" market="ADA-USD" side="sell" fee-bps="5" max-fee-bps="10" partner-id="tessera" max-leverage="3" persist="session"></strike-trade>
+      <div class="lbl"><b>Hedge in Tessera</b><span>Powered by Strike</span></div>
+      <div class="panel-frame" id="panel"></div>
     </aside>
   </div>
 </main>
-<footer class="se-foot"><div class="wrap row"><span>Tessera is a fictional demo app. Strike On is an independent project built on Strike's public Builder API.</span><a href="../../" style="color:var(--mint);text-decoration:none;font-weight:600">Strike On →</a></div></footer>
+<footer class="t-foot"><div class="wrap row"><span>Tessera is a fictional demo app. Strike On is an independent project built on Strike's public Builder API. Trading on Strike involves risk of loss.</span><a href="../../">Back to Strike On</a></div></footer>
 
 <script src="../../assets/chrome.js"></script>
 <script>
 (function () {
   SEChrome.ticker(document.getElementById("ticker"));
-  var q = new URLSearchParams(location.search), el = document.getElementById("w");
-  el.setAttribute("network", SEChrome.network(q.get("network"), "testnet"));
-  if (q.get("builder")) el.setAttribute("builder-code", q.get("builder"));
-  el.setAttribute("partner-api", SEChrome.partnerApi(q.get("api")));
+  var q = new URLSearchParams(location.search);
+  var network = SEChrome.network(q.get("network"), "testnet");
+
+  function mount(screen) {
+    var host = document.getElementById("panel"); host.innerHTML = "";
+    var el = document.createElement("strike-trade");
+    var attrs = { variant: "app", layout: "mobile", "builder-code": q.get("builder") || "Playground101", network: network, market: "ADA-USD", side: "sell", screen: screen, "fee-bps": "5", "max-fee-bps": "10", "partner-id": "tessera", "max-leverage": "3", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
+    Object.keys(attrs).forEach(function (k) { if (attrs[k]) el.setAttribute(k, attrs[k]); });
+    host.appendChild(el);
+  }
+  mount("market");
+  document.getElementById("goHedge").addEventListener("click", function () {
+    mount("trade");
+    document.getElementById("panel").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  var ICON = "https://app.strikefinance.org/images/";
   var holdings = [
-    { sym: "ADA", name: "Cardano · staked", bal: 42000, color: "#4efab0", strike: "ADA-USD" },
-    { sym: "USDM", name: "Moneta Dollar", bal: 3200, color: "#c7f9cc", fixed: 1 },
-    { sym: "NIGHT", name: "Midnight", bal: 60000, color: "#a5b4fc", strike: "NIGHT-USD" },
-    { sym: "BTC", name: "Bitcoin · wrapped", bal: 0.045, color: "#fbbf24", strike: "BTC-USD" },
+    { sym: "ADA", name: "Cardano · staked", bal: 42000, strike: "ADA-USD" },
+    { sym: "USDM", name: "Moneta Dollar", bal: 3200, fixed: 1 },
+    { sym: "NIGHT", name: "Midnight", bal: 60000, strike: "NIGHT-USD" },
+    { sym: "BTC", name: "Bitcoin · wrapped", bal: 0.045, strike: "BTC-USD" },
   ];
   var S = "https://api.strikefinance.org";
   var f = function (v, d) { return v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
-  var getJSON = function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }); };
+  var esc = SEChrome.esc;
+  function tokCell(h) {
+    var img = h.strike ? '<img alt="" src="' + ICON + h.sym.toLowerCase() + '.webp" data-b="' + h.sym + '" />' : '<span class="ph">' + h.sym.slice(0, 2) + "</span>";
+    return '<div class="tok">' + img + "<div><b>" + esc(h.sym) + "</b><small>" + esc(h.name) + "</small></div></div>";
+  }
+  function fixIcons(root) {
+    root.querySelectorAll("img[data-b]").forEach(function (img) {
+      img.addEventListener("error", function () {
+        if (!img.dataset.tried) { img.dataset.tried = "1"; img.src = img.src.replace(/\.webp$/, ".svg"); return; }
+        var ph = document.createElement("span"); ph.className = "ph"; ph.textContent = (img.dataset.b || "?").slice(0, 2); img.replaceWith(ph);
+      });
+    });
+  }
   function load() {
-    Promise.all([
-      getJSON(S + "/v2/markets"),
-      getJSON(S + "/price/v2/klines?symbol=ADA-USD&interval=1h&limit=25&priceType=mark").catch(function () { return []; }),
-    ]).then(function (res) {
-      var mk = (res[0] && res[0].markets) || {}, marks = {};
+    Promise.all([SEChrome.getJSON(S + "/v2/markets"), SEChrome.getJSON(S + "/price/v2/ticker/24hr").catch(function () { return []; })]).then(function (res) {
+      var mk = (res[0] && res[0].markets) || {}, marks = {}, chg = {};
       Object.values(mk).forEach(function (m) { var v = Number(m.mark_price); if (v > 0 && isFinite(v)) marks[m.symbol] = v; });
+      (Array.isArray(res[1]) ? res[1] : []).forEach(function (t) { var c = Number(t && t.priceChangePercent); if (t && isFinite(c)) chg[t.symbol] = c; });
       if (!marks["ADA-USD"]) return;
-      var total = 0;
-      holdings.forEach(function (h) { h.price = h.fixed || marks[h.strike] || 0; h.value = h.bal * h.price; total += h.value; });
-      document.getElementById("rows").innerHTML = holdings.map(function (h) {
+      var total = 0, moved = 0;
+      holdings.forEach(function (h) { h.price = h.fixed || marks[h.strike] || 0; h.value = h.bal * h.price; total += h.value; var c = h.strike ? chg[h.strike] || 0 : 0; moved += h.value - h.value / (1 + c / 100); });
+      var tbody = document.getElementById("rows");
+      tbody.innerHTML = holdings.map(function (h) {
         var p = total ? (h.value / total) * 100 : 0;
-        return '<tr><td><div class="tok"><i style="background:' + h.color + '">' + h.sym.slice(0, 2) + "</i>" + h.sym + " <small>" + h.name + '</small></div></td><td class="r num">' + f(h.bal, h.bal < 1 ? 4 : 0) + '</td><td class="r num">$' + f(h.price, h.price < 1 ? 4 : 2) + '</td><td class="r num">$' + f(h.value, 0) + '</td><td class="r"><div class="alloc"><span class="num soft">' + p.toFixed(1) + '%</span><div class="b"><span style="width:' + p.toFixed(1) + '%"></span></div></div></td></tr>';
+        return "<tr><td>" + tokCell(h) + '</td><td class="r">' + f(h.bal, h.bal < 1 ? 4 : 0) + '</td><td class="r">$' + f(h.price, h.price < 1 ? 4 : 2) + '</td><td class="r">$' + f(h.value, 0) + '</td><td class="r"><div class="alloc"><span>' + p.toFixed(1) + '%</span><div class="b"><span style="width:' + p.toFixed(1) + '%"></span></div></div></td></tr>';
       }).join("");
-      var ada = holdings[0], k = Array.isArray(res[1]) ? res[1] : [], ref = k.length ? Number(k[0][4]) : 0, chg = ref > 0 && ada.price ? ((ada.price - ref) / ref) * 100 : 0;
+      fixIcons(tbody);
+      var ada = holdings[0], c = chg["ADA-USD"] || 0;
       document.getElementById("nw").textContent = "$" + f(total, 0);
+      var d = document.getElementById("nwDelta"); d.textContent = (moved >= 0 ? "+$" : "−$") + f(Math.abs(moved), 0) + " today"; d.className = "delta " + (moved >= 0 ? "up" : "down");
       document.getElementById("exp").textContent = total ? ((ada.value / total) * 100).toFixed(0) + "%" : "—";
       document.getElementById("px").textContent = "$" + f(ada.price, 4);
-      var c = document.getElementById("pxChg"); c.textContent = (chg >= 0 ? "+" : "") + chg.toFixed(2) + "% 24h"; c.className = "s num " + (chg >= 0 ? "pos" : "neg");
-      var pnl = ada.value * chg / 100, pe = document.getElementById("pnl"); pe.textContent = (pnl >= 0 ? "+$" : "-$") + f(Math.abs(pnl), 0); pe.className = "v num " + (pnl >= 0 ? "pos" : "neg");
+      var pc = document.getElementById("pxChg"); pc.textContent = (c >= 0 ? "+" : "") + c.toFixed(2) + "% in 24h"; pc.className = "s " + (c >= 0 ? "up" : "down");
+      var pnl = ada.value - ada.value / (1 + c / 100), pe = document.getElementById("pnl"); pe.textContent = (pnl >= 0 ? "+$" : "−$") + f(Math.abs(pnl), 0); pe.className = "v " + (pnl >= 0 ? "up" : "down");
       var hedge = ada.value * 0.25;
       document.getElementById("hUsd").textContent = "$" + f(hedge, 0);
       document.getElementById("hAda").textContent = f(hedge / ada.price, 0) + " ADA";
-      var fr = Number((mk["ADA-USD"] || {}).funding_rate || 0) * 100, fe = document.getElementById("hFund"); fe.textContent = fr.toFixed(4) + "%"; fe.className = fr >= 0 ? "pos" : "neg";
+      var fr = Number((mk["ADA-USD"] || {}).funding_rate || 0) * 100, fe = document.getElementById("hFund"); fe.textContent = fr.toFixed(4) + "%"; fe.className = fr >= 0 ? "up" : "down";
     }).catch(function () {});
   }
   load(); setInterval(function () { if (!document.hidden) load(); }, 20000);

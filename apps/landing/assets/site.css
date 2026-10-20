@@ -14,13 +14,11 @@ body { background: #000; color: #f0f0f0; font-size: 16px; overflow-x: clip; }
 .bx { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 14px; font-weight: 600; font-size: 15.5px; text-decoration: none; cursor: pointer; border: 0; transition: transform .15s, filter .15s, background .15s, border-color .15s, color .15s; white-space: nowrap; font-family: var(--font); }
 .bx svg { width: 14px; height: 14px; transition: transform .2s; }
 .bx:hover svg { transform: translateX(2px); }
-.bx-primary { color: var(--mint-ink); background: linear-gradient(180deg, #7dffc8, #34d897); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 10px 40px rgba(var(--mint-rgb), .22); }
-.bx-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
-.bx-dark { color: #f0f0f0; background: linear-gradient(180deg, #1a1d1c, #0e100f); border: 1px solid rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
-.bx-dark:hover { border-color: rgba(var(--mint-rgb), .45); }
-.bx-link { color: var(--grey); background: none; padding: 0 12px; }
+.bx-primary, .bx-dark { border-radius: 16px; border: 2px solid rgba(255, 255, 255, .05); background: linear-gradient(104deg, rgba(253, 253, 253, .05) 5%, rgba(240, 240, 228, .1) 100%); background-origin: border-box; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); box-shadow: 0 1px 3px rgba(0, 0, 0, .1), 0 1px 2px -1px rgba(0, 0, 0, .1); color: #fff; transition: background-color .2s cubic-bezier(.4, 0, .2, 1), color .2s cubic-bezier(.4, 0, .2, 1), box-shadow .2s cubic-bezier(.4, 0, .2, 1); }
+.bx-primary:hover, .bx-dark:hover { background-color: rgba(236, 255, 246, .92); color: #04120c; box-shadow: 0 0 4px rgba(var(--mint-rgb), .10), 0 1px 14px rgba(var(--mint-rgb), .22), 0 3px 32px rgba(var(--mint-rgb), .30); }
+.bx-link { color: #c9cdcc; background: none; padding: 0 12px; }
 .bx-link:hover { color: #fff; }
-.bx-sm { height: 36px; padding: 0 14px; border-radius: 10px; font-size: 14px; }
+.bx-sm { height: 38px; padding: 0 16px; border-radius: 12px; font-size: 14px; }
 .go { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #fff; text-decoration: none; }
 .go svg { width: 12px; height: 12px; transition: transform .2s; }
 .go:hover { color: var(--mint); }
@@ -67,6 +65,17 @@ section { position: relative; padding: 140px 0 0; }
 .codewin .foot a:hover { color: #fff; }
 .codewin .foot svg { width: 14px; height: 14px; }
 .chip2 { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 7px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .08); font: 13px var(--mono); color: #dfe3e1; white-space: nowrap; }
+
+@property --beam { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.lit { position: relative; isolation: isolate; }
+.lit::before { content: ""; position: absolute; top: 0; left: 50%; width: min(220px, 60%); height: 1px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent); pointer-events: none; z-index: 2; }
+.lit::after { content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none; z-index: 3;
+  background: conic-gradient(from var(--beam), transparent 0deg 286deg, rgba(var(--mint-rgb), .25) 316deg, rgba(235, 255, 246, .95) 350deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity .35s; animation: beam 3.6s linear infinite paused; }
+.lit:hover::after, .lit:focus-visible::after { opacity: 1; animation-play-state: running; }
+@keyframes beam { to { --beam: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .lit::after { animation: none; } }
 
 .fcard { position: relative; border-radius: 22px; overflow: hidden; background: var(--card); border: 1px solid var(--hair); }
 .fcard .vis { position: relative; height: 330px; overflow: hidden; border-bottom: 1px solid rgba(255, 255, 255, .06); background: radial-gradient(500px 240px at 50% 0%, rgba(var(--mint-rgb), .08), transparent 70%); }

@@ -62,7 +62,7 @@ export const appCss =  `:host([variant="app"]) {
 .pa-title.two b { font-size: 17px; font-weight: 600; }
 .pa-title.two > span { font-size: 15px; color: var(--pa-muted); }
 .pa-side { display: inline-flex; align-items: center; gap: 4px; font-size: 17px; font-weight: 600; padding: 0; }
-.pa-chip-test { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(255,183,25,.14); color: var(--pa-gold); letter-spacing: 0; white-space: nowrap; }
+.pa-chip-test { font-size: 11px; font-weight: 500; padding: 1px 8px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #f2cf86; letter-spacing: 0; white-space: nowrap; }
 .pa-round { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--pa-card-2); color: var(--pa-text); transition: background .15s; }
 .pa-round:hover { background: #2e2e32; }
 .pa-round.ghost { background: none; pointer-events: none; }
@@ -184,8 +184,6 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pa-line { position: relative; margin: 0 -16px; color: var(--pa-accent); touch-action: pan-y; user-select: none; }
 .pa-line.dn { color: var(--pa-neg); }
 .pa-line svg { display: block; }
-.pa-line .pulse { opacity: .25; animation: pa-pulse 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes pa-pulse { 0% { transform: scale(.4); opacity: .5; } 100% { transform: scale(1.4); opacity: 0; } }
 .pa-line .xh { stroke: rgba(255,255,255,.35); stroke-dasharray: 3 4; }
 .pa-line-msg { position: absolute; inset: 0; display: grid; place-items: center; color: var(--pa-muted); font-size: 14px; }
 .pa-candles { margin: 0 -16px; }
@@ -444,7 +442,10 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pd-tabs.left button { flex: none; padding: 0 18px; }
 .pd-tabs.scroll { overflow-x: auto; scrollbar-width: none; }
 .pd-tabs.scroll::-webkit-scrollbar { display: none; }
-.pd-tabs.scroll button { white-space: nowrap; padding: 0 10px; font-size: 13px; }
+.pd-tabs.scroll button { white-space: nowrap; padding: 0 12px; font-size: 13.5px; }
+.pd-subtabs { flex: none; display: flex; gap: 6px; padding: 10px 12px 0; }
+.pd-subtabs button { height: 28px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--pa-muted); background: var(--pa-card-2); }
+.pd-subtabs button.on { color: var(--pa-text); background: #3a3a40; }
 
 @supports (animation-timeline: scroll()) {
   .pd-tabs.scroll { animation: pd-tabfade linear both; animation-timeline: scroll(self inline); }

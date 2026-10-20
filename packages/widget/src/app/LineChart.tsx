@@ -118,8 +118,7 @@ export function LineChart({
         <path d={d} fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" />
         {hi_ === null ? (
           <>
-            <circle class="pulse" cx={x(n - 1)} cy={y(vals[n - 1])} r="9" fill="currentColor" />
-            <circle cx={x(n - 1)} cy={y(vals[n - 1])} r="3.6" fill="currentColor" />
+            <circle cx={x(n - 1)} cy={y(vals[n - 1])} r="3.4" fill="currentColor" />
           </>
         ) : (
           <>

@@ -10,7 +10,17 @@
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
   }
+  var ICON = "https://app.strikefinance.org/images/";
   function fmtPrice(v) { return v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4); }
+  function fmtChg(c) { return (c >= 0 ? "+" : "") + c.toFixed(2) + "%"; }
+  function iconFallback(root) {
+    root.querySelectorAll("img[data-b]").forEach(function (img) {
+      img.addEventListener("error", function () {
+        if (!img.dataset.tried) { img.dataset.tried = "1"; img.src = img.src.replace(/\.webp$/, ".svg"); return; }
+        var ph = document.createElement("span"); ph.className = "ph"; ph.textContent = (img.dataset.b || "?").slice(0, 1); img.replaceWith(ph);
+      });
+    });
+  }
   function render(el, tickers) {
     var by = {}; (Array.isArray(tickers) ? tickers : []).forEach(function (t) { if (t && t.symbol) by[t.symbol] = t; });
     var items = [];
@@ -18,11 +28,56 @@
       var t = by[s]; if (!t) return;
       var px = Number(t.lastPrice), c = Number(t.priceChangePercent);
       if (!isFinite(px) || !isFinite(c)) return;
-      items.push('<span class="t">' + s + ' <span class="c">' + fmtPrice(px) + '</span> <span class="c ' + (c >= 0 ? "pos" : "neg") + '">' + (c >= 0 ? "+" : "") + c.toFixed(2) + "%</span></span>");
+      var base = s.replace(/-USD$/, "");
+      items.push('<span class="t" data-s="' + s + '"><img alt="" src="' + ICON + encodeURIComponent(base.toLowerCase()) + '.webp" data-b="' + base + '" /><b>' + base + '</b><span class="px">' + fmtPrice(px) + '</span><span class="ch ' + (c >= 0 ? "pos" : "neg") + '">' + fmtChg(c) + "</span></span>");
     });
     if (!items.length) return false;
-    el.innerHTML = '<span class="live"><span class="dot pulse"></span>Live from Strike</span>' + items.join("");
+    if (!el._seBelt) {
+      el.innerHTML = '<span class="lab"><span class="dot"></span>Live from Strike</span><div class="vp"><div class="belt"></div></div>';
+      el._seBelt = el.querySelector(".belt");
+    }
+    el._seBelt.innerHTML = items.join("") + items.join("");
+    iconFallback(el._seBelt);
     return true;
+  }
+  function live(el) {
+    var WS_URL = "wss://api.strikefinance.org/ws/price", ws = null, retry = 0, ping = null;
+    function apply(it) {
+      if (!it || it.e !== "24hrMiniTicker" || !it.s || !el._seBelt) return;
+      var c = Number(it.c), o = Number(it.o);
+      if (!(c > 0)) return;
+      var chg = o > 0 ? ((c - o) / o) * 100 : null;
+      el._seBelt.querySelectorAll('.t[data-s="' + it.s + '"]').forEach(function (t) {
+        var px = t.querySelector(".px"), ch = t.querySelector(".ch"), txt = fmtPrice(c);
+        if (px.textContent !== txt) {
+          var prev = Number(px.dataset.v || 0);
+          px.textContent = txt; px.dataset.v = c;
+          if (prev) { px.classList.remove("up", "down"); void px.offsetWidth; px.classList.add(c >= prev ? "up" : "down"); setTimeout(function () { px.classList.remove("up", "down"); }, 700); }
+        } else if (!px.dataset.v) px.dataset.v = c;
+        if (chg !== null) { ch.textContent = fmtChg(chg); ch.className = "ch " + (chg >= 0 ? "pos" : "neg"); }
+      });
+    }
+    function open() {
+      if (typeof WebSocket !== "function") return;
+      try { ws = new WebSocket(WS_URL); } catch (e) { return later(); }
+      ws.onopen = function () {
+        retry = 0;
+        ws.send(JSON.stringify({ method: "subscribe", channel: "!miniticker@arr", id: 1 }));
+        clearInterval(ping); ping = setInterval(function () { try { ws.send(JSON.stringify({ method: "ping", id: "hb" })); } catch (e) {} }, 30000);
+      };
+      ws.onmessage = function (ev) {
+        String(ev.data || "").split("\n").forEach(function (line) {
+          if (!line.trim()) return;
+          var m; try { m = JSON.parse(line); } catch (e) { return; }
+          var arr = Array.isArray(m) ? m : Array.isArray(m && m.data) ? m.data : m && m.data ? [m.data] : [m];
+          arr.forEach(apply);
+        });
+      };
+      ws.onclose = function () { clearInterval(ping); later(); };
+      ws.onerror = function () { try { ws.close(); } catch (e) {} };
+    }
+    function later() { retry = Math.min(retry + 1, 6); setTimeout(function () { if (!document.hidden) open(); else document.addEventListener("visibilitychange", function once() { document.removeEventListener("visibilitychange", once); open(); }); }, 1000 * Math.pow(2, retry)); }
+    open();
   }
   function unavailable(el) { el.innerHTML = '<span class="off">Live prices unavailable</span>'; }
 
@@ -109,7 +164,8 @@
           .then(function () { busy = false; });
       };
       load();
-      setInterval(function () { if (!document.hidden) load(); }, 20000);
+      live(el);
+      setInterval(function () { if (!document.hidden) load(); }, 60000);
       document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - lastAt > 20000) load(); });
     },
     strikeStats: function () {

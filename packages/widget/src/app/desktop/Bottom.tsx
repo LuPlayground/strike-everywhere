@@ -10,28 +10,44 @@ import { useActivity } from "../mobile/History";
 type Tab = "positions" | "orders" | "twap" | "grid" | "closed" | "ohist" | "fills" | "funding" | "transfers";
 type PosTool = null | { kind: "close" | "tpsl" | "trail" | "margin" | "reverse"; p: Position } | { kind: "closeall" };
 
+type HistTab = "closed" | "ohist" | "fills" | "funding";
+const HIST_TABS: Array<[HistTab, string]> = [
+  ["closed", "Positions"],
+  ["ohist", "Orders"],
+  ["fills", "Trades"],
+  ["funding", "Funding"],
+];
+
 export function Bottom({ s, onPick }: { s: PerpsState; onPick: (sym: string) => void }) {
-  const [tab, setTab] = useState<Tab>("positions");
-  const tabs: Array<[Tab, string]> = [
+  const [top, setTop] = useState<"positions" | "orders" | "twap" | "grid" | "history" | "transfers">("positions");
+  const [hist, setHist] = useState<HistTab>("closed");
+  const tab: Tab = top === "history" ? hist : top;
+  const tabs: Array<[typeof top, string]> = [
     ["positions", `Positions (${s.positions.length})`],
     ["orders", `Open Orders (${s.orders.length})`],
     ["twap", "TWAP"],
     ["grid", "Grid"],
-    ["closed", "Position History"],
-    ["ohist", "Order History"],
-    ["fills", "Trade History"],
-    ["funding", "Funding"],
+    ["history", "History"],
     ["transfers", "Transfers"],
   ];
   return (
     <div class="pd-panel pd-bottom">
       <div class="pd-tabs left scroll">
         {tabs.map(([t, label]) => (
-          <button key={t} class={tab === t ? "on" : ""} onClick={() => setTab(t)}>
+          <button key={t} class={top === t ? "on" : ""} onClick={() => setTop(t)}>
             {label}
           </button>
         ))}
       </div>
+      {top === "history" && (
+        <div class="pd-subtabs" role="tablist" aria-label="History">
+          {HIST_TABS.map(([t, label]) => (
+            <button key={t} role="tab" aria-selected={hist === t} class={hist === t ? "on" : ""} onClick={() => setHist(t)}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div class="pd-table-wrap">
         {!s.session ? (
           <div class="pd-center">

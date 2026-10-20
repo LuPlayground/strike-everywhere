@@ -8,7 +8,17 @@ export const Chevron = ({ size = 12 }: { size?: number }) => (
 );
 
 const COIN_TINTS = ["#4efab0", "#7aa2ff", "#f8931a", "#c084fc", "#38bdf8", "#facc15", "#fb7185"];
+const ICON_HOST = "https://app.strikefinance.org/images/";
 export function CoinIcon({ base }: { base: string }) {
+  const urls = [`${ICON_HOST}${encodeURIComponent(base.toLowerCase())}.webp`, `${ICON_HOST}${encodeURIComponent(base.toLowerCase())}.svg`];
+  const [i, setI] = useState(0);
+  useEffect(() => setI(0), [base]);
+  if (i < urls.length)
+    return (
+      <span class="coin img" aria-hidden="true">
+        <img src={urls[i]} alt="" width={26} height={26} loading="lazy" decoding="async" referrerpolicy="no-referrer" onError={() => setI(i + 1)} />
+      </span>
+    );
   const tint = base === "ADA" ? "#4efab0" : COIN_TINTS[[...base].reduce((n, c) => n + c.charCodeAt(0), 0) % COIN_TINTS.length];
   return (
     <span class="coin" style={{ background: tint }} aria-hidden="true">
