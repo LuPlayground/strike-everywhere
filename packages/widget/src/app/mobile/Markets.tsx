@@ -15,7 +15,7 @@ const SORTS: Array<[SortKey, string]> = [
 ];
 
 export function sortMarkets(list: Mkt[], key: SortKey, desc: boolean): Mkt[] {
-  const v = (m: Mkt): number | string => (key === "volume" ? m.vol24 : key === "price" ? m.mark : key === "change" ? m.change : key === "leverage" ? m.maxLev : m.base);
+  const v = (m: Mkt): number | string => (key === "volume" ? m.vol24 : key === "price" ? m.mark : key === "change" ? m.change : key === "leverage" ? m.strikeMaxLev : m.base);
   return [...list].sort((a, b) => {
     const x = v(a);
     const y = v(b);
@@ -97,7 +97,7 @@ export function Markets({ s, nav, list, pick, focus }: { s: PerpsState; nav: Nav
               <Coin base={m.base} size={40} />
               <span class="l">
                 <b>
-                  {m.base} <span class="pa-lev">{m.maxLev}x</span>
+                  {m.base} <span class="pa-lev">{m.strikeMaxLev}x</span>
                 </b>
                 <span class="s num">{compactUsd(m.vol24)} Vol</span>
               </span>

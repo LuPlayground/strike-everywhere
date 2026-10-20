@@ -134,7 +134,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
                 {(["market", "limit"] as const).map((t) => (
                   <button key={t} role="option" aria-selected={type === t} class={type === t ? "on" : ""} onClick={() => (setType(t), setTypeOpen(false))}>
                     <b>{t === "market" ? "Market" : "Limit"}</b>
-                    <span>{t === "market" ? "Fill now at the best price" : "Fill at your price or better"}</span>
+                    <span>{t === "market" ? "Fills right away, near the market price" : "Fills only at your price or better"}</span>
                   </button>
                 ))}
               </span>
@@ -194,7 +194,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
           <span class="num">{z.size > 0 ? usdText(z.margin) : "N/A"}</span>
         </div>
         <div class="pd-kv muted">
-          <span title={`Strike ${(s.takerRate * 100).toFixed(3)}% + builder ${(s.client.orderFeeBps / 100).toFixed(2)}%`}>Fees</span>
+          <span title={`Strike taker ${(s.takerRate * 100).toFixed(3)}% + builder ${(s.client.orderFeeBps / 100).toFixed(2)}%. A limit order that waits on the book pays Strike's lower maker fee.`}>{type === "limit" ? "Fees (up to)" : "Fees"}</span>
           <span class="num">{z.size > 0 ? usdText(z.fee, { decimals: z.fee < 0.1 ? 4 : 2 }) : `${(z.feeRate * 100).toFixed(3)}%`}</span>
         </div>
         {fill && fill.complete && !fill.beyondBand && (

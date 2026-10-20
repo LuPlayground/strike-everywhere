@@ -60,7 +60,7 @@ export function Market({ s, nav, sym, onLearn }: { s: PerpsState; nav: Nav; sym:
         <div class="pa-coinhead">
           <Coin base={m.base} size={30} />
           <span class="nm">{m.name}</span>
-          <span class="pa-lev">{m.maxLev}x</span>
+          <span class="pa-lev">{m.strikeMaxLev}x</span>
         </div>
         <div class="pa-price num">{priceText(shown, tick_)}</div>
         <div class={`pa-chg num ${chg >= 0 ? "pos" : "neg"}`}>
@@ -146,7 +146,7 @@ export function Market({ s, nav, sym, onLearn }: { s: PerpsState; nav: Nav; sym:
             v={<span class={`num ${m.funding > 0 ? "neg" : m.funding < 0 ? "pos" : ""}`}>{fundingWords(m.funding)}</span>}
             vsub={m.nextFunding > Date.now() ? <span class="num">{`next in ${countdown(m.nextFunding)}`}</span> : undefined}
           />
-          <Row k="Max leverage" v={`${m.maxLev}x`} />
+          <Row k="Max leverage" v={`${m.strikeMaxLev}x`} vsub={m.maxLev < m.strikeMaxLev ? `up to ${m.maxLev}x in this wallet` : undefined} />
           <Row k="Minimum order" v={<span class="num">{usdText(m.spec.minNotional, { decimals: 0 })}</span>} />
         </Group>
         <div class="pa-bottom-pad" />

@@ -210,7 +210,7 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
                 onClick={() => setSheet("auto")}
                 chevron={tp || sl ? "down" : "plus"}
               />
-              <Row k="Payment" sub={<span class="num">{`Perps Balance · ${(z.feeRate * 100).toFixed(3)}% fee`}</span>} info={() => setSheet("fees")} />
+              <Row k="Payment" sub={<span class="num">{`Perps Balance · ${type === "limit" ? "up to " : ""}${(z.feeRate * 100).toFixed(3)}% fee`}</span>} info={() => setSheet("fees")} />
               {fill && fill.complete && !fill.beyondBand && (
                 <Row
                   k="Est. fill price"
@@ -318,11 +318,11 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
       {sheet === "fees" && (
         <Sheet title="Fees" onClose={() => setSheet(null)}>
           <Group>
-            <Row k="Strike trading fee" v={<span class="num">{(s.takerRate * 100).toFixed(3)}%</span>} />
+            <Row k="Strike trading fee (taker)" v={<span class="num">{(s.takerRate * 100).toFixed(3)}%</span>} />
             <Row k={`Builder fee (${s.config.builderCode})`} v={<span class="num">{(s.client.orderFeeBps / 100).toFixed(2)}%</span>} />
-            <Row k="Estimated total" v={<span class="num">{usdText(z.fee, { decimals: z.fee < 0.1 ? 4 : 2 })}</span>} />
+            <Row k={type === "limit" ? "Estimated total (if it fills at once)" : "Estimated total"} v={<span class="num">{usdText(z.fee, { decimals: z.fee < 0.1 ? 4 : 2 })}</span>} />
           </Group>
-          <p class="pa-p">Fees are charged on the position size when the order fills, and again when you close. Funding is paid or received every hour while the position is open.</p>
+          <p class="pa-p">Fees are charged on the position size when the order fills, and again when you close. A limit order that waits on the book pays Strike's lower maker fee instead of the taker fee; the builder fee is the same. Funding is paid or received every hour while the position is open.</p>
         </Sheet>
       )}
       {sheet === "side" && (
@@ -358,7 +358,7 @@ function LeverageSheet({ s, z, draft, ctx, onClose, onApply }: { s: PerpsState; 
   const marks = [1, 2, 5, 10, 20, 25, 40, 50, 75, 100].filter((x) => x <= cap);
   return (
     <Sheet title="Leverage" onClose={onClose} onDone={() => onApply(l)}>
-      <p class="pa-p c">Boost gains and losses with a larger position size.</p>
+      <p class="pa-p c">Leverage multiplies your position, and your gains and losses with it.</p>
       <div class="pa-levbig num">{l}x</div>
       <Slider min={1} max={cap} value={l} onChange={setL} label="Leverage" marks={marks} />
       <div class="pa-levmarks">
@@ -370,7 +370,7 @@ function LeverageSheet({ s, z, draft, ctx, onClose, onApply }: { s: PerpsState; 
       </div>
       <Group>
         <Row k="Current Price" v={<span class="num">{priceText(ctx.mark, tick)}</span>} />
-        <Row k="Liquidation" v={<span class="num">{at.liq > 0 ? priceText(at.liq, tick) : "—"}</span>} />
+        <Row k="Liquidation (est.)" v={<span class="num">{at.liq > 0 ? priceText(at.liq, tick) : "—"}</span>} />
         <Row k="Distance" v={<span class="num">{at.liq > 0 ? movePct(at.px || ctx.mark, at.liq) : "—"}</span>} />
       </Group>
       {margin > 0 && l < minLev && minLev <= cap && (
@@ -415,7 +415,7 @@ function OrderTypeSheet({
             <span class="ck">{t === x && <Icon n="check" size={18} />}</span>
             <span class="l">
               <span class="k">{x === "market" ? "Market Order" : "Limit Order"}</span>
-              <span class="s">{x === "market" ? "Get the best available price." : "Trade at a specific price"}</span>
+              <span class="s">{x === "market" ? "Fills right away, near the market price" : "Fills only at your price or better"}</span>
             </span>
           </button>
         ))}

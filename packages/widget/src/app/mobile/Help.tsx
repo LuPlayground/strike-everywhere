@@ -16,7 +16,7 @@ export function Help({ s, nav }: { s: PerpsState; nav: Nav }) {
       </div>
       <div class="pa-scroll">
         <div class="pa-prose">
-          <p>Deposits usually take 3–6 minutes: Strike waits for Cardano confirmations before crediting. Withdrawals usually arrive within a few minutes.</p>
+          <p>Deposits usually take a few minutes: Strike waits for Cardano confirmations before crediting. Withdrawals usually arrive within a few minutes.</p>
           <p>Your ADA is always visible on-chain. If a transfer seems stuck, check it in a Cardano explorer, then contact Strike support with the transaction.</p>
         </div>
         {s.session ? (

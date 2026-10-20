@@ -94,7 +94,7 @@ export function Home({ s, nav, onClose, onLearn, onDisclosures }: { s: PerpsStat
               <Icon n="x" size={14} />
             </button>
             <div class="eyebrow">GET STARTED</div>
-            <div class="t">Learn to trade Perps with confidence</div>
+            <div class="t">New to Perps? Learn the basics in a minute</div>
             <button class="link" onClick={() => nav.push({ k: "onboard" })}>
               Learn More <Icon n="right" size={14} />
             </button>
@@ -128,7 +128,7 @@ export function Home({ s, nav, onClose, onLearn, onDisclosures }: { s: PerpsStat
                 <Coin base={m.base} size={40} rank={i < 3 ? i + 1 : undefined} />
                 <span class="l">
                   <b>
-                    {m.base} <span class="pa-lev">{m.maxLev}x</span>
+                    {m.base} <span class="pa-lev">{m.strikeMaxLev}x</span>
                   </b>
                   <span class="s num">{compactUsd(m.vol24)} Vol</span>
                 </span>

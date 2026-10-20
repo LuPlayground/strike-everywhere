@@ -73,7 +73,7 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
             {s.testnet && <span class="pa-chip-test">Testnet</span>}
             <div class="pd-stats">
             <Stat k="Mark" v={priceText(m.mark, tickSize)} />
-            <Stat k="Oracle" v={priceText(m.index, tickSize)} title="Index price: average spot price on major exchanges" />
+            <Stat k="Index" v={priceText(m.index, tickSize)} title="Index price: average spot price on major external exchanges" />
             <Stat k="24h Change" v={`${usdText(m.changeAbs, { sign: true, decimals: Math.abs(m.changeAbs) < 1 ? 4 : 2 })} / ${pctText(m.change)}`} cls={m.change >= 0 ? "pos" : "neg"} />
             <Stat k="24h Volume" v={compactUsd(m.vol24)} />
             <Stat k="Open Interest" v={oi === null ? "—" : compactUsd(oi * m.mark)} />
@@ -182,7 +182,7 @@ function MarketList({ s, sym, onPick, compact }: { s: PerpsState; sym: string; o
             <Coin base={m.base} size={28} />
             <span class="l">
               <b>
-                {m.base} <span class="pa-lev">{m.maxLev}x</span>
+                {m.base} <span class="pa-lev" title="Strike's maximum leverage for this market">{m.strikeMaxLev}x</span>
               </b>
               <span class="muted num">{compactUsd(m.vol24)} Vol</span>
             </span>

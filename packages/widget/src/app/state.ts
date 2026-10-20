@@ -36,6 +36,7 @@ export interface Mkt {
   low24: number;
   createdAt: number;
   maxLev: number;
+  strikeMaxLev: number;
 }
 
 interface Live {
@@ -242,6 +243,7 @@ export function usePerps(config: AppConfig) {
           low24: l?.low ?? 0,
           createdAt: fin(raw.created_at),
           maxLev: Math.max(1, Math.min(config.maxLeverage, spec.maxLeverage)),
+          strikeMaxLev: spec.maxLeverage,
         };
       }),
     [specs, live, ref24, config.maxLeverage],

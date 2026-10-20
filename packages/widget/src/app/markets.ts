@@ -27,7 +27,7 @@ const DAY = 86_400_000;
 export const LISTS: ListDef[] = [
   { id: "blue", label: "Blue Chips", icon: "bulb", test: (b) => BLUE_CHIPS.has(b) },
   { id: "cardano", label: "Cardano", icon: "ada", test: (b) => CARDANO.has(b) },
-  { id: "stocks", label: "Stocks", icon: "building", test: (b) => kindOf(b) === "stock" },
+  { id: "stocks", label: "Equities", icon: "building", test: (b) => kindOf(b) === "stock" },
   { id: "indices", label: "Indices", icon: "chart", test: (b) => kindOf(b) === "index" },
   { id: "commodities", label: "Commodities", icon: "cube", test: (b) => kindOf(b) === "commodity" },
   { id: "crypto", label: "Crypto", icon: "coins", test: (b) => kindOf(b) === "crypto" },

@@ -143,7 +143,7 @@ export function DepositSheet({
             </div>
             {phase === "review" && <button class="cta" onClick={sign}>Sign deposit</button>}
             {phase === "registering" && <button class="cta" onClick={retryRegister}>Retry registering with Strike</button>}
-            {phase === "crediting" && !slow && <p>This usually takes 3–6 minutes. You can close this; the balance updates on its own.</p>}
+            {phase === "crediting" && !slow && <p>This usually takes a few minutes while Strike waits for Cardano confirmations. You can close this; the balance updates on its own.</p>}
             {phase === "crediting" && slow && (
               <div class="warn">
                 <b>Strike hasn't credited this deposit yet.</b> Your transaction is on-chain; crediting is handled by Strike. If it doesn't appear soon, contact Strike support with this transaction:{" "}

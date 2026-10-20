@@ -74,7 +74,7 @@ export function PositionScreen({ s, nav, id, onLearn }: { s: PerpsState; nav: Na
           <Row k="Mark price" info={() => onLearn("mark")} v={<span class="num">{priceText(mark, tick)}</span>} />
           <Row k="Liquidation price" info={() => onLearn("leverage")} v={<span class="num">{liq > 0 ? priceText(liq, tick) : "—"}</span>} vsub={liq > 0 && mark > 0 ? <span class="num">{`${((Math.abs(liq - mark) / mark) * 100).toFixed(1)}% away`}</span> : undefined} />
           <Row k="Margin" v={<span class="num">{usdText(margin)}</span>} />
-          {Number.isFinite(funding) && funding !== 0 && <Row k="Funding so far" info={() => onLearn("funding")} v={<span class={`num ${funding > 0 ? "pos" : "neg"}`}>{usdText(funding, { sign: true, decimals: 4 })}</span>} />}
+          {Number.isFinite(funding) && funding !== 0 && <Row k="Funding fees" info={() => onLearn("funding")} v={<span class="num">{usdText(funding, { decimals: 4 })}</span>} vsub="as Strike reports" />}
         </Group>
 
         {exits.length > 0 && (

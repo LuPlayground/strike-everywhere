@@ -5,9 +5,9 @@ import { Icon, RoundBtn, pref } from "../ui";
 import type { Nav } from "./Mobile";
 
 const RISKS = [
-  { id: "high", icon: "bolt", title: "High risk tolerance", text: "I can handle high volatility and I am prepared to risk losing most or all of my investment.", lev: 10 },
-  { id: "medium", icon: "chart", title: "Medium risk tolerance", text: "I can handle moderate volatility and I am prepared to risk losing a significant portion of my investment.", lev: 5 },
-  { id: "low", icon: "shield", title: "Low risk tolerance", text: "I can handle only a small amount of volatility and I am only prepared to risk losing some of my investment.", lev: 2 },
+  { id: "high", icon: "bolt", title: "High risk tolerance", text: "Big swings are fine with me, and I accept I could lose all of the funds I add.", lev: 10 },
+  { id: "medium", icon: "chart", title: "Medium risk tolerance", text: "Some swings are fine, and I accept I could lose a large part of the funds I add.", lev: 5 },
+  { id: "low", icon: "shield", title: "Low risk tolerance", text: "I prefer small swings and want liquidation to stay far away.", lev: 2 },
 ];
 
 export function Onboarding({ s, nav, onLearn }: { s: PerpsState; nav: Nav; onLearn: (t: string) => void }) {
@@ -37,12 +37,12 @@ export function Onboarding({ s, nav, onLearn }: { s: PerpsState; nav: Nav; onLea
         <div class="pa-ob">
           <SeesawArt />
           <h1>Trade future prices with Perps</h1>
-          <p class="lede">Use Perps to bet on whether a price goes up ("long") or down ("short"). Play the market in a whole new way.</p>
+          <p class="lede">Perps let you trade on whether a price goes up ("long") or down ("short"), on Strike's markets.</p>
           <div class="pt">
             <Icon n="wallet" size={22} />
             <span>
               <b>Start small</b>
-              <span>Orders from ${minOrder.toFixed(0)}. Only risk the funds you put in.</span>
+              <span>Orders from ${minOrder.toFixed(0)}. Only the funds you add to Perps are at risk.</span>
             </span>
           </div>
           <div class="pt">
@@ -63,8 +63,8 @@ export function Onboarding({ s, nav, onLearn }: { s: PerpsState; nav: Nav; onLea
       )}
       {step === 1 && (
         <div class="pa-ob">
-          <h1 class="c">Master Perpetual Futures</h1>
-          <p class="lede c">With perps you're not just trading assets, you're trading what you think will happen next.</p>
+          <h1 class="c">How Perps work</h1>
+          <p class="lede c">Four words cover most of it.</p>
           <div class="pa-ob-facts">
             <div>
               <b class="pos">Long</b>
@@ -80,7 +80,7 @@ export function Onboarding({ s, nav, onLearn }: { s: PerpsState; nav: Nav; onLea
             </div>
             <div>
               <b>Liquidation</b>
-              <span>If the price moves too far against you, the position closes and you lose its margin</span>
+              <span>If the price moves too far against you, Strike closes some or all of the position and you can lose its margin</span>
             </div>
           </div>
           <div class="sp" />
@@ -91,8 +91,8 @@ export function Onboarding({ s, nav, onLearn }: { s: PerpsState; nav: Nav; onLea
       )}
       {step === 2 && (
         <div class="pa-ob">
-          <h1 class="c">What Is Your Risk Tolerance?</h1>
-          <p class="lede c">Your leverage will be set based on your risk tolerance, but you can always adjust it when opening a position.</p>
+          <h1 class="c">Pick your starting risk</h1>
+          <p class="lede c">This sets your starting leverage. You can change it on every trade.</p>
           <div class="pa-risks" role="radiogroup">
             {RISKS.map((r) => (
               <button key={r.id} role="radio" aria-checked={risk === r.id} class={`pa-risk${risk === r.id ? " on" : ""}`} onClick={() => setRisk(r.id)}>
