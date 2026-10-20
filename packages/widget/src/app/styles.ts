@@ -482,6 +482,10 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pd-mrow .r { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; font-size: 12px; }
 .pd-mrow .r b { font-size: 13.5px; font-weight: 500; }
 .pd-mrow .pa-lev { font-size: 11px; padding: 0 5px; }
+.pd-star { flex: none; display: grid; place-items: center; width: 20px; height: 20px; margin-right: -4px; color: rgba(255,255,255,.22); border-radius: 5px; cursor: pointer; }
+.pd-star:hover { color: var(--pa-soft); }
+.pd-star.on { color: var(--pa-gold); }
+.pd-star.on svg path { fill: currentColor; }
 .pd-ivs { flex: none; display: flex; gap: 2px; padding: 8px 10px; border-bottom: 1px solid var(--pa-line); }
 .pd-ivs button { height: 26px; padding: 0 9px; border-radius: 6px; font-size: 12.5px; font-weight: 600; color: var(--pa-muted); }
 .pd-ivs button.on { background: rgba(255,255,255,.1); color: var(--pa-text); }

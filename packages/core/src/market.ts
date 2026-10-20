@@ -148,6 +148,18 @@ export class MarketData {
       .sort((a, b) => a.time - b.time);
   }
 
+  async liquidationMap(symbol: string, rangePct = 0.85): Promise<Array<{ price: number; long: number; short: number }>> {
+    const j = await this.http.request<any>("GET", `/v1/stats/coin/liquidation-map${query({ symbol, range_pct: rangePct })}`, { base: "stat", auth: false });
+    const cols: unknown[] = Array.isArray(j?.columns) ? j.columns : [];
+    const ix = (name: string, fb: number) => (cols.indexOf(name) >= 0 ? cols.indexOf(name) : fb);
+    const [pi, li, si] = [ix("price", 0), ix("long_base", 1), ix("short_base", 2)];
+    const rows: unknown[] = Array.isArray(j?.data) ? j.data : [];
+    return rows
+      .map((r) => (Array.isArray(r) ? { price: Number(r[pi]), long: Number(r[li]) || 0, short: Number(r[si]) || 0 } : null))
+      .filter((r): r is { price: number; long: number; short: number } => !!r && r.price > 0 && r.long >= 0 && r.short >= 0)
+      .sort((a, b) => a.price - b.price);
+  }
+
   async vaults(limit = 20): Promise<Vault[]> {
     const j = await this.http.request<unknown>("GET", `/v2/vaults${query({ limit })}`, { auth: false });
     return listFrom(j, "vaults").map(parseVault).filter((v): v is Vault => v !== null);

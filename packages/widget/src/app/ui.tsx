@@ -83,6 +83,7 @@ const ICONS: Record<string, JSX.Element> = {
     </>
   ),
   bolt: <path {...P} d="M13 3 5 14h6l-1 7 8-11h-6l1-7z" />,
+  star: <path {...P} d="m12 3.5 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L12 3.5z" />,
   ext: <path {...P} d="M14 5h5v5M19 5l-8 8M17 14v5H5V7h5" />,
 };
 

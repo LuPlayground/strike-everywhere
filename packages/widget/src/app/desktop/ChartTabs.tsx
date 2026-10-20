@@ -267,6 +267,137 @@ export function DepthChart({ book, base, tick }: { book: BookView | null | undef
 }
 
 
+export function LiquidationMap({ s, m }: { s: PerpsState; m: Mkt }) {
+  const [rows, setRows] = useState<Array<{ price: number; long: number; short: number }> | null | undefined>(undefined);
+  const [hover, setHover] = useState<number | null>(null);
+  const [box, w, h] = useBox<HTMLDivElement>();
+  useEffect(() => {
+    let alive = true;
+    setRows(undefined);
+    const load = () =>
+      s.client.market
+        .liquidationMap(m.symbol)
+        .then((r) => alive && setRows(r))
+        .catch(() => alive && setRows((r) => r ?? null));
+    load();
+    const t = setInterval(() => !pageHidden() && load(), 60_000);
+    return () => ((alive = false), clearInterval(t));
+  }, [m.symbol]);
+
+  const px = m.mark;
+  const tick = m.spec.tickSize;
+  const bins = (rows ?? []).map((r) => ({ price: r.price, long: r.long * r.price, short: r.short * r.price }));
+  const hasAny = bins.some((b) => b.long > 0 || b.short > 0);
+  const cumL = new Array(bins.length).fill(0);
+  const cumS = new Array(bins.length).fill(0);
+  for (let i = bins.length - 1, run = 0; i >= 0; i--) if (bins[i].price < px) cumL[i] = run += bins[i].long;
+  for (let i = 0, run = 0; i < bins.length; i++) if (bins[i].price > px) cumS[i] = run += bins[i].short;
+  const padL = 62;
+  const padR = 66;
+  const padT = 14;
+  const padB = 26;
+  const iw = Math.max(10, w - padL - padR);
+  const ih = Math.max(10, h - padT - padB);
+  const lo = bins.length ? bins[0].price : px * 0.9;
+  const hi = bins.length ? bins[bins.length - 1].price : px * 1.1;
+  const x = (p: number) => padL + ((p - lo) / (hi - lo || 1)) * iw;
+  const vmax = Math.max(1, ...bins.map((b) => Math.max(b.long, b.short)));
+  const cmax = Math.max(1, ...cumL, ...cumS);
+  const y = (v: number) => padT + (1 - v / vmax) * ih;
+  const yc = (v: number) => padT + (1 - v / cmax) * ih;
+  const bw = Math.max(1, (iw / Math.max(1, bins.length)) * 0.6);
+  const path = (idx: number[], arr: number[]) => idx.map((i, k) => `${k ? "L" : "M"}${x(bins[i].price).toFixed(1)},${yc(arr[i]).toFixed(1)}`).join("");
+  const li = bins.map((b, i) => i).filter((i) => bins[i].price < px);
+  const si = bins.map((b, i) => i).filter((i) => bins[i].price > px);
+  const at = hover !== null && bins[hover] ? bins[hover] : null;
+  const usd0 = (v: number) => usdText(v, { decimals: 0 });
+
+  return (
+    <div class="pd-tabbody">
+      <div class="pd-fh">
+        <b>Liquidation Map</b>
+        <span class="muted">
+          {at && hover !== null
+            ? `${priceText(at.price, tick)} · ${at.price < px ? `longs ${usd0(at.long)} · ${usd0(cumL[hover])} down to here` : `shorts ${usd0(at.short)} · ${usd0(cumS[hover])} up to here`}`
+            : "Where open positions on Strike would be liquidated, in USD"}
+        </span>
+      </div>
+      <div class="pd-svgbox" ref={box} onMouseLeave={() => setHover(null)}>
+        {rows === undefined ? (
+          <div class="pd-center">
+            <Spin />
+          </div>
+        ) : rows === null ? (
+          <div class="pd-center muted">The liquidation map is unavailable right now.</div>
+        ) : !hasAny ? (
+          <div class="pd-center muted">No open positions to map{s.testnet ? " on Strike testnet" : ""} right now.</div>
+        ) : (
+          w > 0 && (
+            <svg
+              width={w}
+              height={h}
+              viewBox={`0 0 ${w} ${h}`}
+              role="img"
+              aria-label={`Liquidation levels for ${m.symbol}`}
+              onMouseMove={(e) => {
+                const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                const p = lo + ((e.clientX - r.left - padL) / iw) * (hi - lo);
+                let best = -1;
+                let d = Infinity;
+                bins.forEach((b, i) => Math.abs(b.price - p) < d && ((d = Math.abs(b.price - p)), (best = i)));
+                setHover(best >= 0 ? best : null);
+              }}
+            >
+              {[0, 0.5, 1].map((f) => (
+                <g key={f}>
+                  <line x1={padL} x2={padL + iw} y1={y(vmax * f)} y2={y(vmax * f)} class="grid" />
+                  <text x={padL - 8} y={y(vmax * f) + 4} text-anchor="end" class="ax">
+                    {usd0(vmax * f)}
+                  </text>
+                  <text x={padL + iw + 8} y={yc(cmax * f) + 4} class="ax">
+                    {usd0(cmax * f)}
+                  </text>
+                </g>
+              ))}
+              {bins.map((b, i) =>
+                b.price < px && b.long > 0 ? (
+                  <rect key={i} x={x(b.price) - bw / 2} y={y(b.long)} width={bw} height={Math.max(1, y(0) - y(b.long))} class="neg" />
+                ) : b.price > px && b.short > 0 ? (
+                  <rect key={i} x={x(b.price) - bw / 2} y={y(b.short)} width={bw} height={Math.max(1, y(0) - y(b.short))} class="pos" />
+                ) : null,
+              )}
+              {li.length > 1 && <path d={path(li, cumL)} class="askline" />}
+              {si.length > 1 && <path d={path(si, cumS)} class="bidline" />}
+              <line x1={x(px)} x2={x(px)} y1={padT} y2={padT + ih} class="cross" />
+              <text x={Math.min(x(px) + 6, padL + iw - 120)} y={padT + 12} class="ax">
+                {`Price ${priceText(px, tick)}`}
+              </text>
+              {hover !== null && <line x1={x(bins[hover].price)} x2={x(bins[hover].price)} y1={padT} y2={padT + ih} class="cross" />}
+              {[lo, px, hi].map((p, i) => (
+                <text key={i} x={x(p)} y={h - 6} text-anchor={i === 0 ? "start" : i === 2 ? "end" : "middle"} class="ax">
+                  {priceText(p, tick).replace("$", "")}
+                </text>
+              ))}
+            </svg>
+          )
+        )}
+      </div>
+      <div class="pd-legend">
+        <span>
+          <i class="sw neg" /> Longs
+        </span>
+        <span>
+          <i class="sw pos" /> Shorts
+        </span>
+        <span>
+          <i class="sw line" /> Running totals from the price
+        </span>
+      </div>
+    </div>
+  );
+}
+
+
 const n = (v: unknown) => (v === undefined || v === null || v === "" ? NaN : Number(v));
 const decs = (step: number) => {
   if (!Number.isFinite(step) || step <= 0) return 0;

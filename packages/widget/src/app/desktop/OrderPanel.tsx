@@ -450,6 +450,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
 export function AccountCard({ s }: { s: PerpsState }) {
   const mm = Number(s.account?.maintenance_margin) || 0;
   const ratio = s.equity > 0 ? mm / s.equity : 0;
+  const posValue = s.positions.reduce((a, p) => a + Math.abs(Number(p.size) || 0) * (s.bySymbol[p.symbol]?.mark || Number(p.entry_price) || 0), 0);
   return (
     <div class="pd-panel pd-acct">
       <div class="pd-kv">
@@ -470,6 +471,18 @@ export function AccountCard({ s }: { s: PerpsState }) {
             Margin Ratio
           </span>
           <b class={`num ${ratio >= 0.7 ? "neg" : ""}`}>{(ratio * 100).toFixed(1)}%</b>
+        </div>
+      )}
+      {s.session && mm > 0 && (
+        <div class="pd-kv">
+          <span class="muted" title="Margin your open positions must keep; below it they are liquidated">Maintenance Margin</span>
+          <b class="num">{usdText(mm)}</b>
+        </div>
+      )}
+      {s.session && posValue > 0 && (
+        <div class="pd-kv">
+          <span class="muted">Total Position Value</span>
+          <b class="num">{usdText(posValue)}</b>
         </div>
       )}
       {s.session ? (

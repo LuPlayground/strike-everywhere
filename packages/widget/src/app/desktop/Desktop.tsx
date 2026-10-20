@@ -5,21 +5,22 @@ import { Disclosures } from "../content";
 import { compactUsd, countdown, kindOf, pctText, priceText, usdText } from "../markets";
 import { filterMarkets, sortMarkets } from "../mobile/Markets";
 import type { Mkt, PerpsState } from "../state";
-import { Coin, Icon, Sheet } from "../ui";
+import { Coin, Icon, Sheet, pref } from "../ui";
 import { BookTrades } from "./BookTrades";
-import { DepthChart, FundingChart, MarketDetails } from "./ChartTabs";
+import { DepthChart, FundingChart, LiquidationMap, MarketDetails } from "./ChartTabs";
 import { Bottom } from "./Bottom";
 import { AccountCard, OrderPanel } from "./OrderPanel";
 
 const IVS: Interval[] = ["1m", "5m", "15m", "1h", "4h", "1d", "1w"];
-type View = "chart" | "funding" | "depth" | "details";
+type View = "chart" | "funding" | "depth" | "liq" | "details";
 const VIEWS: Array<[View, string]> = [
   ["chart", "Chart"],
   ["funding", "Funding"],
   ["depth", "Depth"],
+  ["liq", "Liquidations"],
   ["details", "Details"],
 ];
-type Cat = "all" | "crypto" | "tradfi";
+type Cat = "fav" | "all" | "crypto" | "tradfi";
 
 export function Desktop({ s, width }: { s: PerpsState; width: number }) {
   const [sym, setSym] = useState(s.config.market);
@@ -84,6 +85,8 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
             <Stat k="Mark" v={priceText(m.mark, tickSize)} />
             <Stat k="Index" v={priceText(m.index, tickSize)} title="Index price: average spot price on major external exchanges" />
             <Stat k="24h Change" v={`${usdText(m.changeAbs, { sign: true, decimals: Math.abs(m.changeAbs) < 1 ? 4 : 2 })} / ${pctText(m.change)}`} cls={m.change >= 0 ? "pos" : "neg"} />
+            <Stat k="24h High" v={m.high24 > 0 ? priceText(m.high24, tickSize) : "—"} />
+            <Stat k="24h Low" v={m.low24 > 0 ? priceText(m.low24, tickSize) : "—"} />
             <Stat k="24h Volume" v={compactUsd(m.vol24)} />
             <Stat k="Open Interest" v={oi === null ? "—" : compactUsd(oi * m.mark)} />
             <Stat k="Funding / Countdown" v={`${fundingWords(m.funding)}${m.nextFunding > Date.now() ? ` · ${countdown(m.nextFunding)}` : ""}`} cls={m.funding > 0 ? "neg" : m.funding < 0 ? "pos" : ""} />
@@ -120,6 +123,7 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
         {m && view === "chart" && <ChartFill s={s} m={m} iv={iv} />}
         {m && view === "funding" && <FundingChart s={s} sym={sym} />}
         {m && view === "depth" && <DepthChart book={book} base={m.base} tick={tickSize} />}
+        {m && view === "liq" && <LiquidationMap s={s} m={m} />}
         {m && view === "details" && <MarketDetails s={s} m={m} />}
       </div>
       {showBook && m && <BookTrades s={s} sym={sym} base={m.base} tick={tickSize} book={book} onPrice={(p) => setPick({ p, n: Date.now() })} />}
@@ -178,16 +182,38 @@ function ChartFill({ s, m, iv }: { s: PerpsState; m: Mkt; iv: Interval }) {
   );
 }
 
+function useFavorites(): [Set<string>, (sym: string) => void] {
+  const [fav, setFav] = useState<Set<string>>(() => {
+    try {
+      const v = JSON.parse(pref("favorites") ?? "[]");
+      return new Set(Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
+    } catch {
+      return new Set();
+    }
+  });
+  const toggle = (sym: string) =>
+    setFav((cur) => {
+      const next = new Set(cur);
+      next.has(sym) ? next.delete(sym) : next.add(sym);
+      pref("favorites", JSON.stringify([...next]));
+      return next;
+    });
+  return [fav, toggle];
+}
+
 export function MarketList({ s, sym, onPick, compact }: { s: PerpsState; sym: string; onPick: (s: string) => void; compact?: boolean }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<Cat>("all");
-  const rows = sortMarkets(filterMarkets(s.markets, q), "volume", true).filter((m) => cat === "all" || (cat === "crypto" ? kindOf(m.base) === "crypto" : kindOf(m.base) !== "crypto"));
+  const [fav, toggleFav] = useFavorites();
+  const rows = sortMarkets(filterMarkets(s.markets, q), "volume", true).filter((m) =>
+    cat === "all" ? true : cat === "fav" ? fav.has(m.symbol) : cat === "crypto" ? kindOf(m.base) === "crypto" : kindOf(m.base) !== "crypto",
+  );
   return (
     <div class={`pd-panel pd-list${compact ? " compact" : ""}`}>
       <div class="pd-tabs">
-        {(["all", "crypto", "tradfi"] as const).map((c) => (
-          <button key={c} class={cat === c ? "on" : ""} onClick={() => setCat(c)}>
-            {c === "all" ? "All" : c === "crypto" ? "Crypto" : "TradFi"}
+        {(["fav", "all", "crypto", "tradfi"] as const).map((c) => (
+          <button key={c} class={cat === c ? "on" : ""} onClick={() => setCat(c)} aria-label={c === "fav" ? "Favorites" : undefined} title={c === "fav" ? "Favorites" : undefined}>
+            {c === "fav" ? <Icon n="star" size={16} /> : c === "all" ? "All" : c === "crypto" ? "Crypto" : "TradFi"}
           </button>
         ))}
       </div>
@@ -202,6 +228,17 @@ export function MarketList({ s, sym, onPick, compact }: { s: PerpsState; sym: st
       <div class="pd-list-b">
         {rows.map((m) => (
           <button key={m.symbol} class={`pd-mrow${m.symbol === sym ? " on" : ""}`} onClick={() => onPick(m.symbol)}>
+            <span
+              class={`pd-star${fav.has(m.symbol) ? " on" : ""}`}
+              role="button"
+              tabIndex={0}
+              aria-pressed={fav.has(m.symbol)}
+              aria-label={fav.has(m.symbol) ? `Remove ${m.base} from favorites` : `Add ${m.base} to favorites`}
+              onClick={(e) => (e.stopPropagation(), toggleFav(m.symbol))}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), e.stopPropagation(), toggleFav(m.symbol))}
+            >
+              <Icon n="star" size={14} />
+            </span>
             <Coin base={m.base} size={28} />
             <span class="l">
               <b>
@@ -215,7 +252,7 @@ export function MarketList({ s, sym, onPick, compact }: { s: PerpsState; sym: st
             </span>
           </button>
         ))}
-        {!rows.length && <div class="pd-center muted">{s.markets.length ? "No markets match" : "Loading…"}</div>}
+        {!rows.length && <div class="pd-center muted">{!s.markets.length ? "Loading…" : cat === "fav" && !q ? "Star a market to keep it here." : "No markets match"}</div>}
       </div>
     </div>
   );
