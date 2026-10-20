@@ -202,8 +202,11 @@ export class Trading {
     await this.http.request("DELETE", `/v2/algo/twap/${encodeURIComponent(id)}`);
   }
 
-  async closePosition(spec: MarketSpec, position: Position, builderFeeBps: number, ids?: PlacedOrder): Promise<PlacedOrder> {
-    const size = Math.abs(Number(position.size));
+  async closePosition(spec: MarketSpec, position: Position, builderFeeBps: number, ids?: PlacedOrder, fraction = 1): Promise<PlacedOrder> {
+    const full = Math.abs(Number(position.size));
+    const step = spec.marketStepSize ?? spec.stepSize;
+    const size = fraction >= 1 ? full : Number(roundToStep(full * Math.max(0, fraction), step || 1e-8, "floor"));
+    if (!(size > 0)) throw new Error("That's smaller than the market's minimum size. Close a larger part.");
     const side: Side = Number(position.size) > 0 ? "sell" : "buy";
     return this.placeOrder(spec, { symbol: position.symbol, side, type: "market", size, reduceOnly: true }, builderFeeBps, ids);
   }

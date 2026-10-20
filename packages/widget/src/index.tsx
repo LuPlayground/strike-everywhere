@@ -1,18 +1,20 @@
 import { render } from "preact";
 import { StrikeEverywhere } from "@strike-everywhere/core";
 import { App, type WidgetConfig } from "./App";
-import { FONT_HREF, css } from "./styles";
+import { PerpsApp } from "./app/PerpsApp";
+import { appCss } from "./app/styles";
+import { APP_FONT_HREF, FONT_HREF, css } from "./styles";
 
-export const VERSION = "0.1.0";
+export const VERSION = "0.2.0";
 
-const ATTRS = ["builder-code", "fee-bps", "max-fee-bps", "market", "network", "partner-id", "partner-api", "max-leverage", "persist", "referral-code", "width", "side"] as const;
+const ATTRS = ["builder-code", "fee-bps", "max-fee-bps", "market", "network", "partner-id", "partner-api", "max-leverage", "persist", "referral-code", "width", "side", "variant", "layout", "closable", "height", "screen"] as const;
 
-function ensureFont(): void {
-  if (document.querySelector(`link[data-strike-everywhere-font]`)) return;
+function ensureFont(href = FONT_HREF, key = "font"): void {
+  if (document.querySelector(`link[data-strike-everywhere-${key}]`)) return;
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = FONT_HREF;
-  link.setAttribute("data-strike-everywhere-font", "");
+  link.href = href;
+  link.setAttribute(`data-strike-everywhere-${key}`, "");
   document.head.appendChild(link);
 }
 
@@ -29,9 +31,10 @@ export class StrikeTradeElement extends HTMLElement {
     if (!this.root) {
       this.root = this.attachShadow({ mode: "open" });
       const style = document.createElement("style");
-      style.textContent = css;
+      style.textContent = css + appCss;
       this.root.appendChild(style);
       const mount = document.createElement("div");
+      mount.className = "se-mount";
       this.root.appendChild(mount);
       for (const t of ["keydown", "keyup", "keypress"]) this.root.addEventListener(t, (e) => e.stopPropagation());
     }
@@ -80,9 +83,14 @@ export class StrikeTradeElement extends HTMLElement {
 
   private renderApp(): void {
     const mount = this.root!.lastElementChild!;
-    const width = this.getAttribute("width")?.trim();
-    if (width) this.style.setProperty("--se-width", /^\d+(\.\d+)?$/.test(width) ? `${width}px` : width);
-    else this.style.removeProperty("--se-width");
+    const size = (attr: string, prop: string) => {
+      const v = this.getAttribute(attr)?.trim();
+      if (v) this.style.setProperty(prop, /^\d+(\.\d+)?$/.test(v) ? `${v}px` : v);
+      else this.style.removeProperty(prop);
+    };
+    size("width", "--se-width");
+    size("height", "--se-height");
+    const variant = (this.getAttribute("variant") ?? "").trim().toLowerCase();
     const cfg = this.config();
     if (typeof cfg === "string") {
       render(
@@ -95,7 +103,14 @@ export class StrikeTradeElement extends HTMLElement {
       );
       return;
     }
-    const key = [cfg.network, cfg.builderCode, cfg.feeBps, cfg.maxFeeBps, cfg.partnerApi, cfg.partnerId, cfg.referralCode, cfg.persist].join("|");
+    const key = [variant, cfg.network, cfg.builderCode, cfg.feeBps, cfg.maxFeeBps, cfg.partnerApi, cfg.partnerId, cfg.referralCode, cfg.persist].join("|");
+    if (variant === "app") {
+      ensureFont(APP_FONT_HREF, "app-font");
+      const layout = (this.getAttribute("layout") ?? "").trim().toLowerCase();
+      const appCfg = { ...cfg, layout: layout === "mobile" || layout === "desktop" ? layout : "auto", closable: this.hasAttribute("closable") } as const;
+      render(<PerpsApp key={key} config={appCfg} host={this} screen={this.getAttribute("screen") ?? undefined} />, mount);
+      return;
+    }
     render(<App key={key} config={cfg} />, mount);
   }
 }

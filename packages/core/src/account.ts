@@ -1,6 +1,6 @@
 import { StrikeApiError, StrikeHttp, query } from "./http.js";
 import { listFrom, numOrNull, pick, pickNum, pickStr } from "./parse.js";
-import type { Account, ClosedPositionRow, Fill, FillRow, FundingRow, MarginMode, OrderHistoryEntry, Page, PortfolioSummary, Position } from "./types.js";
+import type { Account, ClosedPositionRow, Fill, FillRow, FundingRow, MarginMode, OrderHistoryEntry, Page, PortfolioSummary, Position, TransactionRow } from "./types.js";
 
 export class AccountApi {
   constructor(private readonly http: StrikeHttp) {}
@@ -35,6 +35,11 @@ export class AccountApi {
     const j = await this.http.request<unknown>("GET", `/v2/history/funding${query({ limit, fromId: p.fromId ?? undefined })}`);
     const items = listFrom(j, "funding").map(parseFunding).filter((f): f is FundingRow => f !== null);
     return { items, next: nextCursor(items, limit, (f) => f.id) };
+  }
+
+  async transactions(accountId: string, limit = 100): Promise<TransactionRow[]> {
+    const j = await this.http.request<unknown>("GET", `/v2/history/transaction${query({ account_id: accountId, limit: Math.max(1, Math.min(1000, limit)) })}`, { auth: false });
+    return listFrom(j, "transactions").map(parseTransaction).filter((t): t is TransactionRow => t !== null).sort((a, b) => b.time - a.time);
   }
 
   async orderHistoryPage(p: { limit?: number; fromOrderId?: number | null } = {}): Promise<Page<OrderHistoryEntry>> {
@@ -116,6 +121,24 @@ export class AccountApi {
       return null;
     }
   }
+}
+
+export function parseTransaction(t: any): TransactionRow | null {
+  if (!t || typeof t !== "object") return null;
+  const id = Number(t.id);
+  const time = Number(t.timestamp ?? t.create_timestamp);
+  const amount = numOrNull(t.amount ?? t.usd_value);
+  if (!Number.isFinite(id) || !(time > 0) || amount === null) return null;
+  return {
+    id,
+    type: String(t.type ?? ""),
+    status: String(t.status ?? ""),
+    amount,
+    time,
+    txHash: typeof t.tx_hash === "string" && t.tx_hash ? t.tx_hash.split("#")[0] : null,
+    asset: typeof t.asset_symbol === "string" ? t.asset_symbol : null,
+    assetAmount: numOrNull(t.asset_amount),
+  };
 }
 
 export function normalizeOrder(o: any): OrderHistoryEntry {

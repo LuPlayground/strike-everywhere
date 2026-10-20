@@ -288,11 +288,12 @@ export class StrikeEverywhere {
     return this.appUrl(isUuid(vaultId) ? `/vaults/${vaultId}` : "/vaults");
   }
 
-  async closePosition(position: Position): Promise<OrderHistoryEntry> {
+  async closePosition(position: Position, fraction = 1): Promise<OrderHistoryEntry> {
     const spec = this.spec(position.symbol);
     const price = Number(this.raw(position.symbol)?.mark_price ?? position.entry_price);
     const side = Number(position.size) > 0 ? "sell" : "buy";
-    return this.submitTracked(position.symbol, Trading.newOrderIds({}), side, Math.abs(Number(position.size)) * price, (ids) => this.trading.closePosition(spec, position, this.orderFeeBps, ids), true);
+    const notional = Math.abs(Number(position.size)) * Math.min(1, Math.max(0, fraction)) * price;
+    return this.submitTracked(position.symbol, Trading.newOrderIds({}), side, notional, (ids) => this.trading.closePosition(spec, position, this.orderFeeBps, ids, fraction), true);
   }
 
   private async applyLeverage(symbol: string, leverage: number): Promise<void> {

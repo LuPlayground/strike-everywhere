@@ -162,6 +162,17 @@ export interface ClosedPositionRow {
   realizedPnl: number | null;
 }
 
+export interface TransactionRow {
+  id: number;
+  type: string;
+  status: string;
+  amount: number;
+  time: number;
+  txHash: string | null;
+  asset: string | null;
+  assetAmount: number | null;
+}
+
 export interface TwapStrategy {
   id: string;
   symbol: string;

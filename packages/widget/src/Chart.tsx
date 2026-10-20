@@ -3,13 +3,28 @@ import { formatPrice, type Kline, type StrikeEverywhere } from "@strike-everywhe
 import { fmtTime, pageHidden } from "./parts";
 
 export const INTERVALS = { "15m": 900_000, "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000 } as const;
-export type Interval = keyof typeof INTERVALS;
+export const ALL_INTERVALS = { "1m": 60_000, "5m": 300_000, ...INTERVALS, "1w": 604_800_000 } as const;
+export type Interval = keyof typeof ALL_INTERVALS;
 type PriceType = "mark" | "last" | "index";
 
 const AXIS = 58;
 const fmtVol = (v: number) => v.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 1 });
 
-export function Chart({ client, symbol, interval, tick, live }: { client: StrikeEverywhere; symbol: string; interval: Interval; tick?: number; live: Record<PriceType, number> }) {
+export function Chart({
+  client,
+  symbol,
+  interval,
+  tick,
+  live,
+  height,
+}: {
+  client: StrikeEverywhere;
+  symbol: string;
+  interval: Interval;
+  tick?: number;
+  live: Record<PriceType, number>;
+  height?: number;
+}) {
   const [priceType, setPriceType] = useState<PriceType>("mark");
   const [candles, setCandles] = useState<Kline[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -51,7 +66,7 @@ export function Chart({ client, symbol, interval, tick, live }: { client: Strike
     setCandles((prev) => {
       if (!prev?.length) return prev;
       const last = prev[prev.length - 1];
-      const step = INTERVALS[interval];
+      const step = ALL_INTERVALS[interval];
       const now = Date.now();
       if (now >= last.openTime + step) {
         const openTime = last.openTime + Math.floor((now - last.openTime) / step) * step;
@@ -71,7 +86,7 @@ export function Chart({ client, symbol, interval, tick, live }: { client: Strike
     </div>
   );
 
-  const h = w >= 480 ? 250 : 210;
+  const h = height ?? (w >= 480 ? 250 : 210);
   if (!candles?.length) {
     return (
       <div class="chart" ref={box} style={{ height: `${h}px` }}>
@@ -111,7 +126,7 @@ export function Chart({ client, symbol, interval, tick, live }: { client: Strike
   const hc = hover ? vis[hover.i] : null;
   const hoverPrice = hover ? hi - ((hover.y - top) / priceH) * (hi - lo) : 0;
   const timeIdx = [Math.floor(n * 0.15), Math.floor(n * 0.5), Math.floor(n * 0.85)];
-  const dateOnly = interval === "1d" || interval === "4h";
+  const dateOnly = interval === "1d" || interval === "4h" || interval === "1w";
 
   const onMove = (e: PointerEvent) => {
     const r = (e.currentTarget as SVGElement).getBoundingClientRect();

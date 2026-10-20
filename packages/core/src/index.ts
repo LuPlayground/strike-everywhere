@@ -7,8 +7,8 @@ export * from "./explain.js";
 export { StrikeHttp, StrikeApiError, query } from "./http.js";
 export { ApiWalletKey, canonicalRequestMessage, signRequest, signLogon } from "./signer.js";
 export { builderConnect, type BuilderSession, type Chain } from "./builderConnect.js";
-export { MarketData, toMarketSpec, parseKlines, parseVault, type RawMarket } from "./market.js";
-export { AccountApi, normalizeOrder, marginModeOf, parseFill, parseFunding, parseClosedPosition, parsePortfolio, attachRealizedPnl } from "./account.js";
+export { MarketData, toMarketSpec, parseKlines, parseVault, parseTrades, type RawMarket, type PublicTrade } from "./market.js";
+export { AccountApi, normalizeOrder, marginModeOf, parseFill, parseFunding, parseClosedPosition, parsePortfolio, parseTransaction, attachRealizedPnl } from "./account.js";
 export { Trading, OrderRejectedError, humanizeRejection, stopOrderProblem, roundStopPrice, parseTwap, TWAP_MIN_SEC, TWAP_MAX_SEC, type PlaceOrderInput, type PlacedOrder, type TwapInput } from "./trading.js";
 export {
   LocalBook,

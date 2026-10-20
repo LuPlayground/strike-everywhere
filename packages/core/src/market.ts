@@ -14,6 +14,24 @@ export function parseKlines(rows: unknown): Kline[] {
   return out.sort((a, b) => a.openTime - b.openTime);
 }
 
+export interface PublicTrade {
+  id: number;
+  price: number;
+  size: number;
+  time: number;
+  side: "buy" | "sell";
+}
+
+export function parseTrades(rows: unknown): PublicTrade[] {
+  if (!Array.isArray(rows)) return [];
+  const out: PublicTrade[] = [];
+  for (const r of rows) {
+    const t = { id: Number(r?.id), price: Number(r?.price), size: Number(r?.qty), time: Number(r?.time), side: r?.isBuyerMaker ? ("sell" as const) : ("buy" as const) };
+    if (Number.isFinite(t.id) && t.price > 0 && t.size > 0 && t.time > 0) out.push(t);
+  }
+  return out.sort((a, b) => b.time - a.time || b.id - a.id);
+}
+
 export function parseVault(v: any): Vault | null {
   if (!v || typeof v.vault_id !== "string" || typeof v.name !== "string") return null;
   return {
@@ -104,6 +122,16 @@ export class MarketData {
     if (!snap) throw new Error("Malformed order book from Strike");
     if (snap.bids.length && snap.asks.length && snap.bids[0][0] >= snap.asks[0][0]) throw new Error("Crossed order book from Strike");
     return snap;
+  }
+
+  async trades(symbol: string, limit = 30): Promise<PublicTrade[]> {
+    const rows = await this.http.request<unknown>("GET", `/v2/trades${query({ symbol, limit: Math.max(1, Math.min(500, Math.round(limit))) })}`, { base: "price", auth: false });
+    return parseTrades(rows);
+  }
+
+  async openInterest(symbol: string): Promise<number | null> {
+    const j = await this.http.request<any>("GET", `/v2/openInterest${query({ symbol })}`, { base: "price", auth: false });
+    return numOrNull(j?.openInterest);
   }
 
   async vaults(limit = 20): Promise<Vault[]> {

@@ -25,6 +25,20 @@ For wallets, dApps, portfolio trackers, communities and publications that want S
   - `max-leverage="3"` for conservative audiences;
   - `network="testnet"` while you integrate.
 
+### Full app layout (wallets and full-screen hosts)
+`variant="app"` turns the ticket into a complete perps app for hosts that can give it a whole screen, like a wallet:
+```html
+<strike-trade variant="app" builder-code="YOUR_CODE" fee-bps="5" closable
+  style="display:block; height:100%"></strike-trade>
+```
+- Under 900 px wide it's a mobile flow: Perps home (balance, positions, lists, top markets), market pages with a live chart, an amount keypad with leverage, order type and auto close (TP/SL), Review → Confirm, positions with partial close, and history.
+- From 900 px it's a desktop trading view: market list, chart, order book and trades, order panel, positions / orders / trade history / transfers.
+- Force one with `layout="mobile"` or `layout="desktop"`. Give it a height (`height` attribute or CSS); it fills its box.
+- `closable` shows a × on the mobile home screen; it fires a `strike-close` event for the host to handle (e.g. go back to the wallet).
+- It fires `strike-session` (`detail: { connected, address, accountId }`) whenever the connection changes, so the host's own header can reflect it.
+- `screen="market"` or `screen="trade"` opens straight on the `market` attribute's market.
+- The amount users enter is the **margin**; the position is margin × leverage (as in most wallet perps apps). It uses the Inter typeface; the classic ticket keeps Strike's IBM Plex.
+
 ### React / frameworks
 It is a standard custom element, so it works in any framework:
 ```tsx

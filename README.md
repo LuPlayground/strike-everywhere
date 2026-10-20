@@ -43,7 +43,7 @@ On Hyperliquid, front ends that embed trading, especially wallets, became the la
 | Path | What it is |
 |---|---|
 | `packages/core` | `@strike-everywhere/core`, a browser SDK. It covers Builder Connect (Cardano CIP-30), signed REST, market data, trading, ADA deposits with pre-sign safety checks, the price and user WebSockets, and margin-tier risk maths. It has a unit test suite. |
-| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~57 KB gzipped**. |
+| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~94 KB gzipped (both layouts)**. |
 | `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill and transaction history**: a fill counts only if the widget registered its `client_order_id` before Strike created the order. |
 | `apps/dashboard` | The partner dashboard: wallets → funded → trading accounts, verified volume, builder fees, per-site breakdown, recent activity, and an embed-snippet generator. |
 | `apps/developers` | The integration page: configurator, live preview in a sample app, HTML / React / wallet-extension snippets. |
