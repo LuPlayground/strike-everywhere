@@ -134,6 +134,15 @@ export class MarketData {
     return numOrNull(j?.openInterest);
   }
 
+  async fundingHistory(symbol: string, days = 7): Promise<Array<{ time: number; rate: number }>> {
+    const j = await this.http.request<any>("GET", `/v1/stats/coin/history/funding${query({ symbol, days: Math.max(1, Math.min(90, Math.round(days))) })}`, { base: "stat", auth: false });
+    const rows: unknown[] = Array.isArray(j?.data) ? j.data : [];
+    return rows
+      .map((r) => (Array.isArray(r) ? { time: Number(r[0]), rate: Number(r[1]) } : null))
+      .filter((r): r is { time: number; rate: number } => !!r && r.time > 0 && Number.isFinite(r.rate))
+      .sort((a, b) => a.time - b.time);
+  }
+
   async vaults(limit = 20): Promise<Vault[]> {
     const j = await this.http.request<unknown>("GET", `/v2/vaults${query({ limit })}`, { auth: false });
     return listFrom(j, "vaults").map(parseVault).filter((v): v is Vault => v !== null);

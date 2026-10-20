@@ -58,6 +58,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
   const slipHigh = (!!fill && (fill.slippage > SLIP_CONFIRM || !fill.complete || fill.beyondBand)) || bookDown || emptySide;
   const slipKey = `k|${sym}|${side}|${z.size}|${fill ? (fill.complete ? Math.ceil(fill.slippage * 200) : "p") : bookDown ? "n" : "e"}`;
 
+  const canPct = !!s.session && s.available > 0 && !!m;
   const setFraction = (pct: number) => {
     if (pct <= 0) return setAmt("");
     const margin = marginForFraction(ctx, z.lev, pct / 100);
@@ -158,12 +159,13 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
           </button>
         </label>
         <div class="pd-sl">
-          <Slider min={0} max={100} value={Math.round(fraction)} onChange={setFraction} label="Share of available balance" marks={[0, 25, 50, 75, 100]} />
+          <Slider min={0} max={100} value={Math.round(fraction)} onChange={setFraction} label="Share of available balance" marks={[0, 25, 50, 75, 100]} disabled={!canPct} />
           <label class="pd-box">
-            <input inputMode="decimal" value={fraction ? Math.round(fraction) : ""} placeholder="0" aria-label="Percent of available balance" onInput={(e) => setFraction(Math.min(100, Number(cleanDecimal(e)) || 0))} />
+            <input inputMode="decimal" disabled={!canPct} value={fraction ? Math.round(fraction) : ""} placeholder="0" aria-label="Percent of available balance" onInput={(e) => setFraction(Math.min(100, Number(cleanDecimal(e)) || 0))} />
             <span>%</span>
           </label>
         </div>
+        {!canPct && <div class="pd-hint">{!s.session ? "Connect a wallet to size by % of your balance." : "Add funds to size by % of your balance."}</div>}
         <div class="pd-lbl">Leverage</div>
         <div class="pd-sl">
           <Slider min={1} max={levMax} value={Math.min(lev, levMax)} onChange={setLev} label="Leverage" marks={[1, ...[2, 5, 10, 20, 40, 75].filter((x) => x < levMax), levMax]} />

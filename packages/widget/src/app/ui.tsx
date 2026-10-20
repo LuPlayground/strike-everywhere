@@ -282,18 +282,18 @@ export function Banner({ toast, onDismiss }: { toast: Toast | null; onDismiss: (
   );
 }
 
-export function Slider({ min, max, value, onChange, label, marks }: { min: number; max: number; value: number; onChange: (v: number) => void; label: string; marks?: number[] }) {
+export function Slider({ min, max, value, onChange, label, marks, disabled }: { min: number; max: number; value: number; onChange: (v: number) => void; label: string; marks?: number[]; disabled?: boolean }) {
   const span = Math.max(1e-9, max - min);
   const pct = Math.max(0, Math.min(100, ((value - min) / span) * 100));
   return (
-    <div class="pa-slider">
+    <div class={`pa-slider${disabled ? " off" : ""}`}>
       <div class="track" />
       <div class="fill" style={{ width: `${pct}%` }} />
       {marks?.map((m) => (
         <span key={m} class={`mk${value >= m ? " on" : ""}`} style={{ left: `${((m - min) / span) * 100}%` }} />
       ))}
       <span class="knob" style={{ left: `${pct}%` }} />
-      <input type="range" min={min} max={max} step={1} value={value} aria-label={label} onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))} />
+      <input type="range" min={min} max={max} step={1} value={value} aria-label={label} disabled={disabled} onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))} />
     </div>
   );
 }

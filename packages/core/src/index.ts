@@ -9,7 +9,31 @@ export { ApiWalletKey, canonicalRequestMessage, signRequest, signLogon } from ".
 export { builderConnect, type BuilderSession, type Chain } from "./builderConnect.js";
 export { MarketData, toMarketSpec, parseKlines, parseVault, parseTrades, type RawMarket, type PublicTrade } from "./market.js";
 export { AccountApi, normalizeOrder, marginModeOf, parseFill, parseFunding, parseClosedPosition, parsePortfolio, parseTransaction, attachRealizedPnl } from "./account.js";
-export { Trading, OrderRejectedError, humanizeRejection, stopOrderProblem, roundStopPrice, parseTwap, TWAP_MIN_SEC, TWAP_MAX_SEC, type PlaceOrderInput, type PlacedOrder, type TwapInput } from "./trading.js";
+export {
+  Trading,
+  OrderRejectedError,
+  humanizeRejection,
+  stopOrderProblem,
+  roundStopPrice,
+  roundTpPrice,
+  buildOrderBody,
+  gridProblem,
+  parseGridBot,
+  isTriggered,
+  needsLimitPrice,
+  executesAtMarket,
+  parseTwap,
+  TWAP_MIN_SEC,
+  TWAP_MAX_SEC,
+  TRAILING_MIN_PCT,
+  TRAILING_MAX_PCT,
+  type PlaceOrderInput,
+  type PlacedOrder,
+  type TwapInput,
+  type GridInput,
+  type GridBot,
+  type ConditionalType,
+} from "./trading.js";
 export {
   LocalBook,
   OrderBookFeed,

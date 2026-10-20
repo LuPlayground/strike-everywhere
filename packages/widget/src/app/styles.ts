@@ -248,6 +248,8 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pa-slider .mk.on { background: rgba(4,18,12,.55); }
 .pa-slider .knob { position: absolute; top: 4px; width: 21px; height: 21px; margin-left: -10.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(var(--pa-accent-rgb), .9), 0 2px 8px rgba(0,0,0,.4); pointer-events: none; }
 .pa-slider input { position: absolute; inset: 0; width: 100%; opacity: 0; margin: 0; cursor: pointer; }
+.pa-slider.off { opacity: .4; }
+.pa-slider.off input { cursor: not-allowed; }
 .pa-radio { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #4a4a50; }
 .pa-radio.on { border: 6px solid var(--pa-accent); }
 .pa-field { display: flex; flex-direction: column; gap: 6px; padding: 14px 18px; border-radius: 20px; background: var(--pa-card-2); margin-bottom: 12px; border: 1.5px solid transparent; text-align: left; width: 100%; }
@@ -436,6 +438,7 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pd-box input { width: 100%; min-width: 0; background: none; border: 0; outline: none; color: var(--pa-text); text-align: right; font: inherit; font-size: 13.5px; }
 .pd-box span { color: var(--pa-muted); margin-left: 3px; font-size: 12px; }
 .pd-hint { font-size: 12px; color: var(--pa-muted); margin-top: -6px; }
+.pd-box input:disabled { cursor: not-allowed; opacity: .5; }
 .pd-switch { width: 42px; height: 24px; border-radius: 12px; background: #3a3a3f; position: relative; transition: background .15s; }
 .pd-switch span { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .pd-switch.on { background: var(--pa-accent); }

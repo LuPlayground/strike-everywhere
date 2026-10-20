@@ -8,8 +8,9 @@ import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
 import { ApiWalletKey } from "./signer.js";
-import { OrderRejectedError, Trading, stopOrderProblem, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
-import type { MarginMode, MarketSpec, OrderHistoryEntry, Position } from "./types.js";
+import { OrderRejectedError, Trading, gridProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
+import type { MarginMode, MarketSpec, OrderHistoryEntry, Position, Side } from "./types.js";
+import { uuid } from "./bytes.js";
 import { PriceStream, UserStream } from "./ws.js";
 import { OrderBookFeed } from "./book.js";
 import { isUuid } from "./parse.js";
@@ -230,10 +231,13 @@ export class StrikeEverywhere {
   async placeOrder(input: PlaceOrderInput & { leverage?: number }): Promise<OrderHistoryEntry> {
     const spec = this.spec(input.symbol);
     if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
-    if (input.type === "stop" || input.type === "stop_limit") {
+    if (isTriggered(input.type)) {
       const mark = await this.markPrice(input.symbol).catch(() => 0);
       const problem = stopOrderProblem({ ...input, mark, priceBound: Number(this.raw(input.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
       if (problem) throw new Error(mark > 0 ? `${problem}. Order not sent.` : "Couldn't check the trigger against the current mark price. Order not sent.");
+    } else if (input.type === "trailing_stop_market") {
+      const problem = stopOrderProblem({ ...input, mark: 0 });
+      if (problem) throw new Error(`${problem}. Order not sent.`);
     }
     const price = input.price ?? input.stopPrice ?? Number(this.raw(input.symbol)?.mark_price ?? 0);
     return this.submitTracked(input.symbol, Trading.newOrderIds(input), input.side, input.size * price, (ids) => this.trading.placeOrder(spec, input, this.orderFeeBps, ids));
@@ -286,6 +290,82 @@ export class StrikeEverywhere {
 
   vaultUrl(vaultId: string): string {
     return this.appUrl(isUuid(vaultId) ? `/vaults/${vaultId}` : "/vaults");
+  }
+
+  async editOrder(order: OrderHistoryEntry, changes: { price?: number; stopPrice?: number; size?: number }): Promise<OrderHistoryEntry> {
+    const type = String(order.type) as PlaceOrderInput["type"];
+    if (type === "trailing_stop_market") throw new Error("Trailing stops can't be edited: cancel it and place a new one.");
+    if (type === "market") throw new Error("Market orders can't be edited.");
+    const spec = this.spec(order.symbol);
+    const remaining = Math.max(0, Number(order.size) - (Number(order.filled) || 0));
+    const input: PlaceOrderInput = {
+      symbol: order.symbol,
+      side: order.side,
+      type,
+      size: changes.size ?? remaining,
+      price: needsLimitPrice(type) ? changes.price ?? Number(order.price) : undefined,
+      stopPrice: isTriggered(type) ? changes.stopPrice ?? Number(order.stop_price) : undefined,
+      reduceOnly: !!order.reduce_only,
+    };
+    if (isTriggered(type)) {
+      const mark = await this.markPrice(order.symbol).catch(() => 0);
+      const problem = stopOrderProblem({ ...input, mark, priceBound: Number(this.raw(order.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
+      if (problem) throw new Error(`${problem}. Order not changed.`);
+    }
+    const price = input.price ?? input.stopPrice ?? Number(this.raw(order.symbol)?.mark_price ?? 0);
+    return this.submitTracked(order.symbol, { clientOrderId: uuid() }, order.side, input.size * price, (ids) => this.trading.replaceOrder(spec, order, input, this.orderFeeBps, ids.clientOrderId), !!input.reduceOnly);
+  }
+
+  async setPositionExits(position: Position, exits: { takeProfit?: number; stopLoss?: number; fraction?: number; workingType?: "mark_price" | "contract_price"; limitOffset?: number }): Promise<OrderHistoryEntry[]> {
+    const size = Math.abs(Number(position.size)) * Math.min(1, Math.max(0, exits.fraction ?? 1));
+    const side: Side = Number(position.size) > 0 ? "sell" : "buy";
+    const out: OrderHistoryEntry[] = [];
+    if (exits.takeProfit) out.push(await this.placeOrder({ symbol: position.symbol, side, type: "take_profit", size, stopPrice: exits.takeProfit, reduceOnly: true, closePosition: (exits.fraction ?? 1) >= 1, workingType: exits.workingType }));
+    if (exits.stopLoss) out.push(await this.placeOrder({ symbol: position.symbol, side, type: "stop", size, stopPrice: exits.stopLoss, reduceOnly: true, closePosition: (exits.fraction ?? 1) >= 1, workingType: exits.workingType }));
+    return out;
+  }
+
+  async trailPosition(position: Position, callbackRatePct: number, activationPrice?: number, workingType?: "mark_price" | "contract_price"): Promise<OrderHistoryEntry> {
+    const side: Side = Number(position.size) > 0 ? "sell" : "buy";
+    return this.placeOrder({ symbol: position.symbol, side, type: "trailing_stop_market", size: Math.abs(Number(position.size)), callbackRate: callbackRatePct, activationPrice, reduceOnly: true, workingType });
+  }
+
+  async limitClose(position: Position, price: number, fraction = 1): Promise<OrderHistoryEntry> {
+    const side: Side = Number(position.size) > 0 ? "sell" : "buy";
+    const size = Math.abs(Number(position.size)) * Math.min(1, Math.max(0, fraction));
+    return this.placeOrder({ symbol: position.symbol, side, type: "limit", size, price, reduceOnly: true });
+  }
+
+  async reversePosition(position: Position): Promise<OrderHistoryEntry> {
+    const side: Side = Number(position.size) > 0 ? "sell" : "buy";
+    return this.placeOrder({ symbol: position.symbol, side, type: "market", size: Math.abs(Number(position.size)) * 2 });
+  }
+
+  async closeAllPositions(): Promise<Array<{ symbol: string; ok: boolean; status?: string; error?: string }>> {
+    const positions = await this.account.positions();
+    const results: Array<{ symbol: string; ok: boolean; status?: string; error?: string }> = [];
+    for (const p of positions) {
+      try {
+        const o = await this.closePosition(p);
+        results.push({ symbol: p.symbol, ok: o.status === "filled", status: o.status });
+      } catch (e: any) {
+        results.push({ symbol: p.symbol, ok: false, error: e?.message || String(e) });
+      }
+    }
+    return results;
+  }
+
+  modifyMargin(symbol: string, amount: number, direction: "add" | "remove"): Promise<void> {
+    return this.trading.modifyIsolatedMargin(symbol, amount, direction);
+  }
+
+  async startGrid(g: GridInput & { leverage?: number }): Promise<{ id: string; status: string }> {
+    const spec = this.spec(g.symbol);
+    if (g.leverage) await this.applyLeverage(g.symbol, g.leverage);
+    const mark = await this.markPrice(g.symbol).catch(() => 0);
+    const problem = gridProblem(g, mark);
+    if (problem) throw new Error(`${problem}. Grid not started.`);
+    return this.trading.createGrid(spec, g, this.orderFeeBps);
   }
 
   async closePosition(position: Position, fraction = 1): Promise<OrderHistoryEntry> {
