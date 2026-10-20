@@ -2,7 +2,7 @@
   "name": "@strike-everywhere/core",
   "version": "0.1.0",
   "description": "Browser SDK for Strike perps via Builder Connect: Cardano CIP-30 onboarding, signed requests, trading, ADA deposits, streams.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -2,7 +2,7 @@
   "name": "strike-everywhere",
   "private": true,
   "description": "Embeddable Strike perps trading for any Cardano app: widget + SDK + partner dashboard, built on Strike Builder Connect.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "workspaces": [
     "packages/core",
     "packages/widget"

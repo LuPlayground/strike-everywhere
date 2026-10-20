@@ -425,8 +425,10 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pd-foot .dot.test { background: var(--pa-gold); }
 .pd-foot .pa-net { color: var(--pa-muted); }
 
-.pd.pp { display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: none; }
-.pd.pp::-webkit-scrollbar { display: none; }
+.pd.pp { display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.18) transparent; }
+.pd.pp::-webkit-scrollbar { width: 8px; }
+.pd.pp::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+.pd.pp::-webkit-scrollbar-track { background: transparent; }
 .pd.pp > * { flex: none; }
 .pp-head { gap: 12px; }
 .pp-head .sp { flex: 1; }

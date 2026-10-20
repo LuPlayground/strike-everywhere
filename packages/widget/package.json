@@ -2,7 +2,7 @@
   "name": "@strike-everywhere/widget",
   "version": "0.1.0",
   "description": "<strike-trade> — a drop-in Strike perps trade ticket for any website.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "main": "./dist/strike-everywhere.js",
   "files": ["dist"],

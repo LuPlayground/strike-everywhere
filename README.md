@@ -138,4 +138,6 @@ The git history shows all dates.
 
 An independent project built on Strike's public Builder API. Not affiliated with or endorsed by Strike Finance. Perpetual futures are leveraged and risky, and Strike is unavailable in restricted regions (see strikefinance.org/restricted).
 
-MIT licensed.
+## License
+
+Source-available under the [PolyForm Strict License 1.0.0](LICENSE): you can read the code and use it for noncommercial purposes, but not redistribute or modify it. Commercial use (for example embedding it in a commercial wallet, dApp or service) needs a separate license from the author: contact [LuPlayground](https://github.com/LuPlayground) on GitHub.

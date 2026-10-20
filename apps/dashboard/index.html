@@ -35,8 +35,8 @@
   .kpi .v { margin-top: 14px; font-size: 34px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kpi .v.pos { color: var(--mint); }
   .kpi .s { margin-top: 6px; font-size: 13px; color: #7d8281; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .src-tag { flex: none; display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500; color: #8e9392; border: 1px solid rgba(255, 255, 255, .1); }
-  .src-tag.ver { color: #9effd2; border-color: rgba(var(--mint-rgb), .25); }
+  .src-tag { flex: none; font-size: 12.5px; font-weight: 500; color: #7d8281; }
+  .src-tag.ver { color: #9effd2; }
 
   section.card { padding: 0; }
   .card { margin-top: 16px; border-radius: 20px; border: 1px solid var(--hair); background: var(--card); overflow: hidden; }
@@ -56,14 +56,14 @@
   .empty a { color: #fff; }
   .p-name { font-weight: 500; }
   .p-site { font-size: 12.5px; color: #7d8281; margin-top: 2px; }
-  .state { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500; color: #8e9392; border: 1px solid rgba(255, 255, 255, .1); margin-left: 10px; }
-  .state.on { color: #9effd2; border-color: rgba(var(--mint-rgb), .25); }
+  .state { font-size: 12.5px; font-weight: 500; color: #7d8281; margin-left: 12px; }
+  .state.on { color: #9effd2; }
   .share { width: 72px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .07); overflow: hidden; display: inline-block; }
   .share span { display: block; height: 100%; background: linear-gradient(90deg, #1aa673, var(--mint)); }
-  .ev { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid rgba(255, 255, 255, .1); color: #cfd3d2; text-transform: capitalize; }
+  .ev { font-size: 13.5px; font-weight: 500; color: #cfd3d2; text-transform: capitalize; }
   .ev.order { color: #9effd2; } .ev.deposit { color: #f2cf86; } .ev.rejected { color: #fda4b4; }
-  .rep { font-size: 11px; font-weight: 500; color: #7d8281; border: 1px solid rgba(255, 255, 255, .1); border-radius: 999px; padding: 1px 7px; margin-left: 8px; white-space: nowrap; }
-  .rep.ver { color: #9effd2; border-color: rgba(var(--mint-rgb), .25); }
+  .rep { font-size: 12px; font-weight: 500; color: #7d8281; margin-left: 10px; white-space: nowrap; }
+  .rep.ver { color: #9effd2; }
 
   .tab { border: 0; background: none; }
   .chart { position: relative; height: 280px; padding: 12px 16px 6px; }
@@ -196,7 +196,7 @@
     <div><h4>Product</h4><a class="f" href="../#embed">Trade ticket</a><a class="f" href="../#app">App layout</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere#sdk-only">TypeScript SDK</a><a class="f" href="./">Partner dashboard</a></div>
     <div><h4>Demos</h4><a class="f" href="../demo/wallet/">Wallet</a><a class="f" href="../demo/portfolio/">Portfolio tracker</a></div>
     <div><h4>Developers</h4><a class="f" href="../developers/">Configurator</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/INTEGRATION.md">Integration guide</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/SECURITY.md">Security</a></div>
-    <div><h4>Project</h4><a class="f" href="https://github.com/LuPlayground/strike-everywhere">GitHub</a><a class="f" href="https://docs.strikefinance.org">Strike docs</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/LICENSE">MIT license</a></div>
+    <div><h4>Project</h4><a class="f" href="https://github.com/LuPlayground/strike-everywhere">GitHub</a><a class="f" href="https://docs.strikefinance.org">Strike docs</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/LICENSE">License</a></div>
   </div>
 </footer>
 
@@ -417,6 +417,7 @@
     $("viewSeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     var table = b.dataset.v === "table";
     $("chart").hidden = table; $("dailyTable").hidden = !table;
+    $("metricTabs").style.visibility = table ? "hidden" : "";
     if (!table && last) drawChart(last);
   });
 
