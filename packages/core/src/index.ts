@@ -59,3 +59,4 @@ export { previewTransaction, lovelaceToAda, type TxPreview, type TxOutputPreview
 export { spliceWitnessSet, mergeWitnessSets, decode as decodeCbor } from "./cardano/cbor.js";
 export { addressHexToBech32, bech32ToAddressHex, shortAddress } from "./cardano/address.js";
 export { StrikeEverywhere, type StrikeEverywhereOptions, type ClientEvent, type OnboardingCheck } from "./client.js";
+export { StrikeEverywhere as StrikeOn, type StrikeEverywhereOptions as StrikeOnOptions } from "./client.js";

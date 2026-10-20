@@ -47,10 +47,10 @@ button, input, select { font: inherit; color: inherit; }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 
 .se-nav { position: sticky; top: 0; z-index: 50; height: var(--nav-h); display: flex; align-items: center; gap: 28px; padding: 0 24px; background: rgba(10, 10, 10, 0.82); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); border-bottom: 1px solid var(--line); }
-.se-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+.se-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; font-size: 17px; letter-spacing: -0.02em; white-space: nowrap; color: #fff; }
 .se-brand .se-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.se-mark { flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--mint); display: grid; place-items: center; box-shadow: 0 0 24px rgba(var(--mint-rgb), 0.35); }
-.se-mark svg { width: 16px; height: 16px; }
+.se-brand .se-name b { font-weight: 600; background: linear-gradient(90deg, #4efab0, #c9ffe8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.se-logo { flex: none; width: 28px; height: 28px; display: block; filter: drop-shadow(0 0 12px rgba(var(--mint-rgb), 0.22)); }
 .se-links { display: flex; gap: 26px; }
 .se-links a { text-decoration: none; font-weight: 600; font-size: 14px; color: var(--ink); opacity: 0.86; transition: color 0.15s, opacity 0.15s; }
 .se-links a:hover { opacity: 1; color: var(--mint); }
@@ -133,7 +133,7 @@ footer.se-foot .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: ce
   .se-nav { gap: 10px; }
   .se-nav .chip, .se-nav .btn-ghost, .se-links { display: none; }
   .se-nav > * { flex-shrink: 0; }
-  .se-nav .se-brand { flex-shrink: 1; min-width: 0; gap: 8px; font-size: 13.5px; letter-spacing: 0.06em; }
+  .se-nav .se-brand { flex-shrink: 1; min-width: 0; gap: 8px; font-size: 16px; }
   .se-nav .sp { flex: 1 1 0; min-width: 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }

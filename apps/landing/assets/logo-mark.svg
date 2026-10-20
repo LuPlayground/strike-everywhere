@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="so-tile" x1="8" y1="2" x2="56" y2="62" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f2a1f"/>
+      <stop offset=".55" stop-color="#050b08"/>
+      <stop offset="1" stop-color="#000"/>
+    </linearGradient>
+    <linearGradient id="so-edge" x1="6" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4efab0" stop-opacity=".7"/>
+      <stop offset=".45" stop-color="#4efab0" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".14"/>
+    </linearGradient>
+    <linearGradient id="so-track" x1="10" y1="0" x2="54" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d7a52"/>
+      <stop offset=".55" stop-color="#4efab0"/>
+      <stop offset="1" stop-color="#c9ffe8"/>
+    </linearGradient>
+    <radialGradient id="so-knob" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(41 28.5) rotate(60) scale(11)">
+      <stop stop-color="#1c2a24"/>
+      <stop offset="1" stop-color="#020604"/>
+    </radialGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#so-tile)"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="15.5" stroke="url(#so-edge)"/>
+  <rect x="10" y="21" width="44" height="22" rx="11" fill="url(#so-track)"/>
+  <rect x="10.75" y="21.75" width="42.5" height="20.5" rx="10.25" stroke="#fff" stroke-opacity=".28" stroke-width="1.5"/>
+  <circle cx="43" cy="32" r="8.5" fill="url(#so-knob)"/>
+  <circle cx="43" cy="32" r="8" stroke="#4efab0" stroke-opacity=".35"/>
+</svg>

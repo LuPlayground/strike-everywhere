@@ -1,4 +1,4 @@
-# Strike Everywhere
+# Strike On
 
 **Strike perps, anywhere Cardano lives.** One HTML tag puts a Strike trade ticket inside any Cardano wallet, dApp or community site.
 - Users connect the wallet they already have with **one signature**, deposit ADA and trade.
@@ -36,14 +36,14 @@ Yet no third-party project uses it. Integrating means implementing:
 - two WebSocket protocols;
 - margin-tier maths.
 
-On Hyperliquid, front ends that embed trading, especially wallets, became the largest source of builder volume. Phantom alone has done over $50B of perp volume through builder codes. **Strike Everywhere packages Strike's own infrastructure so any Cardano app can switch it on in an afternoon and earn from it.**
+On Hyperliquid, front ends that embed trading, especially wallets, became the largest source of builder volume. Phantom alone has done over $50B of perp volume through builder codes. **Strike On packages Strike's own infrastructure so any Cardano app can switch it on in an afternoon and earn from it.**
 
 ## What's in the repo
 
 | Path | What it is |
 |---|---|
 | `packages/core` | `@strike-everywhere/core`, a browser SDK. It covers Builder Connect (Cardano CIP-30), signed REST, market data, trading, ADA deposits with pre-sign safety checks, the price and user WebSockets, and margin-tier risk maths. It has a unit test suite. |
-| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~94 KB gzipped (both layouts)**. |
+| `packages/widget` | `<strike-trade>`, a web component (Preact, Shadow DOM) styled after Strike's own trading UI. It builds to **one script, ~108 KB gzipped (both layouts)**. |
 | `workers/partner-api` | A Cloudflare Worker + D1 that receives attribution events and **reconciles them against Strike's public fill and transaction history**: a fill counts only if the widget registered its `client_order_id` before Strike created the order. |
 | `apps/dashboard` | The partner dashboard: wallets → funded → trading accounts, verified volume, builder fees, per-site breakdown, recent activity, and an embed-snippet generator. |
 | `apps/developers` | The integration page: configurator, live preview in a sample app, HTML / React / wallet-extension snippets. |

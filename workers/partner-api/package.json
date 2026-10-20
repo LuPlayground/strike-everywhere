@@ -2,7 +2,7 @@
   "name": "@strike-everywhere/partner-api",
   "version": "0.1.0",
   "private": true,
-  "description": "Partner attribution API for Strike Everywhere (Cloudflare Worker + D1).",
+  "description": "Partner attribution API for Strike On (Cloudflare Worker + D1).",
   "license": "MIT",
   "scripts": {
     "deploy": "npx --yes wrangler@3.84.1 deploy",

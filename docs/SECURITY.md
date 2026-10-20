@@ -1,6 +1,6 @@
 # Security model
 
-Strike Everywhere puts trading inside other people's websites. That makes the trust boundaries the most important design decision. This file states them plainly, including the limits.
+Strike On puts trading inside other people's websites. That makes the trust boundaries the most important design decision. This file states them plainly, including the limits.
 
 ## What each party can do
 
@@ -9,7 +9,7 @@ Strike Everywhere puts trading inside other people's websites. That makes the tr
 | **User's wallet** (Lace, Eternl, …) | Sign Strike's connect message once; sign each deposit transaction; sign withdrawals on Strike | — |
 | **API wallet key** (Ed25519, created in the browser by Builder Connect) | Place and cancel orders, set leverage, read the account, build deposits | Withdraw anywhere except the user's own wallet, and only with the user's wallet signature (Strike `withdraw` API). It cannot change the builder fee cap the user signed |
 | **Host site** (the page embedding the widget) | Choose the builder code, fee (≤ the cap the user signs), market and leverage ceiling | Charge more than the cap; move funds out of Strike |
-| **Strike Everywhere servers** (partner API) | Store attribution events (account ids, client order ids, partner labels) | Trade, sign or move anything. They never see keys or signatures |
+| **Strike On servers** (partner API) | Store attribution events (account ids, client order ids, partner labels) | Trade, sign or move anything. They never see keys or signatures |
 | **Strike** | Matches, custodies, settles | — |
 
 ## Key handling
