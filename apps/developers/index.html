@@ -32,6 +32,26 @@
   .in:focus { border-color: rgba(var(--mint-rgb), .55); background: rgba(255, 255, 255, .05); }
   select.in { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23a1a4a5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 12px; padding-right: 36px; }
   select.in option { background: #111; }
+  .mk { position: relative; }
+  .mk-btn { display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; }
+  .mk-btn span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mk-btn small { color: #6b7371; font-size: 13px; margin-left: 6px; }
+  .mk-btn > svg { width: 12px; height: 12px; color: #a1a4a5; flex: none; transition: transform .2s; }
+  .mk.open .mk-btn > svg { transform: rotate(180deg); }
+  .mk-ic { width: 22px; height: 22px; border-radius: 50%; flex: none; object-fit: cover; background: rgba(255, 255, 255, .06); }
+  span.mk-ic { display: inline-grid; place-items: center; font-size: 9px; font-weight: 600; color: #050605; background: var(--mint); }
+  .mk-pop { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); border-radius: 14px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(14, 17, 16, .97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 30px 80px rgba(0, 0, 0, .7); overflow: hidden; }
+  .mk-q { display: flex; align-items: center; gap: 8px; margin: 8px; height: 38px; padding: 0 12px; border-radius: 10px; background: rgba(255, 255, 255, .05); color: #8e9392; }
+  .mk-q svg { width: 14px; height: 14px; flex: none; }
+  .mk-q input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #fff; font: 14px var(--font); }
+  .mk-list { max-height: 300px; overflow-y: auto; padding: 0 6px 6px; scrollbar-width: thin; scrollbar-color: rgba(var(--mint-rgb), .35) transparent; }
+  .mk-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 10px; background: none; color: #e4e7e6; font: 14px var(--font); text-align: left; cursor: pointer; }
+  .mk-row:hover, .mk-row.act { background: rgba(255, 255, 255, .06); }
+  .mk-row.on b { color: var(--mint); }
+  .mk-row b { font-weight: 500; }
+  .mk-row small { display: block; color: #6b7371; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mk-row > span { min-width: 0; }
+  .mk-none { padding: 14px 10px; color: #6b7371; font-size: 13.5px; }
   .sg { display: flex; padding: 3px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .025); }
   .sg button { flex: 1; height: 36px; border: 0; border-radius: 9px; background: none; color: #8e9392; font: 500 14px var(--font); cursor: pointer; white-space: nowrap; padding: 0 8px; transition: color .15s, background .15s; }
   .sg button:hover { color: #e6e6e6; }
@@ -126,7 +146,16 @@
         </div>
         <div class="fld"><span class="lbl">Layout</span><div class="sg" id="c-variant"><button type="button" data-v="ticket" class="on">Trade ticket</button><button type="button" data-v="app">Full app</button></div><span class="help" id="variantHelp">A compact panel for a sidebar, a modal or a page.</span></div>
         <div class="fld"><span class="lbl">Network</span><div class="sg" id="c-net"><button type="button" data-v="testnet" class="on">Testnet</button><button type="button" data-v="mainnet">Mainnet</button></div></div>
-        <div class="fld"><label for="c-market">Default market</label><select class="in" id="c-market"><option>ADA-USD</option></select></div>
+        <div class="fld"><label for="mkBtn">Default market <span class="help" id="mkCount"></span></label>
+          <div class="mk" id="mk">
+            <button type="button" class="in mk-btn" id="mkBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+            <input type="hidden" id="c-market" value="ADA-USD" />
+            <div class="mk-pop" id="mkPop" hidden>
+              <label class="mk-q"><svg viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.8" stroke="currentColor" stroke-width="1.5"/><path d="m10.6 10.6 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><input id="mkQ" placeholder="Search markets" aria-label="Search markets" autocomplete="off" spellcheck="false" /></label>
+              <div class="mk-list" id="mkList" role="listbox" aria-label="Markets"></div>
+            </div>
+          </div>
+        </div>
         <div class="fld" id="sideFld"><span class="lbl">Default side</span><div class="sg" id="c-side"><button type="button" data-v="buy" class="on">Long</button><button type="button" data-v="sell">Short (hedge)</button></div></div>
         <div class="fld">
           <label for="c-fee">Builder fee <span class="feev" id="feeLbl">5 bps · 0.05%</span></label>
@@ -241,24 +270,62 @@
 
   var MARKETS = { mainnet: "https://api.strikefinance.org/v2/markets", testnet: "https://api-v2-testnet.strikefinance.org/v2/markets" };
   var FALLBACK = { mainnet: ["ADA-USD", "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "HYPE-USD", "NVDA-USD", "TSLA-USD", "XAU-USD", "SP500-USD"], testnet: ["ADA-USD", "BTC-USD", "ETH-USD", "SOL-USD"] };
-  var marketCache = {}, marketSeq = 0;
+  var marketCache = {}, marketSeq = 0, mkList = [], mkAct = 0;
+  var ICON = "https://app.strikefinance.org/images/";
+  window.mkIcon = function (el) {
+    if (/\.webp$/.test(el.src)) { el.src = el.src.replace(/\.webp$/, ".svg"); return; }
+    var s = document.createElement("span"); s.className = "mk-ic"; s.textContent = (el.dataset.b || "?").slice(0, 3); el.replaceWith(s);
+  };
+  function mkImg(m) { return '<img class="mk-ic" alt="" data-b="' + SEChrome.esc(m.base) + '" src="' + ICON + encodeURIComponent(m.base.toLowerCase()) + '.webp" onerror="mkIcon(this)" />'; }
+  function toMarket(s, name) { var base = s.split("-")[0]; return { symbol: s, base: base, name: String(name || base).replace(/\s*\/\s*USD$/i, "") }; }
+  function mkButton() {
+    var cur = $("c-market").value, m = mkList.filter(function (x) { return x.symbol === cur; })[0] || toMarket(cur);
+    $("mkBtn").innerHTML = mkImg(m) + "<span>" + SEChrome.esc(m.symbol) + "<small>" + SEChrome.esc(m.name) + '</small></span><svg viewBox="0 0 12 12"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  function mkRows() {
+    var term = $("mkQ").value.trim().toLowerCase(), cur = $("c-market").value;
+    var rows = mkList.filter(function (m) { return !term || m.symbol.toLowerCase().indexOf(term) >= 0 || m.name.toLowerCase().indexOf(term) >= 0; });
+    mkAct = Math.min(mkAct, Math.max(0, rows.length - 1));
+    $("mkList").innerHTML = rows.map(function (m, i) {
+      return '<button type="button" role="option" aria-selected="' + (m.symbol === cur) + '" class="mk-row' + (m.symbol === cur ? " on" : "") + (i === mkAct ? " act" : "") + '" data-s="' + SEChrome.esc(m.symbol) + '">' + mkImg(m) + "<span><b>" + SEChrome.esc(m.symbol) + "</b><small>" + SEChrome.esc(m.name) + "</small></span></button>";
+    }).join("") || '<div class="mk-none">No ' + (cfg.net === "testnet" ? "testnet " : "") + "market matches “" + SEChrome.esc($("mkQ").value.trim()) + "”.</div>";
+  }
+  function mkOpen(open) {
+    $("mk").classList.toggle("open", open); $("mkPop").hidden = !open; $("mkBtn").setAttribute("aria-expanded", open);
+    if (open) { $("mkQ").value = ""; mkAct = 0; mkRows(); setTimeout(function () { $("mkQ").focus(); }, 20); }
+  }
+  function mkPick(s) { $("c-market").value = s; mkButton(); mkOpen(false); $("mkBtn").focus(); update(); }
+  $("mkBtn").addEventListener("click", function () { mkOpen($("mkPop").hidden); });
+  $("mkQ").addEventListener("input", function () { mkAct = 0; mkRows(); });
+  $("mkQ").addEventListener("keydown", function (e) {
+    var rows = $("mkList").querySelectorAll(".mk-row");
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); mkAct = (mkAct + (e.key === "ArrowDown" ? 1 : rows.length - 1)) % Math.max(1, rows.length); mkRows(); var a = $("mkList").querySelector(".act"); if (a) a.scrollIntoView({ block: "nearest" }); }
+    else if (e.key === "Enter") { e.preventDefault(); if (rows[mkAct]) mkPick(rows[mkAct].dataset.s); }
+    else if (e.key === "Escape") { mkOpen(false); $("mkBtn").focus(); }
+  });
+  $("mkList").addEventListener("click", function (e) { var b = e.target.closest(".mk-row"); if (b) mkPick(b.dataset.s); });
+  document.addEventListener("click", function (e) { if (!$("mkPop").hidden && !e.target.closest("#mk")) mkOpen(false); });
   function fillMarkets(list) {
-    var sel = $("c-market"), cur = sel.value;
-    var pick = list.indexOf(cur) >= 0 ? cur : list.indexOf("ADA-USD") >= 0 ? "ADA-USD" : list[0];
-    sel.innerHTML = list.map(function (s) { return "<option" + (s === pick ? " selected" : "") + ">" + SEChrome.esc(s) + "</option>"; }).join("");
-    sel.value = pick;
+    mkList = list;
+    var syms = list.map(function (m) { return m.symbol; }), cur = $("c-market").value;
+    var pick = syms.indexOf(cur) >= 0 ? cur : syms.indexOf("ADA-USD") >= 0 ? "ADA-USD" : syms[0];
+    $("c-market").value = pick;
+    $("mkCount").textContent = list.length + " on " + (cfg.net === "testnet" ? "testnet" : "mainnet");
+    mkButton(); if (!$("mkPop").hidden) mkRows();
     if (pick !== cur) update();
   }
   function loadMarkets() {
     var net = cfg.net, my = ++marketSeq;
     if (marketCache[net]) return fillMarkets(marketCache[net]);
     SEChrome.getJSON(MARKETS[net], 8000).then(function (j) {
-      var list = Object.values((j && j.markets) || {}).filter(function (m) { return m && m.status === "trading" && typeof m.symbol === "string"; }).map(function (m) { return m.symbol; }).sort();
+      var list = Object.values((j && j.markets) || {}).filter(function (m) { return m && m.status === "trading" && typeof m.symbol === "string"; }).map(function (m) { return toMarket(m.symbol, m.name); });
+      list.sort(function (a, b) { return a.symbol === "ADA-USD" ? -1 : b.symbol === "ADA-USD" ? 1 : a.symbol < b.symbol ? -1 : 1; });
       if (!list.length) throw new Error("no markets");
       marketCache[net] = list;
       if (my === marketSeq) fillMarkets(list);
-    }).catch(function () { if (my === marketSeq) fillMarkets(FALLBACK[net]); });
+    }).catch(function () { if (my === marketSeq) fillMarkets(FALLBACK[net].map(function (s) { return toMarket(s); })); });
   }
+  mkButton();
 
   function attrs() {
     var rawCode = $("c-code").value.trim();
@@ -323,7 +390,7 @@
     mount.appendChild(el);
   }
 
-  ["c-code", "c-fee", "c-market", "c-partner"].forEach(function (id) { $(id).addEventListener("input", update); $(id).addEventListener("change", update); });
+  ["c-code", "c-fee", "c-partner"].forEach(function (id) { $(id).addEventListener("input", update); $(id).addEventListener("change", update); });
   $("codeTabs").addEventListener("click", function (e) {
     var b = e.target.closest(".tab2"); if (!b) return;
     cfg.tab = b.dataset.t;
