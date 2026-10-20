@@ -101,6 +101,7 @@ npm run deploy:api            # Cloudflare Worker (partner API)
 - **Market-order slippage estimate** from the live book, with a warning above 0.5% and an extra confirm above 2%.
 - **Cross / isolated margin** toggle per market, applied and confirmed asynchronously like leverage.
 - Lower panel: positions, open orders with **Cancel all**, active **TWAPs** with progress, **History** (fills, funding, closed positions with realized PnL, order history) and **Account** (margin ratio with Strike's risk levels, equity, all-time PnL and volume, fee tier) with a read-only list of **Strike vaults**.
+- **App layout** (`variant="app"`, desktop and side panel) follows Strike's own trade page: chart tabs **Funding** (hourly history), **Depth**, **Liquidations** (Strike's liquidation map) and **Details** (the market's size, precision, price-band and margin-tier rules), an order book with price grouping and a buy/sell ratio, a **Calculator** (PnL, liquidation price, target price), favorites, and trailing stops that only reduce a position, as on Strike.
 
 ### SDK only
 
