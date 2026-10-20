@@ -253,7 +253,7 @@
   var wl = document.getElementById("wl");
 
   var w = document.createElement("strike-trade");
-  [["variant", "app"], ["builder-code", builder], ["network", network], ["market", q.get("market") || "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["max-leverage", "20"], ["persist", "session"], ["partner-api", SEChrome.partnerApi(q.get("api"))]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
+  [["variant", "app"], ["builder-code", builder], ["network", network], ["market", q.get("market") || "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["max-leverage", "1000"], ["persist", "session"], ["partner-api", SEChrome.partnerApi(q.get("api"))]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
 
   var narrow = window.matchMedia("(max-width: 899px)");
   function place() {
