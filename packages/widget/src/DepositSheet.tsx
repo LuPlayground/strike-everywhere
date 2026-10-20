@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { DepositRegistrationError, DepositSafetyError, NEW_ACCOUNT_MIN_DEPOSIT_USD, StrikeEverywhere, walletErrorMessage, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
-import { KV, Spinner, Step, decimalInput } from "./parts";
+import { KV, Spinner, Step, decimalInput, cleanDecimal } from "./parts";
 
 type Phase = "amount" | "preparing" | "review" | "signing" | "registering" | "crediting" | "done";
 
@@ -104,7 +104,7 @@ export function DepositSheet({
           <>
             <div class="field">
               <label for="se-dep-amt">Amount</label>
-              <input id="se-dep-amt" inputMode="decimal" value={ada} placeholder="0" onInput={(e) => setAda(decimalInput((e.target as HTMLInputElement).value))} />
+              <input id="se-dep-amt" inputMode="decimal" value={ada} placeholder="0" onInput={(e) => setAda(cleanDecimal(e))} />
               <span class="unit">ADA</span>
             </div>
             <KV k="Value" v={<span class="num">≈ {formatUsd(usd)}</span>} />

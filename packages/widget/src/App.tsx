@@ -34,7 +34,7 @@ import {
   type StrikeEverywhereOptions,
   type TwapStrategy,
 } from "@strike-everywhere/core";
-import { Check, Chevron, CoinIcon, Confirm, Info, KV, PctSlider, Sparkline, Spinner, decimalInput, pageHidden } from "./parts";
+import { Check, Chevron, CoinIcon, Confirm, Info, KV, PctSlider, Sparkline, Spinner, decimalInput, pageHidden, cleanDecimal } from "./parts";
 import { ConnectSheet } from "./ConnectSheet";
 import { DepositSheet } from "./DepositSheet";
 import { WithdrawSheet } from "./WithdrawSheet";
@@ -515,8 +515,12 @@ export function App({ config }: { config: WidgetConfig }) {
         clearTimeout(flashTimer.current);
         flashTimer.current = setTimeout(() => setFlash(""), 1600);
       } else {
-        const verb = order.status === "untriggered" ? "Stop order placed" : order.status === "open" ? "Order placed" : `Order ${order.status}`;
-        notify("ok", `${verb}: ${dir}`, true);
+        if (/cancel|expire/i.test(order.status) && (orderType === "market" || orderType === "stop")) {
+          notify("err", `Not filled: there were no ${side === "buy" ? "sellers" : "buyers"} close enough to the market price (within Strike's ${(marketBound * 100).toFixed(0)}% band), so Strike cancelled the order. Nothing was traded.`, true);
+        } else {
+          const verb = order.status === "untriggered" ? "Stop order placed" : order.status === "open" ? "Order placed" : `Order ${order.status}`;
+          notify("ok", `${verb}: ${dir}`, true);
+        }
       }
       setSizeUsd("");
       setBookSwitch(null);
@@ -537,7 +541,10 @@ export function App({ config }: { config: WidgetConfig }) {
     try {
       const o = await client.closePosition(p);
       const what = positionText(Number(p.size), p.symbol.split("-")[0]);
-      notify("ok", o.status === "filled" ? `✓ Closed ${what} · PnL ≈ ${formatUsd(Number(p.upnl), { sign: true })}` : `Close order ${o.status}`);
+      if (o.status === "filled") notify("ok", `✓ Closed ${what} · PnL ≈ ${formatUsd(Number(p.upnl), { sign: true })}`);
+      else if (/cancel|expire/i.test(o.status))
+        notify("err", `Not closed: there were no ${Number(p.size) > 0 ? "buyers" : "sellers"} close enough to the market price (within Strike's price band), so Strike cancelled the close order. Your ${what} position is still open.`);
+      else notify("ok", `Close order ${o.status}`);
       refresh();
     } catch (e: any) {
       notify("err", e?.message || String(e));
@@ -668,7 +675,7 @@ export function App({ config }: { config: WidgetConfig }) {
   const priceInput = (id: string, label: string, value: string, set: (v: string) => void, placeholder?: string, markBtn = true) => (
     <div class="field">
       <label for={id}>{label}</label>
-      <input id={id} inputMode="decimal" placeholder={placeholder ?? (mark ? formatPrice(mark, tick).replace(/,/g, "") : "0")} value={value} onInput={(e) => set(decimalInput((e.target as HTMLInputElement).value))} />
+      <input id={id} inputMode="decimal" placeholder={placeholder ?? (mark ? formatPrice(mark, tick).replace(/,/g, "") : "0")} value={value} onInput={(e) => set(cleanDecimal(e))} />
       {markBtn && (
         <button class="unit linkbtn" style={{ textDecoration: "none" }} onClick={() => set(roundToStep(mark, tick ?? 0.0001))}>
           Mark
@@ -969,7 +976,7 @@ export function App({ config }: { config: WidgetConfig }) {
         {usesLimit && priceInput("se-price", "Price", limitPrice, setLimitPrice)}
         <div class="field">
           <label for="se-size">Size</label>
-          <input id="se-size" inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd(decimalInput((e.target as HTMLInputElement).value))} aria-label="Order size in USD" aria-describedby={sizeText ? "se-size-line" : undefined} />
+          <input id="se-size" inputMode="decimal" placeholder="0.00" value={sizeUsd} onInput={(e) => setSizeUsd(cleanDecimal(e))} aria-label="Order size in USD" aria-describedby={sizeText ? "se-size-line" : undefined} />
           <span class="unit">USD</span>
         </div>
         {sizeText && (
@@ -986,7 +993,7 @@ export function App({ config }: { config: WidgetConfig }) {
               value={pctDraft ?? (pct ? pct.toFixed(1) : "")}
               placeholder="0"
               onFocus={() => setPctDraft(pct ? pct.toFixed(1) : "")}
-              onInput={(e) => setPctDraft(decimalInput((e.target as HTMLInputElement).value))}
+              onInput={(e) => setPctDraft(cleanDecimal(e))}
               onBlur={() => {
                 const v = Number(pctDraft);
                 if (pctDraft !== null && Number.isFinite(v)) setPct(Math.max(0, Math.min(100, v)));
@@ -1040,11 +1047,11 @@ export function App({ config }: { config: WidgetConfig }) {
           <div class="tpsl">
             <div class="field">
               <label for="se-tp">TP</label>
-              <input id="se-tp" inputMode="decimal" placeholder="Take-profit price" value={tp} onInput={(e) => setTp(decimalInput((e.target as HTMLInputElement).value))} />
+              <input id="se-tp" inputMode="decimal" placeholder="Take-profit price" value={tp} onInput={(e) => setTp(cleanDecimal(e))} />
             </div>
             <div class="field">
               <label for="se-sl">SL</label>
-              <input id="se-sl" inputMode="decimal" placeholder="Stop-loss price" value={sl} onInput={(e) => setSl(decimalInput((e.target as HTMLInputElement).value))} />
+              <input id="se-sl" inputMode="decimal" placeholder="Stop-loss price" value={sl} onInput={(e) => setSl(cleanDecimal(e))} />
             </div>
           </div>
         )}

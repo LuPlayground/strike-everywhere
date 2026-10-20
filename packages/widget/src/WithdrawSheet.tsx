@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { MIN_WITHDRAW_USD, StrikeEverywhere, WithdrawalSafetyError, formatUsd, walletErrorMessage, lovelaceToAda, shortAddress, type PreparedWithdrawal } from "@strike-everywhere/core";
-import { KV, Spinner, Step, decimalInput } from "./parts";
+import { KV, Spinner, Step, decimalInput, cleanDecimal } from "./parts";
 
 type Phase = "amount" | "quoting" | "review" | "signing" | "pending" | "done";
 
@@ -86,7 +86,7 @@ export function WithdrawSheet({
             <p>Paid out in ADA (or USDM where Strike only supports it) to the wallet you connected. Minimum {formatUsd(minUsd, { decimals: 0 })}.</p>
             <div class="field">
               <label for="se-wd-amt">Amount</label>
-              <input id="se-wd-amt" inputMode="decimal" value={usd} placeholder="0.00" onInput={(e) => setUsd(decimalInput((e.target as HTMLInputElement).value))} />
+              <input id="se-wd-amt" inputMode="decimal" value={usd} placeholder="0.00" onInput={(e) => setUsd(cleanDecimal(e))} />
               <button class="unit linkbtn" style={{ textDecoration: "none" }} onClick={() => setUsd(String(max))}>Max</button>
             </div>
             <KV k="Available" v={<span class="num">{formatUsd(available)}</span>} />

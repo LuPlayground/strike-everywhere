@@ -170,3 +170,10 @@ export function decimalInput(v: string): string {
   const i = s.indexOf(".");
   return i === -1 ? s : s.slice(0, i + 1) + s.slice(i + 1).replace(/\./g, "");
 }
+
+export function cleanDecimal(e: Event): string {
+  const el = e.target as HTMLInputElement;
+  const v = decimalInput(el.value);
+  if (el.value !== v) el.value = v;
+  return v;
+}

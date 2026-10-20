@@ -168,7 +168,7 @@
   var perps = document.createElement("div");
   perps.innerHTML = '<p class="perps-intro"><span class="dot"></span><b>Perpetuals</b> · powered by Strike<span class="badge mint">beta</span></p>';
   var w = document.createElement("strike-trade");
-  [["builder-code", builder], ["network", network], ["market", "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["width", "368"], ["max-leverage", "5"], ["partner-api", SEChrome.partnerApi(q.get("api"))]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
+  [["builder-code", builder], ["network", network], ["market", "ADA-USD"], ["fee-bps", "5"], ["max-fee-bps", "10"], ["partner-id", "halo-wallet-concept"], ["width", "368"], ["max-leverage", "5"], ["persist", "session"], ["partner-api", SEChrome.partnerApi(q.get("api"))]].forEach(function (a) { w.setAttribute(a[0], a[1]); });
   perps.appendChild(w);
   var views = {};
   function show(tab) {
