@@ -143,7 +143,7 @@ export class MarketData {
     const j = await this.http.request<any>("GET", `/v1/stats/coin/history/funding${query({ symbol, days: Math.max(1, Math.min(90, Math.round(days))) })}`, { base: "stat", auth: false });
     const rows: unknown[] = Array.isArray(j?.data) ? j.data : [];
     return rows
-      .map((r) => (Array.isArray(r) ? { time: Number(r[0]), rate: Number(r[1]) } : null))
+      .map((r) => (Array.isArray(r) && r[1] !== null && r[1] !== "" ? { time: Number(r[0]), rate: Number(r[1]) } : null))
       .filter((r): r is { time: number; rate: number } => !!r && r.time > 0 && Number.isFinite(r.rate))
       .sort((a, b) => a.time - b.time);
   }

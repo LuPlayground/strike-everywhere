@@ -481,3 +481,39 @@ describe("cancel all", () => {
     expect(calls[0].headers["X-API-Wallet-Signature"]).toBeTruthy();
   });
 });
+
+
+describe("public stats (Strike's /stat endpoints)", () => {
+  it("reads hourly funding history, oldest first, dropping bad rows", async () => {
+    const { f, calls } = fakeFetch({
+      "/stat/v1/stats/coin/history/funding": () => ({ columns: ["ts", "funding_rate"], data: [[2000, -0.00001], [1000, 0.0002], ["x", 1], [3000, null]], days: 30 }),
+    });
+    const md = new MarketData(new StrikeHttp(NETWORKS.mainnet, f));
+    expect(await md.fundingHistory("ADA-USD", 30)).toEqual([
+      { time: 1000, rate: 0.0002 },
+      { time: 2000, rate: -0.00001 },
+    ]);
+    expect(calls[0].url.searchParams.get("symbol")).toBe("ADA-USD");
+    expect(calls[0].headers["X-API-Wallet-Signature"]).toBeUndefined();
+  });
+
+  it("reads the liquidation map by column name and sorts by price", async () => {
+    const { f, calls } = fakeFetch({
+      "/stat/v1/stats/coin/liquidation-map": () => ({
+        bins: 3,
+        columns: ["price", "short_base", "long_base", "cum_long_base", "cum_short_base"],
+        data: [
+          [0.3, 50, 0, 0, 50],
+          [0.1, 0, 7250, 7250, 0],
+          [-1, 1, 1, 1, 1],
+        ],
+      }),
+    });
+    const md = new MarketData(new StrikeHttp(NETWORKS.mainnet, f));
+    expect(await md.liquidationMap("ADA-USD")).toEqual([
+      { price: 0.1, long: 7250, short: 0 },
+      { price: 0.3, long: 0, short: 50 },
+    ]);
+    expect(calls[0].url.searchParams.get("range_pct")).toBe("0.85");
+  });
+});
