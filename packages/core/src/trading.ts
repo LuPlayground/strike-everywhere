@@ -61,6 +61,8 @@ export function stopOrderProblem(p: {
   stopPrice?: number;
   price?: number;
   mark: number;
+  last?: number;
+  workingType?: "mark_price" | "contract_price";
   priceBound?: number;
   tickSize?: number;
   callbackRate?: number;
@@ -78,11 +80,14 @@ export function stopOrderProblem(p: {
   const stop = p.tickSize && raw > 0 ? (tp ? roundTpPrice(p.side, raw, p.tickSize) : roundStopPrice(p.side, raw, p.tickSize)) : raw;
   if (!(stop > 0)) return "Enter a trigger price";
   if (needsLimitPrice(p.type) && !(Number(p.price) > 0)) return "Enter a limit price";
-  if (!(p.mark > 0)) return "Waiting for the mark price";
-  if (!tp && p.side === "buy" && !(stop > p.mark)) return "Buy stop trigger must be above the mark price";
-  if (!tp && p.side === "sell" && !(stop < p.mark)) return "Sell stop trigger must be below the mark price";
-  if (tp && p.side === "sell" && !(stop > p.mark)) return "Sell take-profit trigger must be above the mark price";
-  if (tp && p.side === "buy" && !(stop < p.mark)) return "Buy take-profit trigger must be below the mark price";
+  const onLast = p.workingType === "contract_price";
+  const ref = onLast ? Number(p.last) : p.mark;
+  const refName = onLast ? "last price" : "mark price";
+  if (!(ref > 0)) return `Waiting for the ${refName}`;
+  if (!tp && p.side === "buy" && !(stop > ref)) return `Buy stop trigger must be above the ${refName}`;
+  if (!tp && p.side === "sell" && !(stop < ref)) return `Sell stop trigger must be below the ${refName}`;
+  if (tp && p.side === "sell" && !(stop > ref)) return `Sell take-profit trigger must be above the ${refName}`;
+  if (tp && p.side === "buy" && !(stop < ref)) return `Buy take-profit trigger must be below the ${refName}`;
   const bound = p.priceBound ?? 0.05;
   if (needsLimitPrice(p.type) && Math.abs(Number(p.price) - stop) / stop > bound) return `Limit price must be within ${(bound * 100).toFixed(0)}% of the trigger`;
   return null;

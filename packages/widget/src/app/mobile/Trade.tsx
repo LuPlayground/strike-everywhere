@@ -43,11 +43,13 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
   const ctx: DraftCtx = {
     spec: m?.spec,
     mark,
+    last: m?.last ?? 0,
     available: s.available,
     takerRate: s.takerRate,
     feeBps: s.client.orderFeeBps,
     maxLeverage: s.config.maxLeverage,
     limitBound: Number(raw?.order_limit_price_bound) || 0.05,
+    position: s.session ? Number(s.positions.find((p) => p.symbol === sym)?.size) || 0 : undefined,
   };
   const bracketOk = type === "market" || type === "limit";
   const draft: Draft = { ...ext, symbol: sym, side, type, amount: Number(amt) || 0, unit, leverage: lev, limitPrice: Number(limitStr) || 0, tp: bracketOk ? tp : 0, sl: bracketOk ? sl : 0, autoMode };
@@ -406,7 +408,7 @@ function typeSummary(type: AppOrderType, limit: string, e: Extras, tick?: number
   else parts.push(label);
   if ((type === "limit" || type === "stop_limit" || type === "take_profit_limit") && e.tif && e.tif !== "GTC") parts.push(e.tif);
   if (type === "limit" && e.postOnly) parts.push("Post only");
-  if (e.reduceOnly) parts.push("Reduce only");
+  if (e.reduceOnly || type === "trailing_stop_market") parts.push("Reduce only");
   return parts.join(" · ");
 }
 
@@ -544,7 +546,11 @@ function OrderTypeSheet({
       )}
       <Group>
         {t === "limit" && <Toggle label="Post only" sub="Only adds liquidity (maker); cancelled if it would fill at once" on={!!e.postOnly} onChange={(v) => set({ postOnly: v })} />}
-        <Toggle label="Reduce only" sub="Only shrinks an open position, never opens or flips one" on={!!e.reduceOnly} onChange={(v) => set({ reduceOnly: v })} />
+        {t === "trailing_stop_market" ? (
+          <Toggle label="Reduce only" sub="Always on: like on Strike, a trailing stop only closes or reduces your open position" on locked onChange={() => {}} />
+        ) : (
+          <Toggle label="Reduce only" sub="Only shrinks an open position, never opens or flips one" on={!!e.reduceOnly} onChange={(v) => set({ reduceOnly: v })} />
+        )}
         {t === "twap" && <Toggle label="Randomize" sub="Varies slice timing and size" on={!!e.randomize} onChange={(v) => set({ randomize: v })} />}
         <Row k="Current Price" v={<span class="num">{priceText(mark, tick)}</span>} />
       </Group>
@@ -552,9 +558,9 @@ function OrderTypeSheet({
   );
 }
 
-function Toggle({ label, sub, on, onChange }: { label: string; sub: string; on: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ label, sub, on, onChange, locked }: { label: string; sub: string; on: boolean; onChange: (v: boolean) => void; locked?: boolean }) {
   return (
-    <button class="pa-row" role="switch" aria-checked={on} onClick={() => onChange(!on)}>
+    <button class="pa-row" role="switch" aria-checked={on} aria-disabled={locked || undefined} disabled={locked} onClick={() => !locked && onChange(!on)}>
       <span class="l">
         <span class="k">{label}</span>
         <span class="s">{sub}</span>

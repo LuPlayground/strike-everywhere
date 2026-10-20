@@ -92,10 +92,25 @@ describe("app order sizing (amount = margin, like Phantom)", () => {
 describe("app order types", () => {
   it("prices conditional orders at their trigger and builds the SDK order", () => {
     const d = draft({ type: "stop", side: "sell", triggerPrice: 95, amount: 20, leverage: 2, workingType: "contract_price" });
-    const z = sizeDraft(d, ctx());
+    const z = sizeDraft(d, ctx({ last: 100 }));
     expect(z.px).toBe(95);
     expect(z.ok).toBe(true);
     expect(toOrderInput(d, z)).toMatchObject({ type: "stop", stopPrice: 95, workingType: "contract_price", side: "sell", size: z.size, leverage: 2 });
+  });
+  it("checks a Last-price trigger against the last price, not the mark", () => {
+    const d = draft({ type: "stop", side: "sell", triggerPrice: 95, amount: 20, leverage: 2, workingType: "contract_price" });
+    expect(sizeDraft(d, ctx({ last: 94 })).problem).toMatch(/below the last price/);
+    expect(sizeDraft(d, ctx({ last: 0 })).problem).toMatch(/last price/);
+    expect(sizeDraft({ ...d, workingType: "mark_price" }, ctx({ last: 94 })).ok).toBe(true);
+  });
+  it("trailing stops only reduce an open position, like on Strike", () => {
+    const d = draft({ type: "trailing_stop_market", side: "sell", callbackRate: 1, amount: 2, unit: "base" });
+    expect(sizeDraft(d, ctx({ position: 0 })).problem).toMatch(/Open one first/);
+    expect(sizeDraft(d, ctx({ position: -5 })).problem).toMatch(/protects your short/);
+    expect(sizeDraft(d, ctx({ position: 1 })).problem).toMatch(/larger than your position/);
+    const ok = sizeDraft(d, ctx({ position: 5, available: 0 }));
+    expect(ok.ok).toBe(true);
+    expect(toOrderInput(d, ok)).toMatchObject({ reduceOnly: true, leverage: undefined });
   });
   it("rejects a buy stop below the mark and a take profit on the wrong side", () => {
     expect(sizeDraft(draft({ type: "stop", side: "buy", triggerPrice: 95 }), ctx()).problem).toMatch(/above the mark/);

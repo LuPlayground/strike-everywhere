@@ -209,6 +209,10 @@ export class StrikeEverywhere {
     return Number((await this.market.premiumIndex(symbol)).markPrice);
   }
 
+  async lastPrice(symbol: string): Promise<number> {
+    return (await this.market.trades(symbol, 1))[0]?.price ?? 0;
+  }
+
   prices(): PriceStream {
     if (!this.priceStream) {
       this.priceStream = new PriceStream(this.net.wsPrice);
@@ -232,9 +236,11 @@ export class StrikeEverywhere {
     const spec = this.spec(input.symbol);
     if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
     if (isTriggered(input.type)) {
-      const mark = await this.markPrice(input.symbol).catch(() => 0);
-      const problem = stopOrderProblem({ ...input, mark, priceBound: Number(this.raw(input.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
-      if (problem) throw new Error(mark > 0 ? `${problem}. Order not sent.` : "Couldn't check the trigger against the current mark price. Order not sent.");
+      const onLast = input.workingType === "contract_price";
+      const [mark, last] = await Promise.all([this.markPrice(input.symbol).catch(() => 0), onLast ? this.lastPrice(input.symbol).catch(() => 0) : Promise.resolve(0)]);
+      const problem = stopOrderProblem({ ...input, mark, last, priceBound: Number(this.raw(input.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
+      const ref = onLast ? last : mark;
+      if (problem) throw new Error(ref > 0 ? `${problem}. Order not sent.` : `Couldn't check the trigger against the current ${onLast ? "last" : "mark"} price. Order not sent.`);
     } else if (input.type === "trailing_stop_market") {
       const problem = stopOrderProblem({ ...input, mark: 0 });
       if (problem) throw new Error(`${problem}. Order not sent.`);
@@ -306,10 +312,12 @@ export class StrikeEverywhere {
       price: needsLimitPrice(type) ? changes.price ?? Number(order.price) : undefined,
       stopPrice: isTriggered(type) ? changes.stopPrice ?? Number(order.stop_price) : undefined,
       reduceOnly: !!order.reduce_only,
+      workingType: isTriggered(type) && order.working_type === "contract_price" ? "contract_price" : undefined,
     };
     if (isTriggered(type)) {
-      const mark = await this.markPrice(order.symbol).catch(() => 0);
-      const problem = stopOrderProblem({ ...input, mark, priceBound: Number(this.raw(order.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
+      const onLast = input.workingType === "contract_price";
+      const [mark, last] = await Promise.all([this.markPrice(order.symbol).catch(() => 0), onLast ? this.lastPrice(order.symbol).catch(() => 0) : Promise.resolve(0)]);
+      const problem = stopOrderProblem({ ...input, mark, last, priceBound: Number(this.raw(order.symbol)?.order_limit_price_bound) || undefined, tickSize: spec.tickSize });
       if (problem) throw new Error(`${problem}. Order not changed.`);
     }
     const price = input.price ?? input.stopPrice ?? Number(this.raw(order.symbol)?.mark_price ?? 0);

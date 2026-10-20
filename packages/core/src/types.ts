@@ -92,6 +92,7 @@ export interface OrderHistoryEntry {
   close_reason: string | null;
   error_message?: string | null;
   create_timestamp: number;
+  working_type?: string | null;
 }
 
 export interface Fill {

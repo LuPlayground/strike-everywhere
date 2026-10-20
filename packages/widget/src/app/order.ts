@@ -59,24 +59,26 @@ export function toOrderInput(d: Draft, s: Sized): PlaceOrderInput & { leverage?:
     workingType: d.workingType,
     timeInForce: needsLimitPrice(t) ? d.tif : undefined,
     postOnly: t === "limit" ? d.postOnly : undefined,
-    reduceOnly: d.reduceOnly || undefined,
+    reduceOnly: d.reduceOnly || t === "trailing_stop_market" || undefined,
     callbackRate: t === "trailing_stop_market" ? d.callbackRate : undefined,
     activationPrice: t === "trailing_stop_market" && Number(d.activationPrice) > 0 ? d.activationPrice : undefined,
     slippage: t === "market" && Number(d.slippage) > 0 ? d.slippage : undefined,
     takeProfit: (t === "market" || t === "limit") && s.tpPrice > 0 ? s.tpPrice : undefined,
     stopLoss: (t === "market" || t === "limit") && s.slPrice > 0 ? s.slPrice : undefined,
-    leverage: d.reduceOnly ? undefined : s.lev,
+    leverage: d.reduceOnly || t === "trailing_stop_market" ? undefined : s.lev,
   };
 }
 
 export interface DraftCtx {
   spec: MarketSpec | undefined;
   mark: number;
+  last?: number;
   available: number;
   takerRate: number;
   feeBps: number;
   maxLeverage: number;
   limitBound: number;
+  position?: number;
 }
 
 export interface Sized {
@@ -179,12 +181,19 @@ export function sizeDraft(d: Draft, ctx: DraftCtx): Sized {
   const fail = (problem: string, kind: Sized["kind"]) => ({ ...out, problem, kind });
 
   if (!(d.amount > 0)) return fail("Enter an amount", "empty");
+  const reduce = d.reduceOnly || d.type === "trailing_stop_market";
+  if (d.type === "trailing_stop_market" && ctx.position !== undefined) {
+    const pos = ctx.position;
+    if (!pos) return fail("A trailing stop closes or reduces an open position. Open one first.", "price");
+    if ((pos > 0) === (d.side === "buy")) return fail(`A trailing stop protects your ${pos > 0 ? "long" : "short"}: switch to ${pos > 0 ? "Short/Sell" : "Long/Buy"}.`, "price");
+    if (size > Math.abs(pos) + 1e-12) return fail("A trailing stop can't be larger than your position", "price");
+  }
   if (d.type === "limit") {
     if (!(d.limitPrice > 0)) return fail("Enter a limit price", "price");
     if (Math.abs(d.limitPrice - ctx.mark) / ctx.mark > ctx.limitBound) return fail(`Limit price must be within ${(ctx.limitBound * 100).toFixed(0)}% of the current price`, "price");
   }
   if (d.type !== "market" && d.type !== "limit" && d.type !== "twap") {
-    const p2 = stopOrderProblem({ side: d.side, type: d.type, stopPrice: d.triggerPrice, price: d.limitPrice, mark: ctx.mark, priceBound: ctx.limitBound, tickSize: spec.tickSize, callbackRate: d.callbackRate, activationPrice: Number(d.activationPrice) > 0 ? d.activationPrice : undefined });
+    const p2 = stopOrderProblem({ side: d.side, type: d.type, stopPrice: d.triggerPrice, price: d.limitPrice, mark: ctx.mark, last: ctx.last, workingType: d.workingType, priceBound: ctx.limitBound, tickSize: spec.tickSize, callbackRate: d.callbackRate, activationPrice: Number(d.activationPrice) > 0 ? d.activationPrice : undefined });
     if (p2) return fail(p2, "price");
   }
   if (d.type === "twap") {
@@ -192,10 +201,10 @@ export function sizeDraft(d: Draft, ctx: DraftCtx): Sized {
     if (!(sec >= TWAP_MIN_SEC && sec <= TWAP_MAX_SEC)) return fail("Duration must be 5 – 1440 minutes", "price");
     if (Number(d.twapLimit) > 0 && Math.abs(Number(d.twapLimit) - ctx.mark) / ctx.mark > ctx.limitBound) return fail(`Limit price must be within ${(ctx.limitBound * 100).toFixed(0)}% of the current price`, "price");
   }
-  if (!d.reduceOnly && notional < spec.minNotional) {
+  if (!reduce && notional < spec.minNotional) {
     return fail(d.unit === "usd" ? `Minimum margin: $${minMargin.toFixed(2)}` : `Minimum order: $${spec.minNotional.toFixed(0)}`, "min");
   }
-  if (!d.reduceOnly && margin + fee > ctx.available * 1.0001) return fail("Insufficient funds", "funds");
+  if (!reduce && margin + fee > ctx.available * 1.0001) return fail("Insufficient funds", "funds");
   if (tpPrice && (d.side === "buy" ? tpPrice <= px : tpPrice >= px)) return fail("Take profit must be above entry for a long, below for a short", "tpsl");
   if (slPrice && (d.side === "buy" ? slPrice >= px : slPrice <= px)) return fail("Stop loss must be below entry for a long, above for a short", "tpsl");
   if (slPrice && p.liquidationPrice > 0 && (d.side === "buy" ? slPrice <= p.liquidationPrice : slPrice >= p.liquidationPrice)) {

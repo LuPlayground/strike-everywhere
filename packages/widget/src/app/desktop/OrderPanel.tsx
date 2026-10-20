@@ -64,11 +64,13 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
   const ctx: DraftCtx = {
     spec: m?.spec,
     mark: m?.mark ?? 0,
+    last: m?.last ?? 0,
     available: s.available,
     takerRate: s.takerRate,
     feeBps: s.client.orderFeeBps,
     maxLeverage: s.config.maxLeverage,
     limitBound: Number(raw?.order_limit_price_bound) || 0.05,
+    position: s.session ? Number(s.positions.find((p) => p.symbol === sym)?.size) || 0 : undefined,
   };
   const bracketOk = type === "market" || type === "limit";
   const draft: Draft = {
@@ -95,6 +97,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
     randomize,
   };
   const z = sizeDraft(draft, ctx);
+  const reducing = reduceOnly || type === "trailing_stop_market";
   const base = m?.base ?? "";
   const tick = m?.spec.tickSize;
   const levMax = m ? Math.max(1, Math.min(s.config.maxLeverage, m.spec.maxLeverage)) : 1;
@@ -148,7 +151,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
   const sideWord = side === "buy" ? "Long" : "Short";
   const cta = (() => {
     if (!s.session) return <button class="pd-cta" onClick={() => s.setSheet("connect")}>Connect wallet</button>;
-    if (s.accountLoaded && s.available <= 0 && !reduceOnly) return <button class="pd-cta" onClick={() => s.openFunds("deposit")}>Deposit to trade</button>;
+    if (s.accountLoaded && s.available <= 0 && !reducing) return <button class="pd-cta" onClick={() => s.openFunds("deposit")}>Deposit to trade</button>;
     if (z.ok && slipHigh && armed === slipKey && !placing)
       return (
         <button class="pd-cta caution" onClick={submit}>
@@ -248,7 +251,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
                   <input inputMode="decimal" placeholder="Optional · starts now" value={activation} onInput={(e) => setActivation(cleanDecimal(e))} aria-label="Activation price (optional)" />
                 </label>
                 <div class="pd-hint">
-                  Trails {TRAILING_MIN_PCT}–{TRAILING_MAX_PCT}% behind the best price and triggers a market order when the price turns by that much. Leave activation empty to start trailing now.
+                  Trails {TRAILING_MIN_PCT}–{TRAILING_MAX_PCT}% behind the best price and triggers a market order when the price turns by that much. Leave activation empty to start trailing now. Like on Strike, it only closes or reduces your open position.
                 </div>
               </>
             )}
@@ -305,7 +308,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
             {z.lev < Math.min(lev, levMax) && <div class="pd-hint">Strike allows up to {z.lev}x for this size.</div>}
             <div class="pd-opts">
               <label class="pd-check" title="Only shrinks an open position; never opens or flips one">
-                <input type="checkbox" checked={reduceOnly} onChange={(e) => setReduceOnly((e.target as HTMLInputElement).checked)} /> Reduce Only
+                <input type="checkbox" checked={reducing} disabled={type === "trailing_stop_market"} onChange={(e) => setReduceOnly((e.target as HTMLInputElement).checked)} /> Reduce Only
               </label>
               {type === "limit" && (
                 <label class="pd-check" title="Rests on the book as a maker order; cancelled if it would fill at once">
@@ -333,7 +336,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
             </div>
             <div class="pd-kv muted">
               <span>Liquidation Price Est.</span>
-              <span class="num">{z.size > 0 && !reduceOnly ? `${priceText(z.liq, tick)} (${movePct(z.px, z.liq)})` : "N/A"}</span>
+              <span class="num">{z.size > 0 && !reducing ? `${priceText(z.liq, tick)} (${movePct(z.px, z.liq)})` : "N/A"}</span>
             </div>
             <div class="pd-kv muted">
               <span>Order Value</span>
@@ -341,7 +344,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
             </div>
             <div class="pd-kv muted">
               <span>Margin Required</span>
-              <span class="num">{z.size > 0 && !reduceOnly ? usdText(z.margin) : "N/A"}</span>
+              <span class="num">{z.size > 0 && !reducing ? usdText(z.margin) : "N/A"}</span>
             </div>
             <div class="pd-kv muted">
               <span title={`Strike taker ${(s.takerRate * 100).toFixed(3)}% + builder ${(s.client.orderFeeBps / 100).toFixed(2)}%. A limit order that waits on the book pays Strike's lower maker fee.`}>{type === "market" ? "Fees" : "Fees (up to)"}</span>
@@ -433,7 +436,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
                       : `Est. slippage ${((fill?.slippage ?? 0) * 100).toFixed(2)}% from the market price.`}
               </div>
             )}
-            {z.ok && !reduceOnly && z.liqDistance > 0 && z.liqDistance < 0.1 && <div class="pd-warn">High risk: liquidation is only {(z.liqDistance * 100).toFixed(1)}% away.</div>}
+            {z.ok && !reducing && z.liqDistance > 0 && z.liqDistance < 0.1 && <div class="pd-warn">High risk: liquidation is only {(z.liqDistance * 100).toFixed(1)}% away.</div>}
             {cta}
           </div>
         </>
