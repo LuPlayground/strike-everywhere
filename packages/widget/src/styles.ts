@@ -293,7 +293,7 @@ button:disabled { cursor: not-allowed; }
 .consent { font-family: var(--se-mono); font-size: 11px; white-space: pre-wrap; background: var(--se-bg); border: 1px solid var(--se-border); border-radius: 6px; padding: 8px; color: var(--se-text-2); max-height: 120px; overflow: auto; }
 .addr { font-family: var(--se-mono); font-size: 11.5px; word-break: break-all; color: var(--se-text-soft); }
 
-.toast { position: sticky; z-index: 40; margin: 0 10px 10px; bottom: 12px; padding: 10px 12px; border-radius: 8px; background: var(--se-surface-2); border: 1px solid var(--se-border-strong); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: 12.5px; display: flex; gap: 8px; align-items: flex-start; animation: rise .18s ease-out; }
+.toast { position: fixed; z-index: 2147483000; left: 50%; transform: translateX(-50%); width: min(360px, calc(100vw - 24px)); bottom: 16px; padding: 10px 12px; border-radius: 8px; background: var(--se-surface-2); border: 1px solid var(--se-border-strong); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: 12.5px; display: flex; gap: 8px; align-items: flex-start; animation: rise .18s ease-out; }
 .ticket-msg { font-size: 12.5px; padding: 8px 10px; border-radius: var(--se-radius); line-height: 1.4; }
 .ticket-msg.ok { background: rgba(var(--se-accent-rgb), .1); color: var(--se-accent); }
 .ticket-msg.err { background: rgba(var(--se-neg-rgb), .12); color: #fda4b4; }

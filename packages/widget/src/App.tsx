@@ -533,6 +533,21 @@ export function App({ config }: { config: WidgetConfig }) {
     }
   };
 
+  useEffect(() => {
+    if (!sheet) return;
+    const t = setTimeout(() => cardRef.current?.querySelector(".sheet")?.scrollIntoView({ block: "start", behavior: "smooth" }), 30);
+    return () => clearTimeout(t);
+  }, [sheet]);
+
+  const [closeNote, setCloseNote] = useState<{ id: number; kind: "ok" | "err"; text: string } | null>(null);
+  const closeNoteTimer = useRef<ReturnType<typeof setTimeout>>();
+  const showCloseNote = (id: number, r: { kind: "ok" | "err"; text: string }) => {
+    setCloseNote({ id, ...r });
+    clearTimeout(closeNoteTimer.current);
+    closeNoteTimer.current = setTimeout(() => setCloseNote(null), 15_000);
+    setTimeout(() => cardRef.current?.querySelector(".list .ticket-msg")?.scrollIntoView({ block: "center", behavior: "smooth" }), 50);
+  };
+
   const closePosition = async (p: Position) => {
     const id = `pos:${p.id}`;
     setAsk(null);
@@ -541,13 +556,18 @@ export function App({ config }: { config: WidgetConfig }) {
     try {
       const o = await client.closePosition(p);
       const what = positionText(Number(p.size), p.symbol.split("-")[0]);
-      if (o.status === "filled") notify("ok", `✓ Closed ${what} · PnL ≈ ${formatUsd(Number(p.upnl), { sign: true })}`);
-      else if (/cancel|expire/i.test(o.status))
-        notify("err", `Not closed: there were no ${Number(p.size) > 0 ? "buyers" : "sellers"} close enough to the market price (within Strike's price band), so Strike cancelled the close order. Your ${what} position is still open.`);
-      else notify("ok", `Close order ${o.status}`);
+      const res: { kind: "ok" | "err"; text: string } =
+        o.status === "filled"
+          ? { kind: "ok", text: `✓ Closed ${what} · PnL ≈ ${formatUsd(Number(p.upnl), { sign: true })}` }
+          : /cancel|expire/i.test(o.status)
+            ? { kind: "err", text: `Not closed: there were no ${Number(p.size) > 0 ? "buyers" : "sellers"} close enough to the market price (within Strike's price band), so Strike cancelled the close order. Your ${what} position is still open.` }
+            : { kind: "ok", text: `Close order ${o.status}` };
+      notify(res.kind, res.text);
+      showCloseNote(p.id, res);
       refresh();
     } catch (e: any) {
       notify("err", e?.message || String(e));
+      showCloseNote(p.id, { kind: "err", text: e?.message || String(e) });
     } finally {
       markBusy(id, false);
     }
@@ -1130,6 +1150,7 @@ export function App({ config }: { config: WidgetConfig }) {
                 ticks={ticks}
                 busy={busy}
                 flash={flash}
+                note={closeNote}
                 confirming={ask?.startsWith("close:") ? Number(ask.slice(6)) : null}
                 onAsk={(p) => setAsk(p ? `close:${p.id}` : null)}
                 onClose={closePosition}

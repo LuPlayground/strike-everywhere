@@ -7,6 +7,7 @@ export function PositionsList({
   ticks,
   busy,
   flash,
+  note,
   confirming,
   onAsk,
   onClose,
@@ -17,6 +18,7 @@ export function PositionsList({
   ticks: Record<string, number>;
   busy: Set<string>;
   flash?: string;
+  note?: { id: number; kind: "ok" | "err"; text: string } | null;
   confirming: number | null;
   onAsk: (p: Position | null) => void;
   onClose: (p: Position) => void;
@@ -48,6 +50,7 @@ export function PositionsList({
                 {busy.has(id) ? <Spinner /> : "Close"}
               </button>
             </div>
+            {note && note.id === p.id && <div class={`ticket-msg ${note.kind}`} role="status">{note.text}</div>}
             {confirming === p.id && !busy.has(id) && (
               <Confirm
                 actions={
