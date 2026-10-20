@@ -106,7 +106,7 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
     if (slipHigh && armed !== slipKey) return setArmed(slipKey);
     setPlacing(true);
     setArmed("");
-    const r = await s.placeDraft(draft, z, base);
+    const r = await s.placeDraft(draft, z, base, fill && fill.complete && !fill.beyondBand ? fill.avgPrice : undefined);
     setPlacing(false);
     if (r !== "failed") nav.replace({ k: "market", sym });
   };

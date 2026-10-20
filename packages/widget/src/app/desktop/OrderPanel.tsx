@@ -75,7 +75,7 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
     if (slipHigh && armed !== slipKey) return setArmed(slipKey);
     setPlacing(true);
     setArmed("");
-    const r = await s.placeDraft(draft, z, base);
+    const r = await s.placeDraft(draft, z, base, fill && fill.complete && !fill.beyondBand ? fill.avgPrice : undefined);
     setPlacing(false);
     if (r !== "failed") (setAmt(""), setTp(""), setSl(""));
   };

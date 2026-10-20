@@ -1,4 +1,6 @@
 import { useState } from "preact/hooks";
+import { roundToStep } from "@strike-everywhere/core";
+import { cleanDecimal } from "../../parts";
 import { priceText, qtyText, usdText, pctText } from "../markets";
 import type { PerpsState } from "../state";
 import { Coin, Group, Icon, RoundBtn, Row, Sheet, Spin } from "../ui";
@@ -9,6 +11,8 @@ export function PositionScreen({ s, nav, id, onLearn }: { s: PerpsState; nav: Na
   const [closing, setClosing] = useState(false);
   const [frac, setFrac] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"market" | "limit">("market");
+  const [limitPx, setLimitPx] = useState("");
 
   if (!p) {
     return (
@@ -38,11 +42,14 @@ export function PositionScreen({ s, nav, id, onLearn }: { s: PerpsState; nav: Na
 
   const close = async () => {
     setBusy(true);
-    const ok = await s.closePosition(p, frac);
+    const ok = mode === "limit" ? await s.limitClose(p, Number(limitPx), frac) : await s.closePosition(p, frac);
     setBusy(false);
     if (ok) {
       setClosing(false);
-      if (frac >= 1) nav.back();
+      if (frac >= 1 && mode === "market") nav.back();
+    } else if (mode === "market") {
+      setMode("limit");
+      if (!limitPx && mark > 0) setLimitPx(roundToStep(mark, tick ?? 0.0001));
     }
   };
 
@@ -108,6 +115,26 @@ export function PositionScreen({ s, nav, id, onLearn }: { s: PerpsState; nav: Na
 
       {closing && (
         <Sheet title="Close position" onClose={() => !busy && setClosing(false)}>
+          <div class="pa-seg" role="radiogroup" aria-label="Close type">
+            {(["market", "limit"] as const).map((k) => (
+              <button key={k} role="radio" aria-checked={mode === k} class={mode === k ? "on" : ""} onClick={() => setMode(k)}>
+                {k === "market" ? "Market close" : "Limit close"}
+              </button>
+            ))}
+          </div>
+          {mode === "limit" && (
+            <label class="pa-field">
+              <span class="lbl">Close at price</span>
+              <span class="in">
+                <span class="muted">$</span>
+                <input inputMode="decimal" value={limitPx} placeholder={mark ? String(mark) : "0"} aria-label="Limit close price" onInput={(e) => setLimitPx(cleanDecimal(e))} />
+                <button class="pa-chipmini" onClick={(e) => (e.preventDefault(), setLimitPx(roundToStep(mark, tick ?? 0.0001)))}>
+                  Mark
+                </button>
+              </span>
+              {Number(limitPx) > 0 && <span class="hint num">Est. P&L at this price ≈ {usdText(((long ? 1 : -1) * (Number(limitPx) - entry) * Math.abs(size)) * frac, { sign: true })}</span>}
+            </label>
+          )}
           <div class="pa-pcts four">
             {[0.25, 0.5, 0.75, 1].map((f) => (
               <button key={f} class={`pa-btn dark${frac === f ? " on" : ""}`} onClick={() => setFrac(f)}>
@@ -120,9 +147,13 @@ export function PositionScreen({ s, nav, id, onLearn }: { s: PerpsState; nav: Na
             <Row k="Estimated P&L" v={<span class={`num ${upnl >= 0 ? "pos" : "neg"}`}>{usdText(upnl * frac, { sign: true })}</span>} />
             {frac < 1 && <Row k="Stays open" v={<span class="num">{`${qtyText(Math.abs(size) * (1 - frac))} ${base}`}</span>} />}
           </Group>
-          <p class="pa-p sm">Closes at the market price. Strike cancels the close if there are no {long ? "buyers" : "sellers"} close enough to the market price; your position then stays open.</p>
-          <button class="pa-btn primary big" disabled={busy} onClick={close}>
-            {busy ? <Spin size={18} /> : frac >= 1 ? "Close position" : `Close ${frac * 100}%`}
+          <p class="pa-p sm">
+            {mode === "market"
+              ? `Closes at the market price. Strike cancels the close if there are no ${long ? "buyers" : "sellers"} close enough to the market price; your position then stays open (try a limit close instead).`
+              : `A reduce-only limit order: it waits on the book and closes when the price reaches yours. It can only shrink this position.`}
+          </p>
+          <button class="pa-btn primary big" disabled={busy || (mode === "limit" && !(Number(limitPx) > 0))} onClick={close}>
+            {busy ? <Spin size={18} /> : mode === "limit" ? (frac >= 1 ? "Place limit close" : `Limit close ${frac * 100}%`) : frac >= 1 ? "Close position" : `Close ${frac * 100}%`}
           </button>
         </Sheet>
       )}

@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { ConnectSheet } from "../ConnectSheet";
-import { DepositSheet } from "../DepositSheet";
-import { WithdrawSheet } from "../WithdrawSheet";
+import { AddFunds, Withdraw } from "./Funds";
 import { Desktop } from "./desktop/Desktop";
 import { Mobile, type Screen } from "./mobile/Mobile";
 import { usePerps, type AppConfig } from "./state";
@@ -34,7 +33,7 @@ export function PerpsApp({ config, host, screen }: { config: AppConfig; host: HT
       {layout === "mobile" ? <Mobile s={s} onClose={onClose} start={start} /> : <Desktop s={s} width={w} />}
       {s.sheet === "connect" && <ConnectSheet client={s.client} onClose={() => s.setSheet(null)} onConnected={s.onConnected} />}
       {s.sheet === "deposit" && (
-        <DepositSheet
+        <AddFunds
           client={s.client}
           adaPrice={s.bySymbol["ADA-USD"]?.mark ?? 0}
           isNewAccount={s.isNewAccount}
@@ -44,7 +43,7 @@ export function PerpsApp({ config, host, screen }: { config: AppConfig; host: HT
         />
       )}
       {s.sheet === "withdraw" && (
-        <WithdrawSheet
+        <Withdraw
           client={s.client}
           available={s.available}
           adaPrice={s.bySymbol["ADA-USD"]?.mark ?? 0}

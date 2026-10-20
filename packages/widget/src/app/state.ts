@@ -315,7 +315,7 @@ export function usePerps(config: AppConfig) {
     notify("ok", "Connected to Strike");
   };
 
-  const placeDraft = async (d: Draft, s: Sized, base: string): Promise<"filled" | "resting" | "failed"> => {
+  const placeDraft = async (d: Draft, s: Sized, base: string, estPrice?: number): Promise<"filled" | "resting" | "failed"> => {
     const dir = d.side === "buy" ? "long" : "short";
     notify("progress", d.type === "limit" ? `Placing ${qty(s.size)} ${base} ${dir} ${s.lev}x` : `Opening ${qty(s.size)} ${base} ${dir} ${s.lev}x`);
     try {
@@ -331,11 +331,12 @@ export function usePerps(config: AppConfig) {
       });
       refresh();
       if (o.status === "filled") {
-        notify("ok", `Opened ${qty(s.size)} ${base} ${dir}`, `${s.lev}x · about ${usd(s.notional)} position`);
+        const px = d.type === "market" && estPrice && estPrice > 0 ? estPrice : s.px;
+        notify("ok", `Opened ${qty(s.size)} ${base} ${dir}`, `${s.lev}x · about ${usd(s.size * px)} at ~$${px.toLocaleString("en-US", { maximumFractionDigits: px >= 1 ? 2 : 5 })}`);
         return "filled";
       }
       if (o.status === "open" || o.status === "untriggered" || o.status === "pending") {
-        notify("ok", "Limit order placed", `${d.side === "buy" ? "Long" : "Short"} ${qty(s.size)} ${base} at ${d.limitPrice}`);
+        notify("ok", "Limit order placed", `${d.side === "buy" ? "Long" : "Short"} ${qty(s.size)} ${base} at $${d.limitPrice.toLocaleString("en-US", { maximumFractionDigits: 8 })}`);
         return "resting";
       }
       if (/cancel|expire/i.test(o.status)) {
@@ -370,6 +371,21 @@ export function usePerps(config: AppConfig) {
       return true;
     } catch (e: any) {
       notify("err", "Close failed", e?.message || String(e));
+      return false;
+    }
+  };
+
+  const limitClose = async (p: Position, price: number, fraction = 1): Promise<boolean> => {
+    const base = p.symbol.split("-")[0];
+    notify("progress", `Placing a limit close for your ${base} position`);
+    try {
+      const o = await client.limitClose(p, price, fraction);
+      refresh();
+      if (o.status === "filled") notify("ok", `Closed ${fraction >= 1 ? "your" : `${Math.round(fraction * 100)}% of your`} ${base} position`);
+      else notify("ok", "Limit close placed", `It closes when the price reaches $${price.toLocaleString("en-US", { maximumFractionDigits: 8 })}. You'll find it under Open Orders.`);
+      return true;
+    } catch (e: any) {
+      notify("err", "Limit close failed", e instanceof OrderRejectedError ? e.message : e?.message || String(e));
       return false;
     }
   };
@@ -416,6 +432,7 @@ export function usePerps(config: AppConfig) {
     onConnected,
     placeDraft,
     closePosition,
+    limitClose,
     cancelOrder,
     disconnect,
   };
