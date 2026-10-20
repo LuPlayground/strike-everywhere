@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseTrades } from "../src/market.js";
 import { parseTransaction } from "../src/account.js";
 import type { MarketSpec } from "../src/types.js";
-import { marginForFraction, pnlForPrice, priceForPnl, sizeDraft, type Draft, type DraftCtx } from "../../widget/src/app/order";
+import { marginForFraction, pnlForPrice, priceForPnl, sizeDraft, toOrderInput, type Draft, type DraftCtx } from "../../widget/src/app/order";
 import { displayName, kindOf, LISTS } from "../../widget/src/app/markets";
 
 const SOL: MarketSpec = {
@@ -86,6 +86,39 @@ describe("app order sizing (amount = margin, like Phantom)", () => {
     const z = sizeDraft(draft({ unit: "base", amount: 0.3, leverage: 3 }), ctx());
     expect(z.size).toBe(0.3);
     expect(z.margin).toBeCloseTo(10);
+  });
+});
+
+describe("app order types", () => {
+  it("prices conditional orders at their trigger and builds the SDK order", () => {
+    const d = draft({ type: "stop", side: "sell", triggerPrice: 95, amount: 20, leverage: 2, workingType: "contract_price" });
+    const z = sizeDraft(d, ctx());
+    expect(z.px).toBe(95);
+    expect(z.ok).toBe(true);
+    expect(toOrderInput(d, z)).toMatchObject({ type: "stop", stopPrice: 95, workingType: "contract_price", side: "sell", size: z.size, leverage: 2 });
+  });
+  it("rejects a buy stop below the mark and a take profit on the wrong side", () => {
+    expect(sizeDraft(draft({ type: "stop", side: "buy", triggerPrice: 95 }), ctx()).problem).toMatch(/above the mark/);
+    expect(sizeDraft(draft({ type: "take_profit", side: "sell", triggerPrice: 95 }), ctx()).problem).toMatch(/above the mark/);
+  });
+  it("trailing stops need a 0.1–5% trail", () => {
+    expect(sizeDraft(draft({ type: "trailing_stop_market", side: "sell", callbackRate: 7 }), ctx()).kind).toBe("price");
+    const ok = sizeDraft(draft({ type: "trailing_stop_market", side: "sell", callbackRate: 1, reduceOnly: true }), ctx());
+    expect(ok.ok).toBe(true);
+    expect(toOrderInput(draft({ type: "trailing_stop_market", side: "sell", callbackRate: 1, reduceOnly: true }), ok)).toMatchObject({ callbackRate: 1, reduceOnly: true, leverage: undefined });
+  });
+  it("reduce-only skips the minimum and the funds check", () => {
+    expect(sizeDraft(draft({ amount: 2, reduceOnly: true }), ctx({ available: 0 })).ok).toBe(true);
+  });
+  it("TWAP duration is bounded and no brackets are attached to non-market/limit orders", () => {
+    expect(sizeDraft(draft({ type: "twap", twapMinutes: 2 }), ctx()).problem).toMatch(/5 – 1440/);
+    const z = sizeDraft(draft({ type: "stop_limit", side: "sell", triggerPrice: 95, limitPrice: 94.5, tp: 20, sl: 10 }), ctx());
+    expect(z.tpPrice).toBe(0);
+    expect(z.slPrice).toBe(0);
+  });
+  it("market slippage is passed as a fraction", () => {
+    const d = draft({ slippage: 0.01 });
+    expect(toOrderInput(d, sizeDraft(d, ctx())).slippage).toBe(0.01);
   });
 });
 

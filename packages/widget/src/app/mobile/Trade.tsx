@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { decimalsOf, estimateMarketFill, maxLeverageFor, movePct, roundToStep, type BookView, type Side } from "@strike-everywhere/core";
 import { cleanDecimal } from "../../parts";
 import { pctText, priceText, qtyText, usdText } from "../markets";
-import { marginForFraction, pnlForPrice, sizeDraft, type AppOrderType, type AutoMode, type Draft, type DraftCtx, type Unit } from "../order";
+import { ORDER_TYPES, marginForFraction, pnlForPrice, sizeDraft, type AppOrderType, type AutoMode, type Draft, type DraftCtx, type Unit } from "../order";
 import type { PerpsState } from "../state";
 import { Group, Icon, Keypad, RoundBtn, Row, Sheet, Slider, Spin, applyKey, pref } from "../ui";
 import type { Nav } from "./Mobile";
@@ -28,6 +28,7 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
     return Math.max(1, Math.min(m?.maxLev ?? 2, saved >= 1 ? saved : 2));
   });
   const [limitStr, setLimitStr] = useState("");
+  const [ext, setExt] = useState<Extras>({ workingType: "mark_price", tif: "GTC", callbackRate: 1, twapMinutes: 60 });
   const [tp, setTp] = useState(0);
   const [sl, setSl] = useState(0);
   const [autoMode, setAutoMode] = useState<AutoMode>("pnl");
@@ -48,7 +49,8 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
     maxLeverage: s.config.maxLeverage,
     limitBound: Number(raw?.order_limit_price_bound) || 0.05,
   };
-  const draft: Draft = { symbol: sym, side, type, amount: Number(amt) || 0, unit, leverage: lev, limitPrice: Number(limitStr) || 0, tp, sl, autoMode };
+  const bracketOk = type === "market" || type === "limit";
+  const draft: Draft = { ...ext, symbol: sym, side, type, amount: Number(amt) || 0, unit, leverage: lev, limitPrice: Number(limitStr) || 0, tp: bracketOk ? tp : 0, sl: bracketOk ? sl : 0, autoMode };
   const z = sizeDraft(draft, ctx);
   const dp = unit === "usd" ? 2 : decimalsOf(m?.spec.stepSize ?? 0.01);
 
@@ -148,9 +150,9 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
             <button class="pa-levline" onClick={() => setSheet("lev")}>
               {z.lev}x leverage <Icon n="down" size={16} />
             </button>
-            {type === "limit" && (
+            {type !== "market" && (
               <button class="pa-levline sub" onClick={() => setSheet("ordertype")}>
-                Limit {limitStr ? priceText(Number(limitStr), tick) : "· set a price"} <Icon n="down" size={16} />
+                {typeSummary(type, limitStr, ext, tick)} <Icon n="down" size={16} />
               </button>
             )}
             {errLine && <div class="pa-err">{errLine}</div>}
@@ -198,19 +200,21 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
                 k={sideWord}
                 sub={
                   <span class="num">
-                    {qtyText(z.size)} {base} · {type === "limit" ? `Limit ${priceText(z.px, tick)}` : `Current Price ${priceText(mark, tick)}`}
+                    {qtyText(z.size)} {base} · {type === "market" ? `Current Price ${priceText(mark, tick)}` : typeSummary(type, limitStr, ext, tick)}
                   </span>
                 }
                 info={() => setSheet("side")}
               />
               <Row k="Leverage" sub={<span class="num">{`${z.lev}x · Liq. ≈ ${priceText(z.liq, tick)}`}</span>} onClick={() => setSheet("lev")} chevron="down" />
-              <Row
-                k={tp || sl ? "Auto Close" : "Add Auto Close"}
-                sub={tp || sl ? <span class="num">{[z.tpPrice ? `TP ${priceText(z.tpPrice, tick)}` : "", z.slPrice ? `SL ${priceText(z.slPrice, tick)}` : ""].filter(Boolean).join(" · ")}</span> : undefined}
-                onClick={() => setSheet("auto")}
-                chevron={tp || sl ? "down" : "plus"}
-              />
-              <Row k="Payment" sub={<span class="num">{`Perps Balance · ${type === "limit" ? "up to " : ""}${(z.feeRate * 100).toFixed(3)}% fee`}</span>} info={() => setSheet("fees")} />
+              {bracketOk && (
+                <Row
+                  k={tp || sl ? "Auto Close" : "Add Auto Close"}
+                  sub={tp || sl ? <span class="num">{[z.tpPrice ? `TP ${priceText(z.tpPrice, tick)}` : "", z.slPrice ? `SL ${priceText(z.slPrice, tick)}` : ""].filter(Boolean).join(" · ")}</span> : undefined}
+                  onClick={() => setSheet("auto")}
+                  chevron={tp || sl ? "down" : "plus"}
+                />
+              )}
+              <Row k="Payment" sub={<span class="num">{`Perps Balance · ${type !== "market" ? "up to " : ""}${(z.feeRate * 100).toFixed(3)}% fee`}</span>} info={() => setSheet("fees")} />
               {fill && fill.complete && !fill.beyondBand && (
                 <Row
                   k="Est. fill price"
@@ -258,7 +262,7 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
         <Sheet title="Settings" onClose={() => setSheet(null)}>
           <Group>
             <Row k="Display currency" v={unit === "usd" ? "USD" : base} onClick={() => setSheet("currency")} chevron="right" />
-            <Row k="Order Type" v={type === "market" ? "Market" : "Limit"} onClick={() => setSheet("ordertype")} chevron="right" />
+            <Row k="Order Type" v={ORDER_TYPES.find((o) => o.type === type)?.label ?? "Market"} onClick={() => setSheet("ordertype")} chevron="right" />
           </Group>
         </Sheet>
       )}
@@ -281,11 +285,13 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
         <OrderTypeSheet
           type={type}
           limit={limitStr}
+          ext={ext}
+          side={side}
           mark={mark}
           tick={tick}
           onBack={() => setSheet("settings")}
           onClose={() => setSheet(null)}
-          onApply={(t, l) => (setType(t), setLimitStr(l), setSheet(null))}
+          onApply={(t, l, e) => (setType(t), setLimitStr(l), setExt(e), setSheet(null))}
         />
       )}
       {sheet === "auto" && (
@@ -386,9 +392,29 @@ function LeverageSheet({ s, z, draft, ctx, onClose, onApply }: { s: PerpsState; 
   );
 }
 
+type Extras = Pick<Draft, "triggerPrice" | "workingType" | "tif" | "postOnly" | "reduceOnly" | "callbackRate" | "activationPrice" | "slippage" | "twapMinutes" | "twapLimit" | "randomize">;
+
+function typeSummary(type: AppOrderType, limit: string, e: Extras, tick?: number): string {
+  const label = ORDER_TYPES.find((o) => o.type === type)?.label ?? "Market";
+  const px = (v?: number | string) => (Number(v) > 0 ? priceText(Number(v), tick) : "set a price");
+  const parts: string[] = [];
+  if (type === "limit") parts.push(`Limit ${px(limit)}`);
+  else if (type === "stop" || type === "take_profit") parts.push(`${label} · trigger ${px(e.triggerPrice)}`);
+  else if (type === "stop_limit" || type === "take_profit_limit") parts.push(`${label} · ${px(e.triggerPrice)} → ${px(limit)}`);
+  else if (type === "trailing_stop_market") parts.push(`Trailing ${e.callbackRate ?? 1}%${Number(e.activationPrice) > 0 ? ` from ${px(e.activationPrice)}` : ""}`);
+  else if (type === "twap") parts.push(`TWAP · ${e.twapMinutes ?? 60} min`);
+  else parts.push(label);
+  if ((type === "limit" || type === "stop_limit" || type === "take_profit_limit") && e.tif && e.tif !== "GTC") parts.push(e.tif);
+  if (type === "limit" && e.postOnly) parts.push("Post only");
+  if (e.reduceOnly) parts.push("Reduce only");
+  return parts.join(" · ");
+}
+
 function OrderTypeSheet({
   type,
   limit,
+  ext,
+  side,
   mark,
   tick,
   onBack,
@@ -397,42 +423,146 @@ function OrderTypeSheet({
 }: {
   type: AppOrderType;
   limit: string;
+  ext: Extras;
+  side: Side;
   mark: number;
   tick?: number;
   onBack: () => void;
   onClose: () => void;
-  onApply: (t: AppOrderType, limit: string) => void;
+  onApply: (t: AppOrderType, limit: string, ext: Extras) => void;
 }) {
   const [t, setT] = useState(type);
-  const [l, setL] = useState(limit || (mark ? roundToStep(mark, tick ?? 0.0001) : ""));
-  const raw = Number(l) > 0 && mark > 0 ? ((Number(l) - mark) / mark) * 100 : 0;
-  const diff = Math.abs(raw) < 0.005 ? 0 : raw;
+  const def = mark ? roundToStep(mark, tick ?? 0.0001) : "";
+  const [l, setL] = useState(limit || def);
+  const [e, setE] = useState<Extras>(ext);
+  const [trig, setTrig] = useState(Number(ext.triggerPrice) > 0 ? String(ext.triggerPrice) : def);
+  const set = (patch: Partial<Extras>) => setE({ ...e, ...patch });
+  const limitT = t === "limit" || t === "stop_limit" || t === "take_profit_limit";
+  const trigT = t === "stop" || t === "stop_limit" || t === "take_profit" || t === "take_profit_limit";
+  const pctOf = (v: string) => {
+    const raw = Number(v) > 0 && mark > 0 ? ((Number(v) - mark) / mark) * 100 : 0;
+    return Math.abs(raw) < 0.005 ? 0 : raw;
+  };
+  const ok = (!limitT || Number(l) > 0) && (!trigT || Number(trig) > 0) && (t !== "trailing_stop_market" || (Number(e.callbackRate) >= 0.1 && Number(e.callbackRate) <= 5)) && (t !== "twap" || (Number(e.twapMinutes) >= 5 && Number(e.twapMinutes) <= 1440));
+  const apply = () => onApply(t, limitT ? l : "", { ...e, triggerPrice: trigT ? Number(trig) : undefined });
+  const hint =
+    t === "stop" || t === "stop_limit"
+      ? side === "buy"
+        ? "Buy stop: set the trigger above the current price."
+        : "Sell stop: set the trigger below the current price."
+      : t === "take_profit" || t === "take_profit_limit"
+        ? side === "sell"
+          ? "Sell take-profit: set the target above the current price."
+          : "Buy take-profit: set the target below the current price."
+        : "";
   return (
-    <Sheet title="Order Type" onClose={onClose} onBack={onBack} onDone={() => onApply(t, t === "limit" ? l : "")} doneDisabled={t === "limit" && !(Number(l) > 0)}>
+    <Sheet title="Order Type" onClose={onClose} onBack={onBack} onDone={apply} doneDisabled={!ok} tall>
       <Group>
-        {(["market", "limit"] as const).map((x) => (
-          <button key={x} class="pa-row opt" onClick={() => setT(x)}>
-            <span class="ck">{t === x && <Icon n="check" size={18} />}</span>
+        {ORDER_TYPES.map((x) => (
+          <button key={x.type} class="pa-row opt" onClick={() => setT(x.type)}>
+            <span class="ck">{t === x.type && <Icon n="check" size={18} />}</span>
             <span class="l">
-              <span class="k">{x === "market" ? "Market Order" : "Limit Order"}</span>
-              <span class="s">{x === "market" ? "Fills right away, near the market price" : "Fills only at your price or better"}</span>
+              <span class="k">{x.label}</span>
+              <span class="s">{x.desc}</span>
             </span>
           </button>
         ))}
       </Group>
-      {t === "limit" && (
+      {trigT && (
+        <label class="pa-field">
+          <span class="lbl">{t.startsWith("take") ? "Target price" : "Trigger price"}</span>
+          <span class="in">
+            <input inputMode="decimal" value={trig} aria-label="Trigger price" onInput={(ev) => setTrig(cleanDecimal(ev))} />
+            <span class={`num ${pctOf(trig) >= 0 ? "pos" : "neg"}`}>({pctText(pctOf(trig))})</span>
+          </span>
+          {hint && <span class="hint">{hint}</span>}
+        </label>
+      )}
+      {limitT && (
         <label class="pa-field">
           <span class="lbl">Limit Price</span>
           <span class="in">
-            <input inputMode="decimal" value={l} aria-label="Limit price" onInput={(e) => setL(cleanDecimal(e))} />
-            <span class={`num ${diff >= 0 ? "pos" : "neg"}`}>({pctText(diff)})</span>
+            <input inputMode="decimal" value={l} aria-label="Limit price" onInput={(ev) => setL(cleanDecimal(ev))} />
+            <span class={`num ${pctOf(l) >= 0 ? "pos" : "neg"}`}>({pctText(pctOf(l))})</span>
           </span>
         </label>
       )}
+      {t === "trailing_stop_market" && (
+        <>
+          <label class="pa-field">
+            <span class="lbl">Trail distance</span>
+            <span class="in">
+              <input inputMode="decimal" value={String(e.callbackRate ?? "")} aria-label="Trail distance percent" onInput={(ev) => set({ callbackRate: Number(cleanDecimal(ev)) || 0 })} />
+              <span>%</span>
+            </span>
+            <span class="hint">Strike allows 0.1–5%. The stop follows the price and triggers when it turns back by this much.</span>
+          </label>
+          <label class="pa-field">
+            <span class="lbl">Activation price (optional)</span>
+            <span class="in">
+              <input inputMode="decimal" value={Number(e.activationPrice) > 0 ? String(e.activationPrice) : ""} placeholder="Start now" aria-label="Activation price" onInput={(ev) => set({ activationPrice: Number(cleanDecimal(ev)) || 0 })} />
+            </span>
+          </label>
+        </>
+      )}
+      {t === "twap" && (
+        <>
+          <div class="pa-lbl-row">Duration</div>
+          <div class="pa-pcts four">
+            {[5, 15, 60, 240].map((v) => (
+              <button key={v} class={`pa-btn dark${e.twapMinutes === v ? " on" : ""}`} onClick={() => set({ twapMinutes: v })}>
+                {v < 60 ? `${v}m` : `${v / 60}h`}
+              </button>
+            ))}
+          </div>
+          <label class="pa-field">
+            <span class="lbl">Price limit (optional)</span>
+            <span class="in">
+              <input inputMode="decimal" value={Number(e.twapLimit) > 0 ? String(e.twapLimit) : ""} placeholder="No limit" aria-label="TWAP price limit" onInput={(ev) => set({ twapLimit: Number(cleanDecimal(ev)) || 0 })} />
+            </span>
+            <span class="hint">Slices that would fill past this price are skipped.</span>
+          </label>
+        </>
+      )}
+      {limitT && (
+        <div class="pa-seg three" role="radiogroup" aria-label="Time in force">
+          {(["GTC", "IOC", "FOK"] as const).map((x) => (
+            <button key={x} role="radio" aria-checked={(e.tif ?? "GTC") === x} class={(e.tif ?? "GTC") === x ? "on" : ""} onClick={() => set({ tif: x })}>
+              {x === "GTC" ? "Good till cancel" : x === "IOC" ? "Fill now (IOC)" : "All or none"}
+            </button>
+          ))}
+        </div>
+      )}
+      {(trigT || t === "trailing_stop_market") && (
+        <div class="pa-seg" role="radiogroup" aria-label="Trigger price type">
+          {(["mark_price", "contract_price"] as const).map((x) => (
+            <button key={x} role="radio" aria-checked={(e.workingType ?? "mark_price") === x} class={(e.workingType ?? "mark_price") === x ? "on" : ""} onClick={() => set({ workingType: x })}>
+              {x === "mark_price" ? "Trigger on mark" : "Trigger on last"}
+            </button>
+          ))}
+        </div>
+      )}
       <Group>
+        {t === "limit" && <Toggle label="Post only" sub="Only adds liquidity (maker); cancelled if it would fill at once" on={!!e.postOnly} onChange={(v) => set({ postOnly: v })} />}
+        <Toggle label="Reduce only" sub="Only shrinks an open position, never opens or flips one" on={!!e.reduceOnly} onChange={(v) => set({ reduceOnly: v })} />
+        {t === "twap" && <Toggle label="Randomize" sub="Varies slice timing and size" on={!!e.randomize} onChange={(v) => set({ randomize: v })} />}
         <Row k="Current Price" v={<span class="num">{priceText(mark, tick)}</span>} />
       </Group>
     </Sheet>
+  );
+}
+
+function Toggle({ label, sub, on, onChange }: { label: string; sub: string; on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button class="pa-row" role="switch" aria-checked={on} onClick={() => onChange(!on)}>
+      <span class="l">
+        <span class="k">{label}</span>
+        <span class="s">{sub}</span>
+      </span>
+      <span class={`pa-switch${on ? " on" : ""}`}>
+        <span />
+      </span>
+    </button>
   );
 }
 

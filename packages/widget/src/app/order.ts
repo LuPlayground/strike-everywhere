@@ -1,8 +1,20 @@
-import { maxLeverageFor, previewOrder, roundToStep, type MarketSpec, type Side } from "@strike-everywhere/core";
+import { TWAP_MAX_SEC, TWAP_MIN_SEC, executesAtMarket, maxLeverageFor, needsLimitPrice, previewOrder, roundToStep, stopOrderProblem, type MarketSpec, type PlaceOrderInput, type Side } from "@strike-everywhere/core";
 
-export type AppOrderType = "market" | "limit";
+export type AppOrderType = "market" | "limit" | "stop" | "stop_limit" | "take_profit" | "take_profit_limit" | "trailing_stop_market" | "twap";
 export type Unit = "usd" | "base";
 export type AutoMode = "pnl" | "price";
+export type Tif = "GTC" | "IOC" | "FOK";
+
+export const ORDER_TYPES: Array<{ type: AppOrderType; label: string; desc: string; advanced?: boolean }> = [
+  { type: "market", label: "Market", desc: "Fills right away, near the market price" },
+  { type: "limit", label: "Limit", desc: "Fills only at your price or better" },
+  { type: "stop", label: "Stop Market", desc: "Market order once the price reaches your trigger", advanced: true },
+  { type: "stop_limit", label: "Stop Limit", desc: "Limit order once the price reaches your trigger", advanced: true },
+  { type: "take_profit", label: "Take Profit Market", desc: "Market order once the price reaches your target", advanced: true },
+  { type: "take_profit_limit", label: "Take Profit Limit", desc: "Limit order once the price reaches your target", advanced: true },
+  { type: "trailing_stop_market", label: "Trailing Stop", desc: "Follows the price and triggers when it turns by your trail %", advanced: true },
+  { type: "twap", label: "TWAP", desc: "Splits the order into slices over 5 min – 24 h", advanced: true },
+];
 
 export interface Draft {
   symbol: string;
@@ -15,6 +27,46 @@ export interface Draft {
   tp: number;
   sl: number;
   autoMode: AutoMode;
+  triggerPrice?: number;
+  workingType?: "mark_price" | "contract_price";
+  tif?: Tif;
+  postOnly?: boolean;
+  reduceOnly?: boolean;
+  callbackRate?: number;
+  activationPrice?: number;
+  slippage?: number;
+  twapMinutes?: number;
+  twapLimit?: number;
+  randomize?: boolean;
+}
+
+export function referencePrice(d: Draft, mark: number): number {
+  if (needsLimitPrice(d.type as any) && d.limitPrice > 0) return d.limitPrice;
+  if ((d.type === "stop" || d.type === "take_profit") && Number(d.triggerPrice) > 0) return Number(d.triggerPrice);
+  if (d.type === "trailing_stop_market" && Number(d.activationPrice) > 0) return Number(d.activationPrice);
+  return mark;
+}
+
+export function toOrderInput(d: Draft, s: Sized): PlaceOrderInput & { leverage?: number } {
+  const t = d.type as PlaceOrderInput["type"];
+  return {
+    symbol: d.symbol,
+    side: d.side,
+    type: t,
+    size: s.size,
+    price: needsLimitPrice(t) ? d.limitPrice : undefined,
+    stopPrice: t === "stop" || t === "stop_limit" || t === "take_profit" || t === "take_profit_limit" ? d.triggerPrice : undefined,
+    workingType: d.workingType,
+    timeInForce: needsLimitPrice(t) ? d.tif : undefined,
+    postOnly: t === "limit" ? d.postOnly : undefined,
+    reduceOnly: d.reduceOnly || undefined,
+    callbackRate: t === "trailing_stop_market" ? d.callbackRate : undefined,
+    activationPrice: t === "trailing_stop_market" && Number(d.activationPrice) > 0 ? d.activationPrice : undefined,
+    slippage: t === "market" && Number(d.slippage) > 0 ? d.slippage : undefined,
+    takeProfit: (t === "market" || t === "limit") && s.tpPrice > 0 ? s.tpPrice : undefined,
+    stopLoss: (t === "market" || t === "limit") && s.slPrice > 0 ? s.slPrice : undefined,
+    leverage: d.reduceOnly ? undefined : s.lev,
+  };
 }
 
 export interface DraftCtx {
@@ -100,8 +152,8 @@ export function sizeDraft(d: Draft, ctx: DraftCtx): Sized {
   };
   if (!spec || !(ctx.mark > 0)) return { ...base, problem: "Loading market…", kind: "load" };
 
-  const px = d.type === "limit" && d.limitPrice > 0 ? d.limitPrice : ctx.mark;
-  const step = d.type === "market" ? spec.marketStepSize ?? spec.stepSize : spec.stepSize;
+  const px = referencePrice(d, ctx.mark);
+  const step = d.type === "twap" || executesAtMarket(d.type as any) ? spec.marketStepSize ?? spec.stepSize : spec.stepSize;
   const wantLev = Math.max(1, Math.round(d.leverage));
   const guess = d.unit === "usd" ? d.amount * wantLev : d.amount * px;
   const tierCap = maxLeverageFor(spec.marginTiers, Math.max(guess, 1));
@@ -119,8 +171,9 @@ export function sizeDraft(d: Draft, ctx: DraftCtx): Sized {
   const minMargin = ceil2(spec.minNotional / lev);
   const maxMargin = marginForFraction(ctx, lev, 1);
 
-  const tpPrice = d.tp > 0 ? (d.autoMode === "pnl" ? priceForPnl(d.side, px, lev, d.tp) : d.tp) : 0;
-  const slPrice = d.sl > 0 ? (d.autoMode === "pnl" ? priceForPnl(d.side, px, lev, -d.sl) : d.sl) : 0;
+  const bracket = d.type === "market" || d.type === "limit";
+  const tpPrice = bracket && d.tp > 0 ? (d.autoMode === "pnl" ? priceForPnl(d.side, px, lev, d.tp) : d.tp) : 0;
+  const slPrice = bracket && d.sl > 0 ? (d.autoMode === "pnl" ? priceForPnl(d.side, px, lev, -d.sl) : d.sl) : 0;
 
   const out: Sized = { ...base, px, lev, levCap, size, notional, margin, fee, liq: p.liquidationPrice, liqDistance: p.liquidationDistance, minMargin, maxMargin, tpPrice, slPrice, step };
   const fail = (problem: string, kind: Sized["kind"]) => ({ ...out, problem, kind });
@@ -130,10 +183,19 @@ export function sizeDraft(d: Draft, ctx: DraftCtx): Sized {
     if (!(d.limitPrice > 0)) return fail("Enter a limit price", "price");
     if (Math.abs(d.limitPrice - ctx.mark) / ctx.mark > ctx.limitBound) return fail(`Limit price must be within ${(ctx.limitBound * 100).toFixed(0)}% of the current price`, "price");
   }
-  if (notional < spec.minNotional) {
+  if (d.type !== "market" && d.type !== "limit" && d.type !== "twap") {
+    const p2 = stopOrderProblem({ side: d.side, type: d.type, stopPrice: d.triggerPrice, price: d.limitPrice, mark: ctx.mark, priceBound: ctx.limitBound, tickSize: spec.tickSize, callbackRate: d.callbackRate, activationPrice: Number(d.activationPrice) > 0 ? d.activationPrice : undefined });
+    if (p2) return fail(p2, "price");
+  }
+  if (d.type === "twap") {
+    const sec = (d.twapMinutes ?? 0) * 60;
+    if (!(sec >= TWAP_MIN_SEC && sec <= TWAP_MAX_SEC)) return fail("Duration must be 5 – 1440 minutes", "price");
+    if (Number(d.twapLimit) > 0 && Math.abs(Number(d.twapLimit) - ctx.mark) / ctx.mark > ctx.limitBound) return fail(`Limit price must be within ${(ctx.limitBound * 100).toFixed(0)}% of the current price`, "price");
+  }
+  if (!d.reduceOnly && notional < spec.minNotional) {
     return fail(d.unit === "usd" ? `Minimum margin: $${minMargin.toFixed(2)}` : `Minimum order: $${spec.minNotional.toFixed(0)}`, "min");
   }
-  if (margin + fee > ctx.available * 1.0001) return fail("Insufficient funds", "funds");
+  if (!d.reduceOnly && margin + fee > ctx.available * 1.0001) return fail("Insufficient funds", "funds");
   if (tpPrice && (d.side === "buy" ? tpPrice <= px : tpPrice >= px)) return fail("Take profit must be above entry for a long, below for a short", "tpsl");
   if (slPrice && (d.side === "buy" ? slPrice >= px : slPrice <= px)) return fail("Stop loss must be below entry for a long, above for a short", "tpsl");
   if (slPrice && p.liquidationPrice > 0 && (d.side === "buy" ? slPrice <= p.liquidationPrice : slPrice >= p.liquidationPrice)) {

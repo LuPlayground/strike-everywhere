@@ -11,7 +11,7 @@ import {
 import type { WidgetConfig } from "../App";
 import { pageHidden } from "../parts";
 import { displayName } from "./markets";
-import type { Draft, Sized } from "./order";
+import { ORDER_TYPES, toOrderInput, type Draft, type Sized } from "./order";
 
 export interface AppConfig extends WidgetConfig {
   layout: "auto" | "mobile" | "desktop";
@@ -317,19 +317,22 @@ export function usePerps(config: AppConfig) {
 
   const placeDraft = async (d: Draft, s: Sized, base: string, estPrice?: number): Promise<"filled" | "resting" | "failed"> => {
     const dir = d.side === "buy" ? "long" : "short";
-    notify("progress", d.type === "limit" ? `Placing ${qty(s.size)} ${base} ${dir} ${s.lev}x` : `Opening ${qty(s.size)} ${base} ${dir} ${s.lev}x`);
+    const label = ORDER_TYPES.find((t) => t.type === d.type)?.label ?? "Order";
+    notify("progress", d.type === "market" ? `Opening ${qty(s.size)} ${base} ${dir} ${s.lev}x` : `Placing ${label.toLowerCase()} · ${qty(s.size)} ${base} ${dir}`);
     try {
-      const o = await client.placeOrder({
-        symbol: d.symbol,
-        side: d.side,
-        type: d.type,
-        size: s.size,
-        price: d.type === "limit" ? d.limitPrice : undefined,
-        takeProfit: s.tpPrice > 0 ? s.tpPrice : undefined,
-        stopLoss: s.slPrice > 0 ? s.slPrice : undefined,
-        leverage: s.lev,
-      });
+      if (d.type === "twap") {
+        const minutes = d.twapMinutes ?? 60;
+        await client.placeTwap({ symbol: d.symbol, side: d.side, size: s.size, durationSec: minutes * 60, limitPrice: Number(d.twapLimit) > 0 ? d.twapLimit : undefined, reduceOnly: d.reduceOnly, randomize: d.randomize, leverage: d.reduceOnly ? undefined : s.lev });
+        refresh();
+        notify("ok", "TWAP started", `${d.side === "buy" ? "Long" : "Short"} ${qty(s.size)} ${base} over ${minutes < 60 ? `${minutes} min` : `${Math.round((minutes / 60) * 10) / 10} h`}`);
+        return "resting";
+      }
+      const o = await client.placeOrder(toOrderInput(d, s));
       refresh();
+      if (d.type !== "market" && d.type !== "limit" && (o.status === "untriggered" || o.status === "open" || o.status === "pending")) {
+        notify("ok", `${label} placed`, d.type === "trailing_stop_market" ? `Trails ${d.callbackRate}% behind the price` : `Triggers at $${Number(d.triggerPrice).toLocaleString("en-US", { maximumFractionDigits: 8 })}`);
+        return "resting";
+      }
       if (o.status === "filled") {
         const px = d.type === "market" && estPrice && estPrice > 0 ? estPrice : s.px;
         notify("ok", `Opened ${qty(s.size)} ${base} ${dir}`, `${s.lev}x · about ${usd(s.size * px)} at ~$${px.toLocaleString("en-US", { maximumFractionDigits: px >= 1 ? 2 : 5 })}`);
@@ -390,6 +393,43 @@ export function usePerps(config: AppConfig) {
     }
   };
 
+  const act = async (progress: string, run: () => Promise<unknown>, ok: string | ((r: any) => string), errTitle: string): Promise<boolean> => {
+    notify("progress", progress);
+    try {
+      const r = await run();
+      refresh();
+      notify("ok", typeof ok === "function" ? ok(r) : ok);
+      return true;
+    } catch (e: any) {
+      notify("err", errTitle, e instanceof OrderRejectedError ? e.message : e?.message || String(e));
+      return false;
+    }
+  };
+  const setExits = (p: Position, exits: { takeProfit?: number; stopLoss?: number; fraction?: number; workingType?: "mark_price" | "contract_price" }) =>
+    act("Placing take profit / stop loss", () => client.setPositionExits(p, exits), "Take profit / stop loss set", "Couldn't set TP/SL");
+  const trail = (p: Position, pct: number, activation?: number, workingType?: "mark_price" | "contract_price") =>
+    act("Placing trailing stop", () => client.trailPosition(p, pct, activation, workingType), `Trailing stop set (${pct}%)`, "Couldn't set the trailing stop");
+  const reverse = (p: Position) =>
+    act(
+      `Reversing your ${p.symbol.split("-")[0]} position`,
+      () => client.reversePosition(p),
+      (o: OrderHistoryEntry) => (o.status === "filled" ? `Reversed to ${Number(p.size) > 0 ? "Short" : "Long"}` : `Reverse order ${o.status}`),
+      "Couldn't reverse",
+    );
+  const closeAll = () =>
+    act(
+      "Closing all positions",
+      () => client.closeAllPositions(),
+      (r: Array<{ ok: boolean }>) => (r.every((x) => x.ok) ? `Closed ${r.length} position${r.length === 1 ? "" : "s"}` : `Closed ${r.filter((x) => x.ok).length} of ${r.length}; the rest were cancelled by Strike (no liquidity near the price)`),
+      "Close all failed",
+    );
+  const modifyMargin = (symbol: string, amount: number, dir: "add" | "remove") =>
+    act(dir === "add" ? "Adding margin" : "Removing margin", () => client.modifyMargin(symbol, amount, dir), dir === "add" ? "Margin added" : "Margin removed", "Couldn't change the margin");
+  const editOrder = (o: OrderHistoryEntry, changes: { price?: number; stopPrice?: number; size?: number }) =>
+    act("Updating the order", () => client.editOrder(o, changes), "Order updated", "Couldn't update the order");
+  const cancelAll = (symbol?: string) =>
+    act("Cancelling orders", () => client.cancelAll(symbol), (n: number | null) => (n === null ? "Cancelling orders…" : `Cancelled ${n} order${n === 1 ? "" : "s"}`), "Couldn't cancel");
+
   const cancelOrder = async (o: OrderHistoryEntry) => {
     try {
       await client.trading.cancelOrder(o.symbol, o.id);
@@ -433,6 +473,13 @@ export function usePerps(config: AppConfig) {
     placeDraft,
     closePosition,
     limitClose,
+    setExits,
+    trail,
+    reverse,
+    closeAll,
+    modifyMargin,
+    editOrder,
+    cancelAll,
     cancelOrder,
     disconnect,
   };
