@@ -72,9 +72,9 @@ button, input, select { font: inherit; color: inherit; }
 .se-ticker .t .px { color: #c9cecc; font-weight: 500; transition: color 0.8s; }
 .se-ticker .t .px.up { color: var(--mint); transition: none; }
 .se-ticker .t .px.down { color: var(--rose); transition: none; }
-.se-ticker .t .ch { font-size: 12px; font-weight: 500; padding: 2px 6px; border-radius: 6px; }
-.se-ticker .t .ch.pos { color: var(--mint); background: rgba(var(--mint-rgb), 0.08); }
-.se-ticker .t .ch.neg { color: #fb7185; background: rgba(var(--rose-rgb), 0.1); }
+.se-ticker .t .ch { font-size: 12px; font-weight: 500; }
+.se-ticker .t .ch.pos { color: var(--mint); }
+.se-ticker .t .ch.neg { color: #fb7185; }
 .se-ticker .off { display: inline-flex; align-items: center; padding: 0 18px; color: var(--muted); font-size: 12.5px; }
 
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: var(--radius); border: 0; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; transition: filter 0.15s, background 0.15s, border-color 0.15s, transform 0.15s; white-space: nowrap; }
