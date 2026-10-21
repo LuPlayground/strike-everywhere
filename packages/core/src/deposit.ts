@@ -20,6 +20,7 @@ export interface PreparedDeposit {
   unsignedTx: string;
   preview: TxPreview;
   destination: { address: string; lovelace: bigint };
+  forwardingCost: bigint;
   networkFee: bigint;
   quotedAddress: string;
   expiresAt?: number;
@@ -37,6 +38,7 @@ export class DepositRegistrationError extends Error {
 
 const ALLOWED_BODY_KEYS = new Set([0, 1, 2, 3, 7, 8, 14, 15]);
 const MAX_NETWORK_FEE = 3_000_000n;
+export const MAX_FORWARDING_COST = 2_000_000n;
 
 function paymentKeyHash(address: string): string | null {
   const hex = bech32ToAddressHex(address);
@@ -45,7 +47,7 @@ function paymentKeyHash(address: string): string | null {
   return hex.slice(2, 58);
 }
 
-export function checkDepositTx(unsignedTx: string, opts: { walletAddress: string; lovelace: bigint; requestId: string; accountId?: string }): { preview: TxPreview; dest: TxPreview["outputs"][number] } {
+export function checkDepositTx(unsignedTx: string, opts: { walletAddress: string; lovelace: bigint; requestId: string; accountId?: string }): { preview: TxPreview; dest: TxPreview["outputs"][number]; forwardingCost: bigint } {
   let preview: TxPreview;
   try {
     preview = previewTransaction(unsignedTx);
@@ -60,8 +62,9 @@ export function checkDepositTx(unsignedTx: string, opts: { walletAddress: string
   const leaving = preview.outputs.filter((o) => o.address !== opts.walletAddress);
   if (leaving.length !== 1) throw new DepositSafetyError(`Expected one deposit output, found ${leaving.length}. Not signing.`);
   const dest = leaving[0];
-  if (dest.lovelace !== opts.lovelace) {
-    throw new DepositSafetyError(`Transaction sends ${dest.lovelace} lovelace but ${opts.lovelace} was requested. Not signing.`);
+  const forwardingCost = dest.lovelace - opts.lovelace;
+  if (forwardingCost < 0n || forwardingCost > MAX_FORWARDING_COST) {
+    throw new DepositSafetyError(`Transaction sends ${dest.lovelace} lovelace but ${opts.lovelace} was requested (plus at most ${MAX_FORWARDING_COST} for Strike's forwarding). Not signing.`);
   }
   if (dest.assetPolicies > 0) throw new DepositSafetyError("Transaction would move native tokens. Not signing.");
 
@@ -74,7 +77,7 @@ export function checkDepositTx(unsignedTx: string, opts: { walletAddress: string
   for (const [hex, what] of must) {
     if (!fields.has(hex)) throw new DepositSafetyError(`Deposit datum doesn't reference ${what}. Not signing.`);
   }
-  return { preview, dest };
+  return { preview, dest, forwardingCost };
 }
 
 export class Deposits {
@@ -91,7 +94,7 @@ export class Deposits {
     });
     if (built.format !== "cardano_cbor") throw new DepositSafetyError(`Unexpected transaction format: ${built.format}`);
 
-    const { preview, dest } = checkDepositTx(built.unsigned_tx, { walletAddress: wallet.address, lovelace, requestId: quote.request_id, accountId });
+    const { preview, dest, forwardingCost } = checkDepositTx(built.unsigned_tx, { walletAddress: wallet.address, lovelace, requestId: quote.request_id, accountId });
     const exp = Number(quote.quote?.expiration_at);
     return Object.freeze({
       requestId: quote.request_id,
@@ -102,6 +105,7 @@ export class Deposits {
       unsignedTx: built.unsigned_tx,
       preview,
       destination: { address: dest.address, lovelace: dest.lovelace },
+      forwardingCost,
       networkFee: preview.fee,
       quotedAddress: quote.deposit_address,
       expiresAt: Number.isFinite(exp) && exp > 0 ? (exp < 1e12 ? exp * 1000 : exp) : undefined,

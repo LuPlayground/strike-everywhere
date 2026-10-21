@@ -81,6 +81,28 @@ describe("checkDepositTx", () => {
     expect(() => checkDepositTx(UNSIGNED_TX, { ...ok, accountId: "11111111-1111-1111-1111-111111111111" })).toThrow(/Strike account/);
   });
 
+  const NEW_TX =
+    "84a600d90102818258200a608ac1cbf75c4b3a87b3b1133615b60996a216191c0795e59e013351fed097010182a3005839003720fafedf128c28ff58dcd60c64cea128890f94fe7ac20b6145bd7c4fe161034ee60058869dc2d9ca8377570433f2d6c7e6b36614a233a3011a1bd5dac0028201d8185877d8799f582435373335613634302d353934372d343562332d623264342d316561356432663030393530582430316131353931642d373761352d373030352d616464662d373833346534383063613965581cbf185803ad6a91c60d28b79cfe09c62124d0f14c330aab3288d856f41b000001a1607d12e0ff82583900bf185803ad6a91c60d28b79cfe09c62124d0f14c330aab3288d856f44cc873f35ef7643fd7f191f88f7f01202f359a1520194508dcb887d31ab5586f5d021a0002af91031a08297704081a08296f840ed9010281581cbf185803ad6a91c60d28b79cfe09c62124d0f14c330aab3288d856f4a0f5f6";
+  const lace = {
+    walletAddress: "addr_test1qzl3skqr444fr3sd9zmeelsfccsjf583fses42ej3rv9dazvepelxhhhvsla0uv3lz8h7qfq9u6e59fqr9zs3h9cslfsr384rf",
+    lovelace: 465_000_000n,
+    requestId: "5735a640-5947-45b3-b2d4-1ea5d2f00950",
+    accountId: "01a1591d-77a5-7005-addf-7834e480ca9e",
+  };
+
+  it("accepts Strike's 2 ADA forwarding cost on top of the requested amount, and reports it", () => {
+    const r = checkDepositTx(NEW_TX, lace);
+    expect(r.dest.lovelace).toBe(467_000_000n);
+    expect(r.forwardingCost).toBe(2_000_000n);
+    expect(checkDepositTx(UNSIGNED_TX, ok).forwardingCost).toBe(0n);
+  });
+
+  it("refuses anything beyond 2 ADA extra, or less than requested", () => {
+    expect(() => checkDepositTx(NEW_TX, { ...lace, lovelace: 464_999_999n })).toThrow(/at most 2000000/);
+    expect(() => checkDepositTx(NEW_TX, { ...lace, lovelace: 467_000_001n })).toThrow(DepositSafetyError);
+    expect(() => checkDepositTx(NEW_TX, { ...lace, accountId: ok.accountId })).toThrow(/Strike account/);
+  });
+
   it("refuses extra body fields (e.g. a treasury donation, key 22)", () => {
     const body = concatBytes(new Uint8Array([0xa7]), tx.slice(2, bodyEnd), hexToBytes("161a000f4240"));
     const evil = concatBytes(tx.slice(0, 1), body, tx.slice(bodyEnd));
