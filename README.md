@@ -30,7 +30,7 @@ Strike already has a builder program that is more generous than Hyperliquid's:
 - one-signature account creation for Cardano, Ethereum and Solana wallets;
 - an API that accepts calls straight from the browser.
 
-Yet no third-party project uses it. Integrating means implementing:
+But it isn't an easy integration, so only a few apps have built on it so far. Integrating means implementing:
 - Ed25519 request signing;
 - CIP-30 COSE signatures;
 - a three-step Cardano deposit, including adding wallet signatures to a transaction Strike builds;
@@ -123,6 +123,19 @@ const order = await se.placeOrder({ symbol: "ADA-USD", side: "buy", type: "marke
 - **Known limit:** a malicious *host page* could misuse the in-memory key to place trades, but not to withdraw.
 
 Full details: [`docs/SECURITY.md`](docs/SECURITY.md).
+
+## Roadmap
+
+Built now: the widget (trade ticket, full app, side panel), the SDK, the partner dashboard and four demo hosts, on Strike testnet.
+
+Next, to match more of Strike's own app (all are Strike features the widget doesn't offer yet):
+- **RFQ** (request-for-quote) orders for large sizes.
+- **Copy trading**: follow a trader from inside the host app.
+- **Position mode** control (One-Way, as shown in Strike's ticket).
+- A **live liquidations feed** next to the liquidation map.
+- **Transfer** between Strike balances, and "Available to withdraw" in the account overview.
+
+Then: mainnet launch, published SDK docs and examples, and the first partner integrations.
 
 ## Development timeline (disclosure)
 

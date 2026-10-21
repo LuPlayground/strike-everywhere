@@ -61,7 +61,7 @@ Builder fees themselves are **credited by Strike directly to your Strike account
 ## Optional: stack Strike's referral program
 Strike's [referral program](https://docs.strikefinance.org/perpetuals/referrals) pays the referrer **20–40% of Strike's trading fees** from referred traders (tier grows with their combined lifetime volume: $0 / $250k / $1M / $5M / $20M), and gives those traders a **4–8% fee discount**. Rewards are claimable from $10 and credited to your Strike balance.
 
-Add `referral-code="YOUR_REFERRAL_CODE"` to the tag and the widget passes it in the Builder Connect request, so a partner can earn the builder fee **and** referral rewards on the same users, while those users trade cheaper than on Strike directly.
+Add `referral-code="YOUR_REFERRAL_CODE"` to the tag and the widget passes it in the Builder Connect request, so a partner can earn the builder fee **and** referral rewards on the same users. Those users get Strike's referral discount on Strike's trading fee; the builder fee is charged on top, so the total they pay is usually a little more than trading on Strike directly.
 
 Caveats:
 - Strike lets you create a referral code only after **$10,000 of your own trading volume**.

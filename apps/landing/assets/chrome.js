@@ -11,6 +11,20 @@
       .then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
   }
   var ICON = "https://app.strikefinance.org/images/";
+  var tradingCache = null;
+  function tradingSymbols() {
+    if (!tradingCache) {
+      tradingCache = getJSON(STRIKE + "/v2/markets", 8000).then(function (j) {
+        var set = {};
+        Object.values((j && j.markets) || {}).forEach(function (m) { if (m && m.status === "trading" && m.symbol) set[m.symbol] = true; });
+        return set;
+      }).catch(function () { tradingCache = null; return null; });
+    }
+    return tradingCache;
+  }
+  function onlyTrading(tickers, set) {
+    return (Array.isArray(tickers) ? tickers : []).filter(function (t) { return t && (!set || set[t.symbol]); });
+  }
   function fmtPrice(v) { return v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4); }
   function fmtChg(c) { return (c >= 0 ? "+" : "") + c.toFixed(2) + "%"; }
   function iconFallback(root) {
@@ -152,14 +166,16 @@
     navGlass: navGlass,
     reveal: reveal,
     getJSON: getJSON,
+    tradingSymbols: tradingSymbols,
+    onlyTrading: onlyTrading,
     ticker: function (el) {
       if (!el) return;
       var shown = false, busy = false, lastAt = 0;
       var load = function () {
         if (busy) return;
         busy = true; lastAt = Date.now();
-        getJSON(STRIKE + "/price/v2/ticker/24hr", 8000)
-          .then(function (t) { if (render(el, t)) shown = true; else if (!shown) unavailable(el); })
+        Promise.all([getJSON(STRIKE + "/price/v2/ticker/24hr", 8000), tradingSymbols()])
+          .then(function (r) { if (render(el, onlyTrading(r[0], r[1]))) shown = true; else if (!shown) unavailable(el); })
           .catch(function () { if (!shown) unavailable(el); })
           .then(function () { busy = false; });
       };

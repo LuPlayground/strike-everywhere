@@ -215,7 +215,7 @@
 <section class="strip">
   <div class="glowline"></div>
   <div class="wrap">
-    <p class="cap rv"><span id="mk-count">31</span> Strike markets, streamed live into your app.<br />Crypto, equities, indices and commodities, priced by Strike.</p>
+    <p class="cap rv"><span id="mk-count">32</span> Strike markets, streamed live into your app.<br />Crypto, equities, indices and commodities, priced by Strike.</p>
   </div>
   <div class="marquee" id="marquee" aria-label="Live Strike markets"><div class="belt" id="belt"></div></div>
   <div class="wrap">
@@ -436,11 +436,11 @@
 
   var ICON = "https://app.strikefinance.org/images/";
   var fmt = function (v) { return v >= 1000 ? v.toLocaleString("en-US", { maximumFractionDigits: 0 }) : v >= 1 ? v.toFixed(2) : v.toFixed(4); };
-  SEChrome.getJSON(STRIKE + "/price/v2/ticker/24hr", 9000).then(function (rows) {
-    rows = (Array.isArray(rows) ? rows : []).filter(function (t) { return t && /-USD$/.test(t.symbol) && isFinite(Number(t.lastPrice)) && isFinite(Number(t.priceChangePercent)); });
+  Promise.all([SEChrome.getJSON(STRIKE + "/price/v2/ticker/24hr", 9000), SEChrome.tradingSymbols()]).then(function (res) {
+    var rows = SEChrome.onlyTrading(res[0], res[1]).filter(function (t) { return /-USD$/.test(t.symbol) && isFinite(Number(t.lastPrice)) && isFinite(Number(t.priceChangePercent)); });
     rows.sort(function (a, b) { return Number(b.quoteVolume || 0) - Number(a.quoteVolume || 0); });
     if (!rows.length) throw new Error("empty");
-    document.getElementById("mk-count").textContent = rows.length;
+    document.getElementById("mk-count").textContent = res[1] ? Object.keys(res[1]).length : rows.length;
     var html = rows.map(function (t) {
       var base = t.symbol.replace(/-USD$/, ""), c = Number(t.priceChangePercent);
       return '<div class="mk"><img alt="" loading="lazy" src="' + ICON + encodeURIComponent(base.toLowerCase()) + '.webp" data-b="' + esc(base) + '" /><b>' + esc(base) + '</b><span class="px">' + fmt(Number(t.lastPrice)) + '</span><span class="ch ' + (c >= 0 ? "pos" : "neg") + '">' + (c >= 0 ? "+" : "") + c.toFixed(2) + "%</span></div>";
