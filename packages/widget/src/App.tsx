@@ -189,6 +189,8 @@ export function App({ config }: { config: WidgetConfig }) {
     let alive = true;
     const off = client.on((e) => {
       if (e.type === "session") setSession(e.session);
+      if (e.type === "session" && e.reason === "idle") notify("err", `Signed out after ${Math.round(client.idleTimeoutMs / 60_000)} minutes without activity. Connect again to trade.`);
+      if (e.type === "session" && e.reason === "expired") notify("err", "Session expired. Connect again.");
       if (e.type === "user") scheduleRefresh();
     });
     (async () => {
@@ -311,7 +313,7 @@ export function App({ config }: { config: WidgetConfig }) {
       setPositions(p);
       setOrders(o);
     } catch (e: any) {
-      if (e?.status === 401) {
+      if (e?.status === 401 && client.session) {
         client.disconnect();
         notify("err", "Session expired. Connect again.");
       }

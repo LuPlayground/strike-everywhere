@@ -25,6 +25,7 @@ const TIMESTAMP_REJECTED = /signature expired|invalid timestamp/i;
 export class StrikeHttp {
   clockSkewMs = 0;
   key: ApiWalletKey | null = null;
+  beforeSign: (() => unknown) | null = null;
 
   constructor(public readonly net: NetworkConfig, private readonly fetchImpl: typeof fetch = globalThis.fetch.bind(globalThis)) {}
 
@@ -67,6 +68,7 @@ export class StrikeHttp {
     const headers: Record<string, string> = {};
     if (body) headers["Content-Type"] = "application/json";
     if (auth) {
+      this.beforeSign?.();
       if (!this.key) throw new StrikeApiError(401, "Not connected: connect a wallet first.", null, path);
       const ts = Math.floor(this.serverNowMs() / 1000);
       Object.assign(headers, await signRequest(this.key, method, path, body, ts, uuid()));

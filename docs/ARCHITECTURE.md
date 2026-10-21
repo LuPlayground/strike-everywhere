@@ -5,7 +5,7 @@ Host page (any origin)
  └─ <script strike-everywhere.iife.js>  ──►  <strike-trade> (Shadow DOM, Preact)
       │                                         │
       │  CIP-30 (Lace / Eternl / …)              │  @strike-everywhere/core (in the browser)
-      │   signData  ── connect consent ─────────►│   ApiWalletKey (Ed25519, @noble/ed25519)
+      │   signData  ── connect consent ─────────►│   ApiWalletKey (Ed25519, WebCrypto non-extractable)
       │   signTx    ── deposits ────────────────►│   StrikeHttp: signed REST  ─────────────►  api.strikefinance.org
       │   submitTx                               │   PriceStream / UserStream (WS) ─────────►  /ws/price, /ws/user-api
       │                                          │   Deposits: quote → build-tx → preview/check → signTx → splice → submit

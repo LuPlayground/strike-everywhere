@@ -111,6 +111,8 @@ export function usePerps(config: AppConfig) {
     let alive = true;
     const off = client.on((e) => {
       if (e.type === "session") setSession(e.session);
+      if (e.type === "session" && e.reason === "idle") notify("err", `Signed out after ${Math.round(client.idleTimeoutMs / 60_000)} minutes without activity`, "Your trading key was forgotten for safety. Connect again to keep trading.");
+      if (e.type === "session" && e.reason === "expired") notify("err", "Session expired", "Connect again to keep trading.");
       if (e.type === "user") scheduleRefresh();
     });
     (async () => {
@@ -261,7 +263,7 @@ export function usePerps(config: AppConfig) {
       setOrders(o);
       setAccountLoaded(true);
     } catch (e: any) {
-      if (e?.status === 401) {
+      if (e?.status === 401 && client.session) {
         client.disconnect();
         notify("err", "Session expired", "Connect again to keep trading.");
       } else if (e?.status === 404) {

@@ -41,10 +41,10 @@ describe("request signing", () => {
     expect(ok).toBe(true);
   });
 
-  it("restores a key from its private hex", async () => {
-    const a = await ApiWalletKey.generate();
-    const b = await ApiWalletKey.fromPrivateKeyHex(a.exportPrivateKeyHex());
-    expect(b.publicKeyHex).toBe(a.publicKeyHex);
+  it("restores a bring-your-own key from its private hex", async () => {
+    const priv = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60";
+    const k = await ApiWalletKey.fromPrivateKeyHex(priv);
+    expect(k.publicKeyHex).toBe("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a");
   });
 });
 

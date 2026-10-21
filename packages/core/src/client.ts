@@ -7,7 +7,6 @@ import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
-import { ApiWalletKey } from "./signer.js";
 import { OrderRejectedError, Trading, gridProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
 import type { MarginMode, MarketSpec, OrderHistoryEntry, Position, Side } from "./types.js";
 import { uuid } from "./bytes.js";
@@ -25,10 +24,16 @@ export interface StrikeEverywhereOptions {
   partnerApi?: string;
   persist?: PersistMode;
   sessionTtlMs?: number;
+  idleTimeoutMs?: number;
 }
 
+export type SessionEndReason = "disconnect" | "expired" | "idle";
+
+export const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60_000;
+const ACTIVITY_EVENTS = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
+
 export type ClientEvent =
-  | { type: "session"; session: BuilderSession | null }
+  | { type: "session"; session: BuilderSession | null; reason?: SessionEndReason }
   | { type: "order"; order: OrderHistoryEntry }
   | { type: "user"; data: any };
 
@@ -61,6 +66,8 @@ export class StrikeEverywhere {
   private rawMarkets = new Map<string, RawMarket>();
   private priceStream: PriceStream | null = null;
   private userStream: UserStream | null = null;
+  private idleTimer: ReturnType<typeof setInterval> | null = null;
+  readonly idleTimeoutMs: number;
 
   constructor(readonly opts: StrikeEverywhereOptions) {
     this.net = NETWORKS[opts.network ?? "mainnet"];
@@ -73,7 +80,9 @@ export class StrikeEverywhere {
     const fee = clampBps(opts.feeBps ?? 5);
     this.maxFeeBps = clampBps(opts.maxFeeBps ?? fee, fee);
     this.feeBps = Math.min(fee, this.maxFeeBps);
-    this.store = new SessionStore(opts.persist ?? "memory", `strike-everywhere:${this.net.network}:${opts.builderCode}`, opts.sessionTtlMs ?? 12 * 3600_000);
+    this.idleTimeoutMs = Math.max(0, Number(opts.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS) || 0);
+    this.store = new SessionStore(opts.persist ?? "memory", `strike-everywhere:${this.net.network}:${opts.builderCode}`, opts.sessionTtlMs ?? 12 * 3600_000, this.idleTimeoutMs);
+    this.http.beforeSign = () => this.checkExpiry();
   }
 
 
@@ -88,17 +97,53 @@ export class StrikeEverywhere {
 
   async init(): Promise<void> {
     await this.http.syncClock();
-    const stored = this.store.load();
+    const stored = await this.store.load();
     if (stored) {
       if (!(Number(stored.session.feeShareBps) >= this.feeBps) || stored.session.builderCode !== this.opts.builderCode) {
-        this.store.clear(stored.privateKeyHex);
+        this.store.clear(stored.key.publicKeyHex);
         return;
       }
       this.resetUserStream();
-      this.http.key = await ApiWalletKey.fromPrivateKeyHex(stored.privateKeyHex);
+      this.http.key = stored.key;
       this.session = stored.session;
+      this.watchActivity();
       this.emit({ type: "session", session: this.session });
     }
+  }
+
+  touch(): void {
+    if (!this.checkExpiry()) this.store.touch();
+  }
+
+  private checkExpiry(): boolean {
+    const why = this.session ? this.store.expiry() : null;
+    if (!why) return false;
+    this.endSession(why);
+    return true;
+  }
+
+  private onActivity = (e: Event) => {
+    if (e.isTrusted) this.touch();
+  };
+
+  private onVisible = () => {
+    if (typeof document !== "undefined" && document.visibilityState === "visible") this.checkExpiry();
+  };
+
+  private watchActivity(): void {
+    this.unwatchActivity();
+    if (typeof window === "undefined") return;
+    for (const t of ACTIVITY_EVENTS) window.addEventListener(t, this.onActivity, { capture: true, passive: true });
+    document.addEventListener("visibilitychange", this.onVisible);
+    this.idleTimer = setInterval(() => this.checkExpiry(), 30_000);
+  }
+
+  private unwatchActivity(): void {
+    if (this.idleTimer) clearInterval(this.idleTimer);
+    this.idleTimer = null;
+    if (typeof window === "undefined") return;
+    for (const t of ACTIVITY_EVENTS) window.removeEventListener(t, this.onActivity, { capture: true });
+    document.removeEventListener("visibilitychange", this.onVisible);
   }
 
   get orderFeeBps(): number {
@@ -150,7 +195,8 @@ export class StrikeEverywhere {
     this.resetUserStream();
     this.http.key = key;
     this.session = session;
-    this.store.save(session, key.exportPrivateKeyHex());
+    await this.store.save(session, key);
+    this.watchActivity();
     this.beacon({ type: "connect", accountId: session.accountId });
     this.emit({ type: "session", session });
     return session;
@@ -161,17 +207,23 @@ export class StrikeEverywhere {
     this.priceStream = null;
     this.userStream?.close();
     this.userStream = null;
+    this.unwatchActivity();
     this.listeners.clear();
   }
 
   disconnect(): void {
+    this.endSession("disconnect");
+  }
+
+  private endSession(reason: SessionEndReason): void {
+    this.unwatchActivity();
     this.resetUserStream();
-    const keyHex = this.http.key?.exportPrivateKeyHex();
+    const pub = this.http.key?.publicKeyHex;
     this.http.key = null;
     this.session = null;
     this.wallet = null;
-    this.store.clear(keyHex);
-    this.emit({ type: "session", session: null });
+    this.store.clear(pub);
+    this.emit({ type: "session", session: null, reason });
   }
 
   async ensureWallet(walletId: string): Promise<CardanoWallet> {

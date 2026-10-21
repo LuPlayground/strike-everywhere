@@ -91,7 +91,7 @@ npm run deploy:api            # Cloudflare Worker (partner API)
 | `partner-id` | — | Sub-attribution label shown in the dashboard |
 | `partner-api` | — | Attribution endpoint (omit to disable) |
 | `referral-code` | — | Strike referral code passed at connect (must belong to the builder owner) |
-| `persist` | `memory` | `session` keeps the trading key in this tab's sessionStorage until it expires (12 h) |
+| `persist` | `memory` | `session` keeps the session across reloads in this tab (up to 12 h). Only the browser-held key handle is stored, never the key itself |
 | `width` | `380px` | Widget width |
 
 ### Features
@@ -117,10 +117,11 @@ const order = await se.placeOrder({ symbol: "ADA-USD", side: "buy", type: "marke
 ## Security model (short)
 
 - **Trading keys never leave the browser.** No server holds them.
-- **The key cannot take funds.** Strike's builder API wallet can trade but cannot withdraw anywhere except the user's own wallet, and only with the user's wallet signature.
+- **The key can trade but can't withdraw.** Withdrawals need the user's own wallet signature and only go back to that wallet. Whoever controls the key could still trade the user's Strike balance, so the key is protected (next point).
+- **No script can copy the key.** It's a browser-held key (WebCrypto, `extractable: false`): the browser keeps the secret and only lets the page ask it to sign. A malicious extension or script can't read it out and trade with it later from somewhere else. Nothing secret is written to storage.
+- **It's forgotten after 30 minutes without activity**, and after 12 hours at most. Coming back takes one wallet signature, which also makes Strike retire the old key. See [Protecting the trading key](docs/SECURITY.md#protecting-the-trading-key).
 - **Deposits are verified before signing.** The widget decodes Strike's unsigned transaction and refuses to ask for a signature unless exactly the requested ADA leaves the wallet in one output, no tokens move, nothing else (certificates, withdrawals, governance actions, collateral) is in the transaction, and the datum credits this user's Strike account.
-- **Keys are limited to the session.** Strike issues keys that never expire (`9999-12-31`), so the widget enforces its own lifetime, and reconnecting rotates the key.
-- **Known limit:** a malicious *host page* could misuse the in-memory key to place trades, but not to withdraw.
+- **Known limit:** code running inside the open page (a hostile host site, an XSS, an extension with access to every site) can still *use* the key to place trades while the page is open, though not withdraw. Only connect on sites you trust.
 
 Full details: [`docs/SECURITY.md`](docs/SECURITY.md).
 
@@ -134,6 +135,9 @@ Next, to match more of Strike's own app (all are Strike features the widget does
 - **Position mode** control (One-Way, as shown in Strike's ticket).
 - A **live liquidations feed** next to the liquidation map.
 - **Transfer** between Strike balances, and "Available to withdraw" in the account overview.
+
+Security, next:
+- **Isolated mode**: the trading key and the order form in a frame served from our own origin, so the host page's scripts can't reach the key at all, with safety checks for unusual orders (price far from the market, unusually large size, bursts of orders) inside that frame. See [Protecting the trading key](docs/SECURITY.md#protecting-the-trading-key).
 
 Then: mainnet launch, published SDK docs and examples, and the first partner integrations.
 
