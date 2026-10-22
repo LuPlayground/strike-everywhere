@@ -62,7 +62,7 @@ export function Panel({ s }: { s: PerpsState }) {
             </span>
           </>
         ) : (
-          <span class="muted">{s.loadError ? `Strike is unreachable right now: ${s.loadError}` : "Loading markets…"}</span>
+          <span class="muted">{s.loadError ? "Can't reach Strike right now. Retrying…" : "Loading markets…"}</span>
         )}
         {listOpen && (
           <div class="pd-pop">

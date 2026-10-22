@@ -745,7 +745,7 @@ export function App({ config }: { config: WidgetConfig }) {
     return (
       <div class="card">
         <div class="ticket">
-          <div class="warn">Strike is unreachable right now: {loadError}</div>
+          <div class="warn">Can't reach Strike right now. Retrying…</div>
         </div>
       </div>
     );

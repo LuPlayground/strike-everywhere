@@ -139,7 +139,7 @@ export function Home({ s, nav, onClose, onLearn, onDisclosures }: { s: PerpsStat
               </button>
             ))
           ) : (
-            <div class="pa-empty-row">{s.loadError ? `Strike is unreachable right now: ${s.loadError}` : "Loading markets…"}</div>
+            <div class="pa-empty-row">{s.loadError ? "Can't reach Strike right now. Retrying…" : "Loading markets…"}</div>
           )}
         </Group>
 

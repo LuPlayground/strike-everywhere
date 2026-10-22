@@ -93,7 +93,7 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
             </div>
           </>
         ) : (
-          <span class="muted">{s.loadError ? `Strike is unreachable right now: ${s.loadError}` : "Loading markets…"}</span>
+          <span class="muted">{s.loadError ? "Can't reach Strike right now. Retrying…" : "Loading markets…"}</span>
         )}
         {listOpen && !showList && (
           <div class="pd-pop">

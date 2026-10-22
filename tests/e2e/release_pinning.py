@@ -33,6 +33,11 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 base = f"http://127.0.0.1:{srv.server_address[1]}"
 results = []
 
+import base64, hashlib
+for v, want in sorted(rel.get("versions", {}).items()):
+    body = urllib.request.urlopen(urllib.request.Request(f"{SITE}/widget/v{v}/strike-everywhere.iife.js", headers={"User-Agent": "strike-everywhere-e2e"})).read()
+    results.append((f"v{v} still served unchanged", "sha384-" + base64.b64encode(hashlib.sha384(body).digest()).decode() == want))
+
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="msedge", headless=True)
     page = browser.new_page()
