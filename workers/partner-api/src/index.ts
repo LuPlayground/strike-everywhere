@@ -221,7 +221,7 @@ async function stats(url: URL, env: Env): Promise<Response> {
               (SELECT COALESCE(SUM(a.deposit_usd),0) FROM accounts a WHERE a.network = ?1 AND a.builder_code = ?2 AND a.funded_at IS NOT NULL AND a.account_id IN (${activeAccounts})) AS deposit_usd,
               (SELECT COUNT(DISTINCT account_id) FROM fills WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3) AS traders,
               (SELECT COALESCE(SUM(notional),0) FROM fills WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3) AS volume,
-              (SELECT COALESCE(SUM(builder_fee),0) FROM fills WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3) AS fees,
+              (SELECT COALESCE(SUM(CAST(builder_fee * 100 + 1e-9 AS INTEGER) / 100.0),0) FROM fills WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3) AS fees,
               (SELECT COUNT(*) FROM fills WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3) AS fills,
               (SELECT COUNT(*) FROM events WHERE network = ?1 AND builder_code = ?2 AND type = 'deposit' AND ts >= ?3) AS deposits_reported`,
     ).bind(network, builder, since),
@@ -236,7 +236,7 @@ async function stats(url: URL, env: Env): Promise<Response> {
               SUM(CASE WHEN e.type = 'order' AND COALESCE(e.status, '') <> 'twap' THEN 1 ELSE 0 END) AS orders,
               (SELECT COUNT(DISTINCT f.account_id) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS traders,
               (SELECT COALESCE(SUM(f.notional), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS volume,
-              (SELECT COALESCE(SUM(f.builder_fee), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS fees
+              (SELECT COALESCE(SUM(CAST(f.builder_fee * 100 + 1e-9 AS INTEGER) / 100.0), 0) FROM fills f WHERE f.network = ?1 AND f.builder_code = ?2 AND f.partner_id = e.partner_id AND f.host_origin = e.host_origin AND f.ts >= ?3) AS fees
        FROM events e
        WHERE e.network = ?1 AND e.builder_code = ?2 AND e.ts >= ?3
        GROUP BY e.partner_id, e.host_origin ORDER BY volume DESC, wallets DESC LIMIT 50`,
@@ -246,7 +246,7 @@ async function stats(url: URL, env: Env): Promise<Response> {
          SELECT MAX(ts) AS last_seen FROM events WHERE network = ?1 AND builder_code = ?2 AND ts >= ?3 GROUP BY partner_id, host_origin)`,
     ).bind(network, builder, since, Date.now() - 7 * 86_400_000),
     env.DB.prepare(
-      `SELECT date(ts / 1000, 'unixepoch') AS day, SUM(notional) AS volume, SUM(builder_fee) AS fees, COUNT(*) AS fills
+      `SELECT date(ts / 1000, 'unixepoch') AS day, SUM(notional) AS volume, SUM(CAST(builder_fee * 100 + 1e-9 AS INTEGER) / 100.0) AS fees, COUNT(*) AS fills
        FROM fills WHERE network = ? AND builder_code = ? AND ts >= ? GROUP BY day ORDER BY day`,
     ).bind(network, builder, since),
     env.DB.prepare(
@@ -283,7 +283,7 @@ async function stats(url: URL, env: Env): Promise<Response> {
       daily: daily.results ?? [],
       recent: (recent.results ?? []).map((r: any) => ({ ...r, account_id: r.account_id ? `${String(r.account_id).slice(0, 8)}…` : null })),
       method:
-        "Volume and fees count only fills in Strike's public fill history for orders the widget registered before Strike created them (same account). Funded accounts and deposit value come from Strike's public transaction history. Connected wallets and integration labels are reported by the widget. Builder fee = executed notional × the order's builder-fee bps.",
+        "Volume and fees count only fills in Strike's public fill history for orders the widget registered before Strike created them (same account). Funded accounts and deposit value come from Strike's public transaction history. Connected wallets and integration labels are reported by the widget. Builder fee = executed notional × the order's builder-fee bps, rounded down to the cent per fill as Strike credits it.",
     },
     200,
     { "Cache-Control": "no-store" },

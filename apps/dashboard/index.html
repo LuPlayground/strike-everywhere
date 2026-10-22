@@ -132,7 +132,7 @@
     <div class="kpi lit"><div class="k"><span title="Referred accounts with a settled deposit in Strike's public transaction history">Funded accounts</span><span class="src-tag ver">Verified on Strike</span></div><div class="v" id="t-funded">—</div><div class="s" id="t-depusd">verified on Strike</div></div>
     <div class="kpi lit"><div class="k"><span title="Referred accounts with at least one verified fill in the selected range">Active traders</span><span class="src-tag ver">Verified on Strike</span></div><div class="v" id="t-traders">—</div><div class="s" id="t-orders">orders via widget</div></div>
     <div class="kpi lit"><div class="k"><span title="USD notional of fills in Strike's public fill history for orders the widget registered before Strike created them (same account)">Attributed volume</span><span class="src-tag ver">Verified on Strike</span></div><div class="v" id="t-volume">—</div><div class="s" id="t-fills">verified fills</div></div>
-    <div class="kpi lit"><div class="k"><span title="Computed as executed notional × the order's builder fee (bps). Strike's public history doesn't expose the fee itself, so this is an estimate.">Builder fees</span><span class="src-tag">Estimate</span></div><div class="v pos" id="t-fees">—</div><div class="s">notional × fee bps; Strike credits the actual fee</div></div>
+    <div class="kpi lit"><div class="k"><span title="Computed per fill as executed notional × the order's builder fee (bps), rounded down to the cent as Strike credits it. Strike's public history doesn't expose the fee itself, so this is an estimate.">Builder fees</span><span class="src-tag">Estimate</span></div><div class="v pos" id="t-fees">—</div><div class="s">notional × fee bps per fill, rounded down to the cent like Strike</div></div>
   </div>
 
   <section class="card">
@@ -300,7 +300,7 @@
     $("t-orders").textContent = int(orders) + " order" + (orders === 1 ? "" : "s") + " via the widget" + (rejected ? " · " + int(rejected) + " rejected" : "");
     $("t-volume").textContent = usd(t.volumeUsd);
     $("t-fills").textContent = int(fills) + " verified fill" + (fills === 1 ? "" : "s");
-    $("t-fees").textContent = usd(fees, fees < 1 && fees > 0 ? 4 : 2);
+    $("t-fees").textContent = usd(fees);
 
     var w = num(t.connectedWallets);
     $("funnel").innerHTML = [["Connected", w, w, "reported", ""], ["Funded", num(t.fundedAccounts), w, "verified", " ver"], ["Trading", num(t.tradingAccounts), w, "verified", " ver"]].map(function (s) {
@@ -323,7 +323,7 @@
           return '<tr><td><div style="display:flex;align-items:center"><div><div class="p-name">' + esc(p.partner_id || "default") + '</div><div class="p-site">' + esc(String(p.host_origin || "").replace(/^https?:\/\//, "")) + '</div></div><span class="state' + (active ? " on" : "") + '">' + (active ? "Active" : "Idle") + "</span></div></td>" +
             '<td class="r">' + int(wal) + '</td><td class="r">' + int(fun) + ' <span class="muted">' + (wal ? Math.round((fun / wal) * 100) + "%" : "") + '</span></td><td class="r">' + int(p.traders) + '</td><td class="r">' + int(p.orders) + "</td>" +
             '<td class="r"><div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><span>' + usd(vol) + '</span><span class="share"><span style="width:' + share + '%"></span></span></div></td>' +
-            '<td class="r pos">' + usd(fee, fee > 0 && fee < 1 ? 4 : 2) + '</td><td class="r soft">' + ago(p.last_seen) + "</td></tr>";
+            '<td class="r pos">' + usd(fee) + '</td><td class="r soft">' + ago(p.last_seen) + "</td></tr>";
         }).join("") + "</tbody></table>"
       : '<div class="empty">No integrations yet. <a href="../developers/">Embed the Strike panel</a> in an app to start.</div>';
 
@@ -390,7 +390,7 @@
       el.addEventListener("mouseenter", function () {
         var i = +el.dataset.i, d = data[i];
         svg.querySelectorAll(".b").forEach(function (b) { b.setAttribute("opacity", +b.dataset.i === i ? "1" : ".45"); });
-        tip.innerHTML = "<b>" + d.day + "</b>Volume " + usd(d.volume) + "<br>Builder fees " + usd(d.fees, d.fees > 0 && d.fees < 1 ? 4 : 2) + " (est.)<br>" + d.fills + " fill" + (d.fills === 1 ? "" : "s");
+        tip.innerHTML = "<b>" + d.day + "</b>Volume " + usd(d.volume) + "<br>Builder fees " + usd(d.fees) + " (est.)<br>" + d.fills + " fill" + (d.fills === 1 ? "" : "s");
         tip.style.display = "block";
         var cx = 16 + ((padL + i * step + step / 2) / W) * (box.width - 32), half = tip.offsetWidth / 2 + 4;
         tip.style.left = Math.max(half, Math.min(box.width - half, cx)) + "px";
@@ -402,7 +402,7 @@
   function drawTable(j) {
     var rows = series(j).reverse().filter(function (d) { return d.fills; });
     $("dailyTable").innerHTML = rows.length
-      ? '<table class="tbl"><thead><tr><th>Day</th><th class="r">Volume</th><th class="r">Builder fees (est.)</th><th class="r">Fills</th></tr></thead><tbody>' + rows.map(function (d) { return "<tr><td>" + d.day + '</td><td class="r">' + usd(d.volume) + '</td><td class="r pos">' + usd(d.fees, d.fees < 1 ? 4 : 2) + '</td><td class="r">' + int(d.fills) + "</td></tr>"; }).join("") + "</tbody></table>"
+      ? '<table class="tbl"><thead><tr><th>Day</th><th class="r">Volume</th><th class="r">Builder fees (est.)</th><th class="r">Fills</th></tr></thead><tbody>' + rows.map(function (d) { return "<tr><td>" + d.day + '</td><td class="r">' + usd(d.volume) + '</td><td class="r pos">' + usd(d.fees) + '</td><td class="r">' + int(d.fills) + "</td></tr>"; }).join("") + "</tbody></table>"
       : '<div class="empty">No fills in this range yet.</div>';
   }
 
