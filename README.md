@@ -6,13 +6,13 @@
 - A **partner dashboard** shows what each site brought in: volume, fees, funded and trading accounts verified against Strike's public history.
 
 ```html
-<script src="https://strike-everywhere.pages.dev/widget/v0.1.4/strike-everywhere.iife.js"
-  integrity="sha384-TMWuDaOIJ/3aY/lC0IZ7SI2Opo07hNpRJBXVF5kn+tqEmVW3Acom2AcCxWgkFkAi"
+<script src="https://strike-everywhere.pages.dev/widget/v0.1.5/strike-everywhere.iife.js"
+  integrity="sha384-kll+w3PEIYuzndoqE+pQDN4wfM9RvmXs/Kq4FUCo+Sj8EZkPXURfPspKHP5jd0FD"
   crossorigin="anonymous" defer></script>
 <strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD"></strike-trade>
 ```
 
-The snippet pins release `v0.1.4` with an integrity hash, so the code your users run can't change without you choosing to update (the current version and hash are always in [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json)). `/widget/strike-everywhere.iife.js` always serves the latest build instead. See [SECURITY.md](docs/SECURITY.md#what-we-the-authors-can-and-cant-do).
+The snippet pins release `v0.1.5` with an integrity hash, so the code your users run can't change without you choosing to update (the current version and hash are always in [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json)). `/widget/strike-everywhere.iife.js` always serves the latest build instead. See [SECURITY.md](docs/SECURITY.md#what-we-the-authors-can-and-cant-do).
 
 | | |
 |---|---|

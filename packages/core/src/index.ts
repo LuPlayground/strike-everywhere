@@ -56,7 +56,7 @@ export {
   type FillEstimate,
 } from "./book.js";
 export { listFrom, numOrNull, isUuid } from "./parse.js";
-export { Deposits, DepositSafetyError, DepositRegistrationError, checkDepositTx, type PreparedDeposit } from "./deposit.js";
+export { Deposits, DepositSafetyError, DepositRegistrationError, checkDepositTx, maxDepositAda, DEPOSIT_EXTRA_ADA, MAX_FORWARDING_COST, type PreparedDeposit } from "./deposit.js";
 export { Withdrawals, MIN_WITHDRAW_USD, WithdrawalSafetyError, checkFundingTx, normalizeWithdrawMessage, type PreparedWithdrawal } from "./withdraw.js";
 export { PriceStream, UserStream } from "./ws.js";
 export { SessionStore, IndexedDbVault, type PersistMode, type KeyVault, type KeyRecord } from "./session.js";

@@ -40,6 +40,9 @@ const ALLOWED_BODY_KEYS = new Set([0, 1, 2, 3, 7, 8, 14, 15]);
 const MAX_NETWORK_FEE = 3_000_000n;
 export const MAX_FORWARDING_COST = 2_000_000n;
 
+export const DEPOSIT_EXTRA_ADA = 3.5;
+export const maxDepositAda = (walletAda: number): number => Math.max(0, Math.floor((walletAda - DEPOSIT_EXTRA_ADA) * 100) / 100);
+
 function paymentKeyHash(address: string): string | null {
   const hex = bech32ToAddressHex(address);
   const type = parseInt(hex[0], 16);
@@ -89,9 +92,16 @@ export class Deposits {
     });
     const utxos = await wallet.utxos();
     if (!utxos.length) throw new Error("Your wallet has no spendable ADA.");
-    const built = await this.http.request<{ unsigned_tx: string; format: string }>("POST", "/v2/deposit/build-tx", {
-      body: { request_id: quote.request_id, user_address: wallet.address, utxos },
-    });
+    const built = await this.http
+      .request<{ unsigned_tx: string; format: string }>("POST", "/v2/deposit/build-tx", {
+        body: { request_id: quote.request_id, user_address: wallet.address, utxos },
+      })
+      .catch((e) => {
+        if (/build/i.test(e?.message ?? "")) {
+          throw new Error(`Strike couldn't build the deposit transaction. Besides the amount, your wallet needs ${Number(MAX_FORWARDING_COST) / 1e6} ADA for Strike's forwarding, about 0.2 ADA network fee and about 1 ADA left as change. Try a smaller amount.`);
+        }
+        throw e;
+      });
     if (built.format !== "cardano_cbor") throw new DepositSafetyError(`Unexpected transaction format: ${built.format}`);
 
     const { preview, dest, forwardingCost } = checkDepositTx(built.unsigned_tx, { walletAddress: wallet.address, lovelace, requestId: quote.request_id, accountId });
