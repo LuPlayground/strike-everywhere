@@ -219,7 +219,8 @@ a.pa-btn.wide { margin: 8px 0 0; }
 
 .pa-review { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .pa-review .pa-scroll { padding-bottom: 8px; }
-.pa-warn { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 12px 14px; border-radius: 16px; background: rgba(var(--pa-neg-rgb), .1); color: #ffb3bf; font-size: 14px; line-height: 1.45; }
+.pa-warn { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 12px 14px; border-radius: 16px; background: rgba(255,69,58,.12); border: 1px solid rgba(255,69,58,.3); color: #ffd0cc; font-size: 14px; line-height: 1.45; }
+.pa-warn > svg:first-child { flex: none; color: #ff453a; margin-top: 2px; }
 .pa-warn svg { flex: none; margin-top: 1px; }
 
 .pa-scrim { position: absolute; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; animation: pa-fade .18s ease-out; }
@@ -275,7 +276,7 @@ a.pa-btn.wide { margin: 8px 0 0; }
 @keyframes pa-drop { from { transform: translate(-50%, -16px); opacity: 0; } }
 .pa-banner .ic { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; }
 .pa-banner.ok .ic { background: var(--pa-accent); color: var(--pa-accent-ink); }
-.pa-banner.err .ic { background: #ff7a45; color: #fff; }
+.pa-banner.err .ic { background: #ff453a; color: #fff; }
 .pa-banner.progress .ic { color: var(--pa-accent); }
 .pa-banner .tx { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 15px; line-height: 1.35; min-width: 0; }
 .pa-banner .tx b { font-weight: 500; }
@@ -397,6 +398,8 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pa .sheet .wallet { padding: 14px 16px; border-radius: 18px; background: var(--pa-card-2); font-size: 16px; }
 .pa .sheet .wallet img { width: 30px; height: 30px; border-radius: 8px; }
 .pa .sheet .note, .pa .sheet .warn { border-radius: 16px; padding: 12px 14px; font-size: 13.5px; }
+.pa .sheet .warn { padding-left: 38px; }
+.pa .sheet .warn::before { left: 14px; top: 13px; }
 .pa .sheet .note { background: var(--pa-card-2); }
 .pa .sheet .field { height: 54px; border-radius: 16px; background: var(--pa-card-2); }
 .pa .sheet .field input { font-family: var(--pa-font); font-size: 18px; }
@@ -653,7 +656,8 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pd-auto { display: flex; flex-direction: column; gap: 8px; }
 .pd-auto-h { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--pa-muted); }
 .pd-chipbtn { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px; border-radius: 999px; background: rgba(255,255,255,.08); font-size: 12px; font-weight: 600; color: var(--pa-text); }
-.pd-warn { padding: 9px 11px; border-radius: 10px; background: rgba(var(--pa-neg-rgb), .1); color: #ffb3bf; font-size: 12.5px; line-height: 1.4; }
+.pd-warn { position: relative; padding: 9px 11px 9px 33px; border-radius: 10px; background: rgba(255,69,58,.12); border: 1px solid rgba(255,69,58,.3); color: #ffd0cc; font-size: 12.5px; line-height: 1.4; }
+.pd-warn::before { content: ""; position: absolute; left: 11px; top: 9px; width: 16px; height: 16px; background: #ff453a; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 3 20h18L12 4z'/%3E%3Cpath d='M12 10v4.5'/%3E%3Ccircle cx='12' cy='17.2' r='1.1' fill='%23000' stroke='none'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 3 20h18L12 4z'/%3E%3Cpath d='M12 10v4.5'/%3E%3Ccircle cx='12' cy='17.2' r='1.1' fill='%23000' stroke='none'/%3E%3C/svg%3E") center / contain no-repeat; }
 .pd-cta { width: 100%; height: 46px; border-radius: 12px; font-size: 15px; font-weight: 600; background: var(--pa-accent); color: var(--pa-accent-ink); flex: none; display: inline-flex; align-items: center; justify-content: center; }
 .pd-cta.short { background: var(--pa-neg); color: #fff; }
 .pd-cta.caution { background: var(--pa-gold); color: #1b1200; }

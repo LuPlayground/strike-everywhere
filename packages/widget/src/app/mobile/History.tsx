@@ -90,7 +90,7 @@ export function History({ s, nav }: { s: PerpsState; nav: Nav }) {
             <Spin />
           </div>
         )}
-        {error && <div class="pa-warn">{error}</div>}
+        {error && <div class="pa-warn"><Icon n="warn" size={16} />{error}</div>}
         {items && !items.length && !error && (
           <div class="pa-nothing">
             <span class="ic">
