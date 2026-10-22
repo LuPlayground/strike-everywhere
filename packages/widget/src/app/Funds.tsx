@@ -362,11 +362,6 @@ export function Withdraw({ client, available, adaPrice, startBalance, onClose, o
             <Row k="Strike fee" v={<span class="num">{usdText(prepared.fee)}</span>} />
             {prepared.funding && <Row k="Funding transaction" sub="Strike's Cardano payout needs a small deposit to its validator" v={<span class="num">{lovelaceToAda(prepared.funding.lovelace).toFixed(2)} ADA</span>} vsub={<span class="num">+{lovelaceToAda(prepared.funding.networkFee).toFixed(3)} ADA fee</span>} />}
           </Group>
-          {prepared.funding && (
-            <SafetyCard>
-              <b>Checked before you sign:</b> the funding transaction only pays {lovelaceToAda(prepared.funding.lovelace).toFixed(2)} ADA to Strike's quoted validator ({shortAddress(prepared.funding.validatorAddress, 8, 6)}), moves no tokens and contains nothing else.
-            </SafetyCard>
-          )}
           <button class="pa-foot-link c" onClick={() => setShowMsg(!showMsg)}>
             {showMsg ? "Hide" : "View"} the message you'll sign
           </button>
