@@ -322,7 +322,7 @@
   function mountPerps() {
     if (perpsEl) { perpsEl.setAttribute("market", perpsSym()); return; }
     perpsEl = document.createElement("strike-trade");
-    var a = { variant: "app", layout: "panel", chart: "off", "builder-code": q.get("builder") || "Playground101", network: network, market: perpsSym(), "fee-bps": "5", "max-fee-bps": "10", "partner-id": "kairo-dex", "max-leverage": "1000", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
+    var a = { variant: "app", layout: "panel", chart: "off", "builder-code": SEChrome.builder(q.get("builder"), network), network: network, market: perpsSym(), "fee-bps": "5", "max-fee-bps": "10", "partner-id": "kairo-dex", "max-leverage": "1000", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
     Object.keys(a).forEach(function (k) { perpsEl.setAttribute(k, a[k]); });
     $("perps").appendChild(perpsEl);
   }

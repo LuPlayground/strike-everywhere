@@ -424,7 +424,7 @@
 (function () {
   var q = new URLSearchParams(location.search);
   var network = SEChrome.network(q.get("network"), "testnet");
-  var builder = q.get("builder") || "Playground101";
+  var builder = SEChrome.builder(q.get("builder"), network);
   var STRIKE = "https://api.strikefinance.org", TESTNET = "https://api-v2-testnet.strikefinance.org";
   var esc = SEChrome.esc;
   SEChrome.navGlass(document.getElementById("nav"));

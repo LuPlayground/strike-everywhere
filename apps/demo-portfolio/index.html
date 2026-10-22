@@ -164,7 +164,7 @@
   var network = SEChrome.network(q.get("network"), "testnet");
 
   var el = document.createElement("strike-trade");
-  var attrs = { variant: "app", layout: "panel", "builder-code": q.get("builder") || "Playground101", network: network, market: "ADA-USD", "fee-bps": "5", "max-fee-bps": "10", "partner-id": "tessera", "max-leverage": "3", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
+  var attrs = { variant: "app", layout: "panel", "builder-code": SEChrome.builder(q.get("builder"), network), network: network, market: "ADA-USD", "fee-bps": "5", "max-fee-bps": "10", "partner-id": "tessera", "max-leverage": "3", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
   Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
   document.getElementById("panel").appendChild(el);
   var col = document.querySelector(".layout .col"), frame = document.getElementById("panel"), lbl = document.querySelector(".side .lbl");

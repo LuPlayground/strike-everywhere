@@ -103,6 +103,12 @@
     v = String(v || "").trim().toLowerCase();
     return v === "mainnet" || v === "testnet" ? v : fallback;
   }
+  var BUILDERS = { testnet: ["Playground101"], mainnet: [] };
+  function builder(v, net) {
+    var list = BUILDERS[net] || [];
+    v = String(v || "").trim();
+    return list.indexOf(v) >= 0 ? v : list[0] || "Playground101";
+  }
 
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
 
@@ -160,6 +166,7 @@
     PARTNER_API: PARTNER_API,
     partnerApi: partnerApi,
     network: network,
+    builder: builder,
     copy: copy,
     esc: esc,
     highlight: highlight,
