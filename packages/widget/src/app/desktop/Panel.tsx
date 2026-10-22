@@ -1,8 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
-import { type BookView, type Side } from "@strike-everywhere/core";
+import { positionMargin, type BookView, type OrderHistoryEntry, type Position, type Side } from "@strike-everywhere/core";
 import { Chart, type Interval } from "../../Chart";
 import { Disclosures } from "../content";
-import { pctText, priceText, usdText } from "../markets";
+import { pctText, priceText, qtyText, usdText } from "../markets";
+import { CloseSheet, EditOrderSheet, MarginSheet, ReverseSheet, TpSlSheet, TrailSheet, exitOrders } from "../PositionTools";
 import type { PerpsState } from "../state";
 import { Coin, Icon, Sheet } from "../ui";
 import { MarketList } from "./Desktop";
@@ -83,6 +84,7 @@ export function Panel({ s }: { s: PerpsState }) {
       )}
       <div class="pd-right pp-right">
         <OrderPanel s={s} m={m} book={book} side={side} setSide={setSide} limitPick={null} />
+        {s.session && <PanelTrades s={s} onPick={setSym} />}
         <AccountCard s={s} />
       </div>
       <div class="pd-foot">
@@ -100,6 +102,141 @@ export function Panel({ s }: { s: PerpsState }) {
           <Disclosures s={s} />
         </Sheet>
       )}
+    </div>
+  );
+}
+
+type Tool = null | { kind: "close" | "tpsl" | "trail" | "margin" | "reverse"; p: Position } | { kind: "edit"; o: OrderHistoryEntry };
+
+function PanelTrades({ s, onPick }: { s: PerpsState; onPick: (sym: string) => void }) {
+  const [tab, setTab] = useState<"positions" | "orders">("positions");
+  const [tool, setTool] = useState<Tool>(null);
+  return (
+    <div class="pd-panel pp-trades">
+      <div class="pd-tabs left">
+        <button class={tab === "positions" ? "on" : ""} onClick={() => setTab("positions")}>
+          Positions ({s.positions.length})
+        </button>
+        <button class={tab === "orders" ? "on" : ""} onClick={() => setTab("orders")}>
+          Open Orders ({s.orders.length})
+        </button>
+      </div>
+      {tab === "positions" ? (
+        s.positions.length ? (
+          s.positions.map((p) => {
+            const m = s.bySymbol[p.symbol];
+            const base = p.symbol.split("-")[0];
+            const size = Number(p.size);
+            const mark = m?.mark || Number(p.entry_price);
+            const tick = m?.spec.tickSize;
+            const margin = positionMargin(p);
+            const upnl = Number(p.upnl);
+            const exits = exitOrders(s, p.symbol);
+            const tp = exits.find((o) => String(o.type).startsWith("take_profit"));
+            const sl = exits.find((o) => String(o.type).startsWith("stop"));
+            const trail = exits.find((o) => String(o.type).startsWith("trailing"));
+            return (
+              <div class="pp-item" key={p.id}>
+                <div class="pp-line">
+                  <button class="pd-mk" onClick={() => onPick(p.symbol)}>
+                    <Coin base={base} size={20} />
+                    <b>{base}</b>
+                  </button>
+                  <span class={`pd-badge ${size > 0 ? "long" : "short"}`}>
+                    {size > 0 ? "Long" : "Short"} {p.leverage}x{p.margin_mode === "isolated" ? " Iso" : ""}
+                  </span>
+                  <span class="sp" />
+                  <b class={`num ${upnl >= 0 ? "pos" : "neg"}`}>
+                    {usdText(upnl, { sign: true })} ({pctText(margin > 0 ? (upnl / margin) * 100 : 0, 1)})
+                  </b>
+                </div>
+                <div class="pd-kv muted">
+                  <span>Size</span>
+                  <span class="num">
+                    {qtyText(Math.abs(size))} {base} · {usdText(Math.abs(size) * mark)}
+                  </span>
+                </div>
+                <div class="pd-kv muted">
+                  <span>Entry · Liq.</span>
+                  <span class="num">
+                    {priceText(Number(p.entry_price), tick)} · {Number(p.liquidation_price) > 0 ? priceText(Number(p.liquidation_price), tick) : "—"}
+                  </span>
+                </div>
+                <div class="pd-kv muted">
+                  <span>TP / SL</span>
+                  <button class="pd-link num" onClick={() => setTool({ kind: "tpsl", p })} title="Edit take profit / stop loss">
+                    {tp ? priceText(Number(tp.stop_price), tick) : "—"} / {sl ? priceText(Number(sl.stop_price), tick) : "—"}
+                    {trail ? " · trail" : ""} ✎
+                  </button>
+                </div>
+                <div class="pp-acts">
+                  <button class="pd-btn sm" onClick={() => setTool({ kind: "close", p })}>
+                    Close
+                  </button>
+                  <button class="pd-btn sm" title="Trailing stop" onClick={() => setTool({ kind: "trail", p })}>
+                    Trail
+                  </button>
+                  {p.margin_mode === "isolated" && (
+                    <button class="pd-btn sm" title="Add or remove margin" onClick={() => setTool({ kind: "margin", p })}>
+                      Margin
+                    </button>
+                  )}
+                  <button class="pd-btn sm" title="Reverse position (long ↔ short)" onClick={() => setTool({ kind: "reverse", p })}>
+                    Reverse
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div class="pp-empty muted">No open positions</div>
+        )
+      ) : s.orders.length ? (
+        s.orders.map((o) => {
+          const tick = s.bySymbol[o.symbol]?.spec.tickSize;
+          const editable = !/market$|^market|trailing/.test(String(o.type));
+          const px = Number(o.price) ? priceText(Number(o.price), tick) : Number(o.stop_price) ? priceText(Number(o.stop_price), tick) : "Market";
+          return (
+            <div class="pp-item" key={o.id}>
+              <div class="pp-line">
+                <button class="pd-mk" onClick={() => onPick(o.symbol)}>
+                  <Coin base={o.symbol.split("-")[0]} size={20} />
+                  <b>{o.symbol.split("-")[0]}</b>
+                </button>
+                <span class={o.side === "buy" ? "pos" : "neg"}>{o.side === "buy" ? "Buy" : "Sell"}</span>
+                <span class="sp" />
+                <span class="num">
+                  {qtyText(Number(o.size))} @ {px}
+                </span>
+              </div>
+              <div class="pd-kv muted">
+                <span>
+                  {String(o.type).replace(/_/g, " ")}
+                  {o.reduce_only ? " · reduce only" : ""}
+                </span>
+                <span class="pp-acts">
+                  {editable && (
+                    <button class="pd-btn sm" onClick={() => setTool({ kind: "edit", o })}>
+                      Edit
+                    </button>
+                  )}
+                  <button class="pd-btn sm" onClick={() => s.cancelOrder(o)}>
+                    Cancel
+                  </button>
+                </span>
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div class="pp-empty muted">No open orders</div>
+      )}
+      {tool?.kind === "close" && <CloseSheet s={s} p={tool.p} onClose={() => setTool(null)} />}
+      {tool?.kind === "tpsl" && <TpSlSheet s={s} p={tool.p} onClose={() => setTool(null)} />}
+      {tool?.kind === "trail" && <TrailSheet s={s} p={tool.p} onClose={() => setTool(null)} />}
+      {tool?.kind === "margin" && <MarginSheet s={s} p={tool.p} onClose={() => setTool(null)} />}
+      {tool?.kind === "reverse" && <ReverseSheet s={s} p={tool.p} onClose={() => setTool(null)} />}
+      {tool?.kind === "edit" && <EditOrderSheet s={s} o={tool.o} onClose={() => setTool(null)} />}
     </div>
   );
 }

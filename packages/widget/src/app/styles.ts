@@ -438,6 +438,13 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pp-head .pd-pop { left: 0; right: 0; width: auto; }
 .pp-chart { padding-top: 8px; }
 .pp-right { min-height: auto; }
+.pp-trades { padding-bottom: 4px; }
+.pp-item { display: flex; flex-direction: column; gap: 7px; padding: 12px 14px; border-top: 1px solid var(--pa-line); }
+.pp-line { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.pp-line .sp { flex: 1; }
+.pp-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp-trades .pd-tabs + .pp-item, .pp-trades .pd-tabs + .pp-empty { border-top: 0; }
+.pp-empty { padding: 18px 14px; text-align: center; font-size: 13px; border-top: 1px solid var(--pa-line); }
 .pd-link { color: var(--pa-muted); text-decoration: none; padding: 0; font-size: 12.5px; }
 .pd-link:hover { color: var(--pa-text); }
 .pd-sym { display: flex; align-items: center; gap: 10px; text-align: left; padding: 0; }
