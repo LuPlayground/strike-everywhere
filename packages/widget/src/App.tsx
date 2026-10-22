@@ -307,10 +307,12 @@ export function App({ config }: { config: WidgetConfig }) {
   const twapWatch = useRef(false);
   twapWatch.current = lowerTab === "twap" || twaps.length > 0;
   const refresh = async (withTwaps = false) => {
-    if (!mounted.current || !client.session) return;
+    const started = client.session;
+    if (!mounted.current || !started) return;
     const tw = withTwaps || twapWatch.current ? client.trading.twaps().catch(() => null) : null;
     try {
       const [a, p, o] = await Promise.all([client.account.account(), client.account.positions(), client.account.openOrders()]);
+      if (!mounted.current || client.session !== started) return;
       setAccount(a);
       setPositions(p);
       setOrders(o);
@@ -321,7 +323,7 @@ export function App({ config }: { config: WidgetConfig }) {
       }
     }
     const t = await tw;
-    if (t) setTwaps(t);
+    if (t && mounted.current && client.session === started) setTwaps(t);
   };
   const scheduleRefresh = () => {
     clearTimeout(refreshTimer.current);

@@ -254,10 +254,11 @@ export function usePerps(config: AppConfig) {
 
   const refreshTimer = useRef<ReturnType<typeof setTimeout>>();
   const refresh = async () => {
-    if (!mounted.current || !client.session) return;
+    const started = client.session;
+    if (!mounted.current || !started) return;
     try {
       const [a, p, o] = await Promise.all([client.account.account(), client.account.positions(), client.account.openOrders()]);
-      if (!mounted.current) return;
+      if (!mounted.current || client.session !== started) return;
       setAccount(a);
       setPositions(p);
       setOrders(o);
