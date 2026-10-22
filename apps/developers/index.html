@@ -246,8 +246,8 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   SEChrome.navGlass($("nav"));
-  var WIDGET = new URL("../widget/strike-everywhere.iife.js", location.href).href;
-  var WIDGET_ESM = new URL("../widget/strike-everywhere.js", location.href).href;
+  var WIDGET = new URL("../widget/v%%WIDGET_VERSION%%/strike-everywhere.iife.js", location.href).href;
+  var WIDGET_ESM = new URL("../widget/v%%WIDGET_VERSION%%/strike-everywhere.js", location.href).href;
   var API = SEChrome.PARTNER_API;
   var cfg = { variant: "ticket", net: "testnet", side: "buy", lev: "5", width: "380", tab: "html" };
 
@@ -352,7 +352,7 @@
     var a = attrs(), app = cfg.variant === "app";
     var style = app ? 'style="display:block; height:100%"' : "";
     if (cfg.tab === "html")
-      return '<!-- 1. Load once, anywhere on the page -->\n<script src="' + WIDGET + '" defer></' + 'script>\n\n<!-- 2. Place it -->\n' + tag(a, "", style);
+      return '<!-- 1. Load once, anywhere on the page -->\n<script src="' + WIDGET + '" integrity="%%WIDGET_SRI%%" crossorigin="anonymous" defer></' + 'script>\n\n<!-- 2. Place it -->\n' + tag(a, "", style);
     if (cfg.tab === "react")
       return '"use client"; // Next.js App Router: this component runs in the browser\nimport { useEffect } from "react";\n\n// TypeScript (.tsx) only: let JSX accept the custom element. Delete this in plain .jsx.\ndeclare module "react" { namespace JSX { interface IntrinsicElements { "strike-trade": any } } }\n\nexport function StrikePanel() {\n  // Load the widget once with a script tag (works in Next.js, Vite and webpack alike).\n  useEffect(() => {\n    if (customElements.get("strike-trade") || document.getElementById("strike-on-js")) return;\n    const s = document.createElement("script");\n    s.id = "strike-on-js";\n    s.src = "' + WIDGET + '";\n    document.head.appendChild(s);\n  }, []);\n\n  return (\n' + tag(a, "    ", app ? 'style={{ display: "block", height: "100%" }}' : "") + "\n  );\n}";
     var wa = app ? a : a.filter(function (p) { return p[0] !== "width"; }).concat([["width", "368"]]);

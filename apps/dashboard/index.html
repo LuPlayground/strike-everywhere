@@ -206,7 +206,7 @@
   SEChrome.navGlass(document.getElementById("nav"));
   var q = new URLSearchParams(location.search);
   var API = SEChrome.partnerApi(q.get("api"));
-  var WIDGET = new URL("../widget/strike-everywhere.iife.js", location.href).href;
+  var WIDGET = new URL("../widget/v%%WIDGET_VERSION%%/strike-everywhere.iife.js", location.href).href;
   var $ = function (id) { return document.getElementById(id); };
   var DAYS = { "7": 1, "30": 1, "90": 1 };
   var state = { builder: (q.get("builder") || "Playground101").trim(), network: SEChrome.network(q.get("network"), "testnet"), days: DAYS[q.get("days")] ? q.get("days") : "30", metric: "volume", kitNet: "mainnet" };
@@ -438,7 +438,7 @@
     var lines = ['  builder-code="' + code + '"', '  fee-bps="' + kitFee() + '"', '  market="' + market + '"', '  partner-id="' + partner + '"'];
     if (state.kitNet === "testnet") lines.push('  network="testnet"');
     lines.push('  partner-api="' + API + '"');
-    kitText = '<script src="' + WIDGET + '" defer></' + 'script>\n\n<strike-trade\n' + lines.join("\n") + ">\n</strike-trade>";
+    kitText = '<script src="' + WIDGET + '" integrity="%%WIDGET_SRI%%" crossorigin="anonymous" defer></' + 'script>\n\n<strike-trade\n' + lines.join("\n") + ">\n</strike-trade>";
     $("snippet").innerHTML = SEChrome.highlight(kitText);
     $("preview").href = "../demo/portfolio/?network=" + state.kitNet + "&builder=" + encodeURIComponent(code);
   }

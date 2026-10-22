@@ -9,8 +9,19 @@ Strike On puts trading inside other people's websites. That makes the trust boun
 | **User's wallet** (Lace, Eternl, …) | Sign Strike's connect message once; sign each deposit transaction; sign withdrawals on Strike | — |
 | **API wallet key** (Ed25519, created in the browser by Builder Connect) | Place and cancel orders, set leverage, read the account, build deposits | Withdraw anywhere except the user's own wallet, and only with the user's wallet signature (Strike `withdraw` API). It cannot change the builder fee cap the user signed |
 | **Host site** (the page embedding the widget) | Choose the builder code, fee (≤ the cap the user signs), market and leverage ceiling | Charge more than the cap; move funds out of Strike |
+| **Strike On (the authors)** | Publish new widget versions | See seed phrases, wallet keys or the trading key; withdraw; change the code a site runs if it pins a version with an integrity hash |
 | **Strike On servers** (partner API) | Store attribution events (account ids, client order ids, partner labels) | Trade, sign or move anything. They never see keys or signatures |
 | **Strike** | Matches, custodies, settles | — |
+
+## What we, the authors, can and can't do
+We never hold users' funds, seed phrases, wallet keys or trading keys, and nothing on our servers can sign or move anything:
+- **Seeds and wallet keys** never leave the user's wallet. CIP-30 only lets the widget *ask* the wallet to sign, and the wallet shows every request.
+- **Withdrawals** go only to the user's own wallet (Strike locks the recipient) and need the user's wallet signature. The trading key alone can't withdraw.
+- **The trading key** is created in the user's browser as non-extractable and never sent anywhere; our partner API only receives account ids, order ids and labels.
+
+The one thing we control is **the widget code we serve**. A changed script, whether shipped by us or by someone who took over our hosting, could misuse a live session (place trades with the trading key, or open wallet prompts the user then has to approve). To take that power away from us, every release is published once at `/widget/vX.Y.Z/` and never changed, and the snippets load it with a Subresource Integrity hash: the browser refuses the file if it differs by a single byte. The build refuses to republish an existing version with different code. Sites that load `/widget/strike-everywhere.iife.js` (latest) get fixes automatically but trust us to serve good code; sites that pin a version don't have to.
+
+Our own pages also send `frame-ancestors 'none'` / `X-Frame-Options: DENY`, so other sites can't show them in a hidden frame to trick clicks.
 
 ## Key handling
 - The **key is created in the browser** and its public half is bound to the user's account and the builder code by Strike's `verify-signature`. The private half is never sent anywhere.
@@ -117,7 +128,7 @@ The same checks run again on the exact bytes right before `signTx`, and an expir
 4. **Attribution data is public by nature.** Strike exposes fills by account id publicly, and the partner API only stores what is needed to match them.
 5. **What the dashboard can and can't prove.**
    - *Verified against Strike:* volume, fills and active traders count only fills from Strike's public history for orders the widget **registered before Strike created them**, from the same account. Order ids are random and only become public once the order exists, so nobody can claim someone else's fills after the fact (`scripts/attribution_selftest.py` checks this against real mainnet fills). Funded accounts and deposit value come from Strike's public transaction history.
-   - *Not verifiable:* "connected wallets" and the integration labels are reported by the widget, so anyone can inflate them for a builder code. The builder-fee amount is computed as notional × the fee bps the widget sent, because Strike's public history doesn't expose builder fees; Strike's own builder page is the source of truth for fees actually credited.
+   - *Not verifiable:* "connected wallets" and the integration labels are reported by the widget, so anyone can inflate them for a builder code. The builder-fee amount is computed per fill as notional × the fee bps the widget sent, rounded down to the cent as Strike credits it (verified on testnet), because Strike's public history doesn't expose builder fees; Strike's own builder page is the source of truth for fees actually credited.
    - Registration waits at most 1.5 s for the partner API before the order is sent; if the API is slow or down, trading continues and that order simply isn't attributed.
 6. **`persist="session"` keeps the key usable across reloads.** Nothing secret is stored, but the browser-held key handle stays in that origin's IndexedDB until the session ends (30 idle minutes, 12 h at most). Scripts on the same site could *use* it during that window, though not copy it. Prefer the default `memory` mode on pages that load third-party scripts.
 

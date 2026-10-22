@@ -457,9 +457,9 @@
 
   var origin = new URL(".", location.href).href;
   var EX = {
-    html: '<script src="' + origin + 'widget/strike-everywhere.iife.js" defer></' + 'script>\n\n<strike-trade\n  builder-code="YOUR_CODE"\n  fee-bps="5"\n  market="ADA-USD"\n  partner-id="homepage"\n  partner-api="' + SEChrome.PARTNER_API + '">\n</strike-trade>',
+    html: '<script src="' + origin + 'widget/v%%WIDGET_VERSION%%/strike-everywhere.iife.js"\n  integrity="%%WIDGET_SRI%%"\n  crossorigin="anonymous" defer></' + 'script>\n\n<strike-trade\n  builder-code="YOUR_CODE"\n  fee-bps="5"\n  market="ADA-USD"\n  partner-id="homepage"\n  partner-api="' + SEChrome.PARTNER_API + '">\n</strike-trade>',
     app: '<!-- give it a whole screen: a full perps app -->\n<strike-trade\n  variant="app"\n  builder-code="YOUR_CODE"\n  fee-bps="5"\n  closable\n  style="display:block; height:100%">\n</strike-trade>\n\n<script>\n  const perps = document.querySelector("strike-trade");\n  perps.addEventListener("strike-session", (e) => showAccount(e.detail)); // your header\n  perps.addEventListener("strike-close", () => goHome());                 // back to your app\n</' + 'script>',
-    react: 'import { useEffect } from "react";\n\nexport function Trade() {\n  useEffect(() => {\n    import("' + origin + 'widget/strike-everywhere.js");\n  }, []);\n\n  return <strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD" />;\n}',
+    react: 'import { useEffect } from "react";\n\nexport function Trade() {\n  useEffect(() => {\n    import("' + origin + 'widget/v%%WIDGET_VERSION%%/strike-everywhere.js"); // pinned release\n  }, []);\n\n  return <strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD" />;\n}',
     sdk: 'import { StrikeOn } from "@strike-everywhere/core";\n\nconst strike = new StrikeOn({ network: "mainnet", builderCode: "YOUR_CODE", feeBps: 5 });\nawait strike.init();\nawait strike.loadMarkets();\n\nawait strike.connect("eternl"); // one CIP-30 signature\n\nconst order = await strike.placeOrder({\n  symbol: "ADA-USD", side: "buy", type: "market", size: 50, leverage: 2,\n});'
   };
   var code = document.getElementById("code"), cur = "html";
