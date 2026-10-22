@@ -310,10 +310,19 @@
   }
 
   var perpsEl = null;
+  var perpsSet = null;
+  if (network !== "mainnet") SEChrome.getJSON("https://api-v2-testnet.strikefinance.org/v2/markets", 8000).then(function (j) {
+    var s = {};
+    Object.values((j && j.markets) || {}).forEach(function (m) { if (m && m.status === "trading" && m.symbol) s[m.symbol] = true; });
+    perpsSet = s;
+    header();
+    if (perpsEl) perpsEl.setAttribute("market", perpsSym());
+  }).catch(function () {});
+  function perpsSym() { var s = pairSym(); return !perpsSet || perpsSet[s] ? s : "ADA-USD"; }
   function mountPerps() {
-    if (perpsEl) { perpsEl.setAttribute("market", pairSym()); return; }
+    if (perpsEl) { perpsEl.setAttribute("market", perpsSym()); return; }
     perpsEl = document.createElement("strike-trade");
-    var a = { variant: "app", layout: "panel", chart: "off", "builder-code": q.get("builder") || "Playground101", network: network, market: pairSym(), "fee-bps": "5", "max-fee-bps": "10", "partner-id": "kairo-dex", "max-leverage": "1000", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
+    var a = { variant: "app", layout: "panel", chart: "off", "builder-code": q.get("builder") || "Playground101", network: network, market: perpsSym(), "fee-bps": "5", "max-fee-bps": "10", "partner-id": "kairo-dex", "max-leverage": "1000", persist: "session", "partner-api": SEChrome.partnerApi(q.get("api")) };
     Object.keys(a).forEach(function (k) { perpsEl.setAttribute(k, a[k]); });
     $("perps").appendChild(perpsEl);
   }
@@ -359,7 +368,7 @@
     st.base = sym;
     if (!fromSpot) { st.pay = sym; if (st.recv === sym) st.recv = "USDM"; }
     quote(); header();
-    if (perpsEl) perpsEl.setAttribute("market", pairSym());
+    if (perpsEl) perpsEl.setAttribute("market", perpsSym());
     if (changed) { candles = []; drawChart(); loadCandles(); loadTrades(); }
   }
 
@@ -426,7 +435,10 @@
     var chev = '<svg viewBox="0 0 10 10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
     $("pairName").innerHTML = (flipped ? "USDM <span>/ " + esc(b.sym) + "</span>" : esc(b.sym) + " <span>/ USDM</span>") + chev;
     $("pSrc").textContent = "Prices from Strike (" + b.strike + " mark)";
-    $("histSub").textContent = network === "mainnet" ? "Live " + b.strike + " fills on Strike, the market behind the Perps tab" : "Live " + b.strike + " fills on Strike mainnet; the Perps tab trades it on testnet";
+    var onPerps = network === "mainnet" || !perpsSet || perpsSet[b.strike];
+    $("histSub").textContent = network === "mainnet" ? "Live " + b.strike + " fills on Strike, the market behind the Perps tab"
+      : onPerps ? "Live " + b.strike + " fills on Strike mainnet; the Perps tab trades it on testnet"
+      : "Live " + b.strike + " fills on Strike mainnet. Strike's testnet doesn't list " + b.strike + ", so the Perps tab opens ADA-USD";
     $("pPrice").textContent = m ? (flipped ? pxFmt(1 / m) : pxFmt(m)) : "—";
     if (c !== undefined) { var cc = flipped ? -c : c; $("pChg").textContent = (cc >= 0 ? "+" : "") + cc.toFixed(2) + "%"; $("pChg").className = cc >= 0 ? "up" : "down"; } else { $("pChg").textContent = "—"; $("pChg").className = ""; }
     var r = $("recent"); if (m) r.innerHTML = img(b) + esc(b.sym) + " " + pxFmt(m) + ' <span style="color:' + ((c || 0) >= 0 ? "var(--k-up)" : "var(--k-down)") + '">' + ((c || 0) >= 0 ? "+" : "") + (c || 0).toFixed(2) + "%</span>";
