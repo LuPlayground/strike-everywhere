@@ -30,4 +30,5 @@ writeFileSync(
     "",
   ].join("\n"),
 );
+writeFileSync(join(out, "_redirects"), ["/demo/blog /#demos 301", "/demo/blog/* /#demos 301", ""].join("\n"));
 console.log("site assembled at", out);
