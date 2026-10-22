@@ -18,6 +18,7 @@ export {
   roundTpPrice,
   buildOrderBody,
   gridProblem,
+  closeSizeFor,
   parseGridBot,
   isTriggered,
   needsLimitPrice,

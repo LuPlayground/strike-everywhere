@@ -356,13 +356,17 @@ export class Trading {
   }
 
   async closePosition(spec: MarketSpec, position: Position, builderFeeBps: number, ids?: PlacedOrder, fraction = 1): Promise<PlacedOrder> {
-    const full = Math.abs(Number(position.size));
-    const step = spec.marketStepSize ?? spec.stepSize;
-    const size = fraction >= 1 ? full : Number(roundToStep(full * Math.max(0, fraction), step || 1e-8, "floor"));
+    const size = closeSizeFor(spec, Math.abs(Number(position.size)), fraction, "market");
     if (!(size > 0)) throw new Error("That's smaller than the market's minimum size. Close a larger part.");
     const side: Side = Number(position.size) > 0 ? "sell" : "buy";
     return this.placeOrder(spec, { symbol: position.symbol, side, type: "market", size, reduceOnly: true }, builderFeeBps, ids);
   }
+}
+
+export function closeSizeFor(spec: MarketSpec, absSize: number, fraction: number, type: "market" | "limit"): number {
+  if (fraction >= 1) return absSize;
+  const step = type === "market" ? spec.marketStepSize ?? spec.stepSize : spec.stepSize;
+  return Number(roundToStep(absSize * Math.max(0, fraction), step || 1e-8, "floor"));
 }
 
 export function parseTwap(t: any): TwapStrategy | null {

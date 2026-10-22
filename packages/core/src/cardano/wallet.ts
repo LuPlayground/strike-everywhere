@@ -30,6 +30,13 @@ export interface WalletInfo {
 
 const IGNORED_KEYS = new Set(["_events", "_eventsCount", "_maxListeners", "enable", "isEnabled"]);
 
+const KNOWN_NAMES: Record<string, string> = { nufi: "NuFi", vespr: "VESPR", gerowallet: "GeroWallet", typhoncip30: "Typhon" };
+
+export function walletDisplayName(name: string): string {
+  if (!name || /[A-Z]/.test(name)) return name;
+  return KNOWN_NAMES[name] ?? name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 export function detectWallets(win: any = globalThis): WalletInfo[] {
   const root = win?.cardano;
   if (!root || typeof root !== "object") return [];
@@ -40,7 +47,7 @@ export function detectWallets(win: any = globalThis): WalletInfo[] {
     const p = root[id] as Cip30Provider;
     if (!p || typeof p.enable !== "function" || seen.has(p)) continue;
     seen.add(p);
-    out.push({ id, name: p.name || id, icon: p.icon });
+    out.push({ id, name: walletDisplayName(p.name || id), icon: p.icon });
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }

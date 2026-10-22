@@ -1,5 +1,5 @@
-import { useState } from "preact/hooks";
-import { TRAILING_MAX_PCT, TRAILING_MIN_PCT, isTriggered, needsLimitPrice, roundToStep, type OrderHistoryEntry, type Position } from "@strike-everywhere/core";
+import { useEffect, useState } from "preact/hooks";
+import { TRAILING_MAX_PCT, TRAILING_MIN_PCT, closeSizeFor, estimateMarketFill, isTriggered, makeView, needsLimitPrice, roundToStep, type BookView, type OrderHistoryEntry, type Position } from "@strike-everywhere/core";
 import { cleanDecimal } from "../parts";
 import { pctText, priceText, qtyText, usdText } from "./markets";
 import type { PerpsState } from "./state";
@@ -264,8 +264,22 @@ export function CloseSheet({ s, p, onClose, onClosed }: { s: PerpsState; p: Posi
   const [frac, setFrac] = useState(1);
   const [limitPx, setLimitPx] = useState("");
   const [busy, setBusy] = useState(false);
-  const upnl = Number(p.upnl);
-  const value = x.abs * x.mark;
+  const size = x.m ? closeSizeFor(x.m.spec, x.abs, frac, mode) : x.abs * frac;
+  const [book, setBook] = useState<BookView | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    s.client.market.depth(p.symbol, 100).then(
+      (d) => alive && setBook(makeView(d.bids, d.asks)),
+      () => alive && setBook(null),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [p.symbol]);
+  const bound = Number(s.client.raw(p.symbol)?.order_market_price_bound) || 0.05;
+  const fill = book && size > 0 ? estimateMarketFill(book, x.long ? "sell" : "buy", size, { mark: x.mark, bound }) : null;
+  const noFill = book !== undefined && (!fill || fill.beyondBand || !fill.complete);
+  const estPnl = fill && !noFill ? (x.long ? 1 : -1) * (fill.avgPrice - x.entry) * size : null;
   const close = async () => {
     setBusy(true);
     const ok = mode === "limit" ? await s.limitClose(p, Number(limitPx), frac) : await s.closePosition(p, frac);
@@ -288,17 +302,25 @@ export function CloseSheet({ s, p, onClose, onClosed }: { s: PerpsState; p: Posi
         ))}
       </div>
       {mode === "limit" && (
-        <PriceField label="Close at price" value={limitPx} onInput={setLimitPx} aria="Limit close price" mark={x.mark} tick={x.tick} hint={Number(limitPx) > 0 ? `Est. P&L at this price ≈ ${usdText((x.long ? 1 : -1) * (Number(limitPx) - x.entry) * x.abs * frac, { sign: true })}` : undefined} />
+        <PriceField label="Close at price" value={limitPx} onInput={setLimitPx} aria="Limit close price" mark={x.mark} tick={x.tick} hint={Number(limitPx) > 0 ? `Est. P&L at this price ≈ ${usdText((x.long ? 1 : -1) * (Number(limitPx) - x.entry) * size, { sign: true })}` : undefined} />
       )}
       <Fractions value={frac} onChange={setFrac} />
       <Group>
-        <Row k="You close" v={<span class="num">{`${qtyText(x.abs * frac)} ${x.base}`}</span>} vsub={<span class="num">{`≈ ${usdText(value * frac)}`}</span>} />
-        {mode === "market" && <Row k="Estimated P&L" v={<span class={`num ${upnl >= 0 ? "pos" : "neg"}`}>{usdText(upnl * frac, { sign: true })}</span>} />}
-        {frac < 1 && <Row k="Stays open" v={<span class="num">{`${qtyText(x.abs * (1 - frac))} ${x.base}`}</span>} />}
+        <Row k="You close" v={<span class="num">{`${qtyText(size)} ${x.base}`}</span>} vsub={<span class="num">{`≈ ${usdText(size * x.mark)}`}</span>} />
+        {mode === "market" && (
+          <Row
+            k="Estimated P&L"
+            sub={fill && !noFill ? `at about ${priceText(fill.avgPrice, x.tick)}` : undefined}
+            v={estPnl !== null ? <span class={`num ${estPnl >= 0 ? "pos" : "neg"}`}>{usdText(estPnl, { sign: true })}</span> : <span class="num">—</span>}
+          />
+        )}
+        {size < x.abs && <Row k="Stays open" v={<span class="num">{`${qtyText(x.abs - size)} ${x.base}`}</span>} />}
       </Group>
       <p class="pa-p sm">
         {mode === "market"
-          ? `Closes at the market price. Strike cancels the close if there are no ${x.long ? "buyers" : "sellers"} close enough to the market price; your position then stays open (try a limit close instead).`
+          ? noFill
+            ? `There aren't enough ${x.long ? "buyers" : "sellers"} within ${(bound * 100).toFixed(0)}% of the market price right now, so Strike would cancel a market close. Try a limit close instead.`
+            : `Closes at the market price. Strike cancels the close if there are no ${x.long ? "buyers" : "sellers"} close enough to the market price; your position then stays open (try a limit close instead).`
           : "A reduce-only limit order: it waits on the book and closes when the price reaches yours. It can only shrink this position."}
       </p>
       <Busy busy={busy} label={mode === "limit" ? (frac >= 1 ? "Place limit close" : `Limit close ${frac * 100}%`) : frac >= 1 ? "Close position" : `Close ${frac * 100}%`} onClick={close} disabled={mode === "limit" && !(Number(limitPx) > 0)} />

@@ -81,7 +81,7 @@ export class Withdrawals {
         q = await quote(asset);
       }
     } catch (e: any) {
-      if (/single-withdrawal limit/i.test(e?.message ?? "")) throw new Error("That's above Strike's limit for a single withdrawal. Try a smaller amount.");
+      if (/single-withdrawal limit/i.test(e?.message ?? "")) throw new Error("Strike caps how much can leave in a single withdrawal, and this is above it. Try a smaller amount, or withdraw in a few parts.");
       if (/rate limit/i.test(e?.message ?? "")) throw new Error("Strike's withdrawal limit for this hour or day is reached. Try again later or a smaller amount.");
       throw e;
     }

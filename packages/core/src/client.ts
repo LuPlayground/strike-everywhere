@@ -7,7 +7,7 @@ import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
-import { OrderRejectedError, Trading, gridProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
+import { OrderRejectedError, Trading, closeSizeFor, gridProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
 import type { MarginMode, MarketSpec, OrderHistoryEntry, Position, Side } from "./types.js";
 import { uuid } from "./bytes.js";
 import { PriceStream, UserStream } from "./ws.js";
@@ -392,7 +392,8 @@ export class StrikeEverywhere {
 
   async limitClose(position: Position, price: number, fraction = 1): Promise<OrderHistoryEntry> {
     const side: Side = Number(position.size) > 0 ? "sell" : "buy";
-    const size = Math.abs(Number(position.size)) * Math.min(1, Math.max(0, fraction));
+    const size = closeSizeFor(this.spec(position.symbol), Math.abs(Number(position.size)), Math.min(1, fraction), "limit");
+    if (!(size > 0)) throw new Error("That's smaller than the market's minimum size. Close a larger part.");
     return this.placeOrder({ symbol: position.symbol, side, type: "limit", size, price, reduceOnly: true });
   }
 

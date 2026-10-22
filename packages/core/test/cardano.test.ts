@@ -158,3 +158,15 @@ describe("addresses", () => {
     expect(addressHexToBech32(hex)).toBe(USER_ADDR);
   });
 });
+
+describe("wallet names", () => {
+  it("capitalises lowercase CIP-30 names and keeps the rest", async () => {
+    const { walletDisplayName, detectWallets } = await import("../src/cardano/wallet.js");
+    expect(walletDisplayName("eternl")).toBe("Eternl");
+    expect(walletDisplayName("lace")).toBe("Lace");
+    expect(walletDisplayName("nufi")).toBe("NuFi");
+    expect(walletDisplayName("Typhon Wallet")).toBe("Typhon Wallet");
+    const w = detectWallets({ cardano: { eternl: { name: "eternl", enable() {} }, lace: { name: "lace", enable() {} } } });
+    expect(w.map((x) => x.name)).toEqual(["Eternl", "Lace"]);
+  });
+});
