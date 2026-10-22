@@ -51,12 +51,14 @@ export async function builderConnect(p: ConnectParams): Promise<{ session: Build
         ...(withReferral && p.referralCode ? { referral_code: p.referralCode } : {}),
       },
     });
+  const ownCode = (e: any) =>
+    /own builder code/i.test(e?.message ?? "") ? new Error(`This wallet owns the builder code ${p.builderCode}, and Strike doesn't let a builder trade through its own code. Connect a different wallet.`) : e;
   let challenge: { nonce: string; message_to_sign: string };
   try {
     challenge = await requestSignature(true);
   } catch (e: any) {
-    if (!p.referralCode || e?.status !== 400) throw e;
-    challenge = await requestSignature(false);
+    if (!p.referralCode || e?.status !== 400 || /own builder code/i.test(e?.message ?? "")) throw ownCode(e);
+    challenge = await requestSignature(false).catch((e2) => Promise.reject(ownCode(e2)));
   }
   checkConsentMessage(challenge.message_to_sign, key.publicKeyHex);
   p.onMessage?.(challenge.message_to_sign);
@@ -69,7 +71,7 @@ export async function builderConnect(p: ConnectParams): Promise<{ session: Build
     });
   } catch (e: any) {
     if (/expir|nonce|challenge/i.test(e?.message ?? "")) throw new Error("The signature request expired (Strike allows a few minutes). Click Sign & connect to get a new one.");
-    throw e;
+    throw ownCode(e);
   }
   if (r.api_wallet_public_key && r.api_wallet_public_key !== key.publicKeyHex) {
     throw new Error("Strike returned a different API key than the one generated. Aborting.");

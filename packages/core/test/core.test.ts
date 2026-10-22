@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import * as ed from "@noble/ed25519";
 import { hexToBytes, sha256Hex, utf8 } from "../src/bytes.js";
 import { ApiWalletKey, canonicalRequestMessage, signRequest } from "../src/signer.js";
@@ -263,6 +263,13 @@ describe("lessons from production integrations", () => {
     expect(bodies.map((b) => "referral_code" in b)).toEqual([true, false]);
     expect(bodies[1]).toMatchObject({ fee_share_bps: 5, code: "code" });
     expect(s.session.accountId).toBe("acc");
+  });
+
+  it("explains Strike's refusal to connect a builder's own account, before any signature", async () => {
+    const signMessage = vi.fn(async () => "sig:key");
+    const http = new StrikeHttp(NETWORKS.testnet, (async () => res({ error: "cannot connect an account to its own builder code" }, 400)) as unknown as typeof fetch);
+    await expect(builderConnect({ http, address: "addr_test1x", chain: "cardano", builderCode: "Playground101", feeShareBps: 10, signMessage })).rejects.toThrow(/owns the builder code Playground101.*different wallet/);
+    expect(signMessage).not.toHaveBeenCalled();
   });
 
   it("tries the alternative userstream logon payload once if the first is rejected", async () => {
