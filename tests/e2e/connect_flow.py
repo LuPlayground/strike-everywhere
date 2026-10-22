@@ -1,6 +1,8 @@
 """End-to-end: Builder Connect through the real widget on Strike TESTNET with a mock CIP-30 wallet.
 
-usage: python -I tests/e2e/connect_flow.py <page_url> <out_dir>
+usage: python -I tests/e2e/connect_flow.py https://strike-everywhere.pages.dev/developers/ <out_dir>
+(The demos use variant="app", whose connect button this script does not drive; the developers preview
+uses the compact widget and never sends attribution.)
 Steps: open page -> Connect Wallet -> pick Mock Wallet -> accept terms -> Sign & connect -> verify connected state.
 """
 import pathlib
