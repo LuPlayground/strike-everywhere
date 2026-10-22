@@ -222,6 +222,8 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pa-warn { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 12px 14px; border-radius: 16px; background: rgba(255,69,58,.12); border: 1px solid rgba(255,69,58,.3); color: #ffd0cc; font-size: 14px; line-height: 1.45; }
 .pa-warn > svg:first-child { flex: none; color: #ff453a; margin-top: 2px; }
 .pa-warn svg { flex: none; margin-top: 1px; }
+.pa-warn.note { background: rgba(255,183,25,.1); border-color: rgba(255,183,25,.35); color: #ffe3a3; margin-bottom: 12px; }
+.pa-warn.note > svg:first-child { color: var(--pa-gold); }
 
 .pa-scrim { position: absolute; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; justify-content: center; animation: pa-fade .18s ease-out; }
 @keyframes pa-fade { from { opacity: 0; } }

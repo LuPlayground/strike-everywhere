@@ -86,7 +86,7 @@ type DepPhase = "amount" | "preparing" | "review" | "signing" | "registering" | 
 export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose, onCredited }: { client: StrikeEverywhere; adaPrice: number; isNewAccount: boolean; startBalance: number; onClose: () => void; onCredited: () => void }) {
   const minUsd = isNewAccount ? NEW_ACCOUNT_MIN_DEPOSIT_USD : 5;
   const suggest = (usd: number) => (adaPrice > 0 ? String(Math.ceil(usd / adaPrice / 5) * 5) : "");
-  const [ada, setAda] = useState(() => suggest(isNewAccount ? NEW_ACCOUNT_MIN_DEPOSIT_USD * 1.05 : 25));
+  const [ada, setAda] = useState("");
   const [phase, setPhase] = useState<DepPhase>("amount");
   const [prepared, setPrepared] = useState<PreparedDeposit | null>(null);
   const [txHash, setTxHash] = useState("");
@@ -181,10 +181,10 @@ export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose
           </p>
           {error && <div class="pa-warn"><Icon n="warn" size={16} />{error}</div>}
           {maxAda !== null && adaPrice > 0 && maxAda * adaPrice < minUsd && (
-            <p class="pa-p sm">Your wallet needs about {Math.ceil(minUsd / adaPrice + DEPOSIT_EXTRA_ADA)} ADA to add the {usdText(minUsd, { decimals: 0 })} minimum (the amount plus Strike's 2 ADA forwarding, the fee and change). It holds {walletAda?.toLocaleString("en-US", { maximumFractionDigits: 2 })} ADA.</p>
+            <div class="pa-warn note"><Icon n="info" size={16} />Your wallet needs about {Math.ceil(minUsd / adaPrice + DEPOSIT_EXTRA_ADA)} ADA to add the {usdText(minUsd, { decimals: 0 })} minimum (the amount plus Strike's 2 ADA forwarding, the fee and change). It holds {walletAda?.toLocaleString("en-US", { maximumFractionDigits: 2 })} ADA.</div>
           )}
           {tooMuch && walletAda !== null && Number(ada) <= walletAda && (
-            <p class="pa-p sm">You can add up to {maxAda} ADA: the rest of your wallet covers Strike's 2 ADA forwarding, the network fee and the change that stays with you.</p>
+            <div class="pa-warn note"><Icon n="info" size={16} />You can add up to {maxAda} ADA. The rest of your wallet covers Strike's 2 ADA forwarding, the network fee and the change that stays with you.</div>
           )}
           <button class="pa-btn primary big" disabled={!(usd >= minUsd) || phase === "preparing" || tooMuch} onClick={review}>
             {phase === "preparing" ? <><Spin size={16} /> Building transaction…</> : walletAda !== null && Number(ada) > walletAda ? "More than your wallet holds" : tooMuch ? `Up to ${maxAda} ADA after fees` : usd >= minUsd ? "Review" : `Minimum ${usdText(minUsd, { decimals: 0 })}`}

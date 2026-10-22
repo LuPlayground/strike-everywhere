@@ -9,8 +9,8 @@ For wallets, dApps, portfolio trackers, communities and publications that want S
 
 ## 2. Embed
 ```html
-<script src="https://strike-everywhere.pages.dev/widget/v0.1.5/strike-everywhere.iife.js"
-  integrity="sha384-kll+w3PEIYuzndoqE+pQDN4wfM9RvmXs/Kq4FUCo+Sj8EZkPXURfPspKHP5jd0FD"
+<script src="https://strike-everywhere.pages.dev/widget/v0.1.6/strike-everywhere.iife.js"
+  integrity="sha384-3DXhr2JPnJKnpDzlvUI08/Nj4Kp8XysFfAaEpbkmmGMR0PU/801isjxoAce8H0jd"
   crossorigin="anonymous" defer></script>
 <strike-trade
   builder-code="YOUR_CODE"
@@ -21,7 +21,7 @@ For wallets, dApps, portfolio trackers, communities and publications that want S
 </strike-trade>
 ```
 
-**Pinned and checked.** This loads release `v0.1.5`, which never changes once published; the browser refuses it if a single byte differs from the `integrity` hash. To update, take the new version and hash from [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json) or the developers page. If you'd rather always get the latest fixes, use `https://strike-everywhere.pages.dev/widget/strike-everywhere.iife.js` without `integrity` (that trusts us to serve good code). Bundling the ESM build into your own app pins it too.
+**Pinned and checked.** This loads release `v0.1.6`, which never changes once published; the browser refuses it if a single byte differs from the `integrity` hash. To update, take the new version and hash from [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json) or the developers page. If you'd rather always get the latest fixes, use `https://strike-everywhere.pages.dev/widget/strike-everywhere.iife.js` without `integrity` (that trusts us to serve good code). Bundling the ESM build into your own app pins it too.
 - The widget renders in a **Shadow DOM**, so your CSS cannot break it and its CSS cannot leak into your page.
 - It sizes itself with `width` (default 380px, min 300px). Put it in a sidebar, a modal or a dedicated page.
 - See the README for every attribute. Common ones:
@@ -46,7 +46,7 @@ For wallets, dApps, portfolio trackers, communities and publications that want S
 ### React / frameworks
 It is a standard custom element, so it works in any framework:
 ```tsx
-useEffect(() => { import("https://strike-everywhere.pages.dev/widget/v0.1.5/strike-everywhere.js"); }, []); // pinned release; or bundle it
+useEffect(() => { import("https://strike-everywhere.pages.dev/widget/v0.1.6/strike-everywhere.js"); }, []); // pinned release; or bundle it
 return <strike-trade builder-code="YOUR_CODE" fee-bps="5" />;
 ```
 
