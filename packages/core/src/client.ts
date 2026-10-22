@@ -7,9 +7,10 @@ import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
-import { OrderRejectedError, Trading, closeSizeFor, gridProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
+import { OrderRejectedError, Trading, closeSizeFor, gridProblem, twapSizeProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
 import type { MarginMode, MarketSpec, OrderHistoryEntry, Position, Side } from "./types.js";
 import { uuid } from "./bytes.js";
+import { roundToStep } from "./format.js";
 import { PriceStream, UserStream } from "./ws.js";
 import { OrderBookFeed } from "./book.js";
 import { isUuid } from "./parse.js";
@@ -307,15 +308,17 @@ export class StrikeEverywhere {
 
   async placeTwap(input: TwapInput & { leverage?: number }): Promise<{ strategyId: string; status: string }> {
     const spec = this.spec(input.symbol);
-    if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
     const mark = await this.markPrice(input.symbol).catch(() => 0);
     if (!(mark > 0)) throw new Error("Couldn't get the current mark price. TWAP not started.");
+    const tooSmall = twapSizeProblem(spec, Number(roundToStep(input.size, spec.marketStepSize ?? spec.stepSize, "floor")), Math.round(Number(input.durationSec)), mark);
+    if (tooSmall) throw new Error(tooSmall);
     if (input.limitPrice !== undefined) {
       const bound = Number(this.raw(input.symbol)?.order_limit_price_bound) || 0.05;
       if (!(input.limitPrice > 0) || Math.abs(input.limitPrice - mark) / mark > bound) {
         throw new Error(`TWAP limit price must be within ${(bound * 100).toFixed(0)}% of the mark price. TWAP not started.`);
       }
     }
+    if (input.leverage) await this.applyLeverage(input.symbol, input.leverage);
     const r = await this.trading.createTwap(spec, input, this.orderFeeBps);
     const price = mark;
     if (isUuid(r.strategyId)) {

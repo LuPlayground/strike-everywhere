@@ -314,7 +314,7 @@ export function usePerps(config: AppConfig) {
   const onConnected = () => {
     if (client.wallet) sset(WALLET_KEY, client.wallet.id);
     setSheet(null);
-    notify("ok", "Connected to Strike");
+    notify("ok", "Wallet connected", "Your trades run on Strike.");
   };
 
   const placeDraft = async (d: Draft, s: Sized, base: string, estPrice?: number): Promise<"filled" | "resting" | "failed"> => {

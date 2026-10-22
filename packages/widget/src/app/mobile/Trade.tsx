@@ -60,6 +60,11 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
   dpRef.current = dp;
   const onKey = useMemo(() => (k: string) => setAmt((cur) => applyKey(cur, k, dpRef.current)), []);
 
+  const savedLev = Number(s.account?.symbol_settings?.[sym]?.leverage) || 0;
+  useEffect(() => {
+    if (savedLev >= 1 && !s.config.leverage) setLev(Math.min(m?.maxLev ?? savedLev, savedLev));
+  }, [sym, savedLev]);
+
   const needBook = phase === "review" && type === "market" && z.size > 0;
   useEffect(() => {
     setBook(undefined);

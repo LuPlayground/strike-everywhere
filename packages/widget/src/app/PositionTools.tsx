@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { TRAILING_MAX_PCT, TRAILING_MIN_PCT, closeSizeFor, estimateMarketFill, isTriggered, makeView, needsLimitPrice, roundToStep, type BookView, type OrderHistoryEntry, type Position } from "@strike-everywhere/core";
+import { TRAILING_MAX_PCT, TRAILING_MIN_PCT, closeSizeFor, estimateMarketFill, positionMargin, isTriggered, makeView, needsLimitPrice, roundToStep, type BookView, type OrderHistoryEntry, type Position } from "@strike-everywhere/core";
 import { cleanDecimal } from "../parts";
 import { pctText, priceText, qtyText, usdText } from "./markets";
 import type { PerpsState } from "./state";
@@ -192,7 +192,7 @@ export function MarginSheet({ s, p, onClose }: { s: PerpsState; p: Position; onC
   const [dir, setDir] = useState<"add" | "remove">("add");
   const [amt, setAmt] = useState("");
   const [busy, setBusy] = useState(false);
-  const current = (x.abs * x.entry) / x.lev;
+  const current = positionMargin(p);
   const n = Number(amt) || 0;
   const save = async () => {
     setBusy(true);

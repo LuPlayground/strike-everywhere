@@ -1,4 +1,10 @@
-import type { MarginTier, Side } from "./types.js";
+import type { MarginTier, Position, Side } from "./types.js";
+
+export function positionMargin(p: Pick<Position, "margin_mode" | "size" | "entry_price" | "leverage" | "iso_balance">): number {
+  const iso = Number(p.iso_balance);
+  if (p.margin_mode === "isolated" && iso > 0) return iso;
+  return (Math.abs(Number(p.size)) * Number(p.entry_price)) / Math.max(1, Number(p.leverage) || 1);
+}
 
 export function tierForNotional(tiers: MarginTier[], notional: number): MarginTier | undefined {
   const sorted = [...tiers].sort((a, b) => Number(a.max_notional) - Number(b.max_notional));

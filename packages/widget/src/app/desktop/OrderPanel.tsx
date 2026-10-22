@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { MIN_WITHDRAW_USD, TRAILING_MAX_PCT, TRAILING_MIN_PCT, estimateMarketFill, marginModeOf, movePct, needsLimitPrice, roundToStep, shortAddress, type BookView, type Side } from "@strike-everywhere/core";
+import { MIN_WITHDRAW_USD, twapPlan, TRAILING_MAX_PCT, TRAILING_MIN_PCT, estimateMarketFill, marginModeOf, movePct, needsLimitPrice, roundToStep, shortAddress, type BookView, type Side } from "@strike-everywhere/core";
 import { cleanDecimal } from "../../parts";
 import { pctText, priceText, qtyText, usdText } from "../markets";
 import { ORDER_TYPES, marginForFraction, pnlForPrice, sizeDraft, type AppOrderType, type AutoMode, type Draft, type DraftCtx, type Tif, type Unit } from "../order";
@@ -51,6 +51,10 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
   useEffect(() => {
     if (s.config.leverage && s.config.leverage >= 1) setLev(s.config.leverage);
   }, [s.config.leverage]);
+  const savedLev = Number(s.account?.symbol_settings?.[sym]?.leverage) || 0;
+  useEffect(() => {
+    if (savedLev >= 1 && !s.config.leverage) setLev(savedLev);
+  }, [sym, savedLev]);
   useEffect(() => (setLimitStr(""), setTrigger(""), setActivation(""), setTwapLimit(""), setTp(""), setSl(""), setArmed("")), [sym]);
   useEffect(() => {
     if (!limitPick || !m) return;
@@ -345,6 +349,15 @@ export function OrderPanel({ s, m, book, side, setSide, limitPick }: { s: PerpsS
               <span>Order Value</span>
               <span class="num">{z.size > 0 ? `${usdText(z.notional)} · ${qtyText(z.size)} ${base}` : "N/A"}</span>
             </div>
+            {type === "twap" && m && Number(twapMin) > 0 && (() => {
+              const plan = twapPlan(m.spec, z.size, Number(twapMin) * 60, z.px);
+              return (
+                <div class="pd-kv muted">
+                  <span title="Strike sends one suborder about every 30 seconds; sizes adjust to catch up if some are skipped.">Suborders</span>
+                  <span class="num">{`~${plan.orders} · every ${plan.intervalSec}s${z.size > 0 ? ` · ${qtyText(plan.perOrder)} ${base} each` : ""}`}</span>
+                </div>
+              );
+            })()}
             <div class="pd-kv muted">
               <span>Margin Required</span>
               <span class="num">{z.size > 0 && !reducing ? usdText(z.margin) : "N/A"}</span>

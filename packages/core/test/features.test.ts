@@ -335,8 +335,10 @@ describe("TWAP", () => {
     await expect(t.createTwap(ADA, { symbol: "ADA-USD", side: "buy", size: 100, durationSec: 299 }, 5)).rejects.toThrow(/duration/);
     await expect(t.createTwap(ADA, { symbol: "ADA-USD", side: "buy", size: 100, durationSec: 86_401 }, 5)).rejects.toThrow(/duration/);
     await t.createTwap(ADA, { symbol: "ADA-USD", side: "buy", size: 100, durationSec: 300 }, 5);
-    await t.createTwap(ADA, { symbol: "ADA-USD", side: "buy", size: 100, durationSec: 86_400 }, 5);
+    await t.createTwap(ADA, { symbol: "ADA-USD", side: "buy", size: 100_000, durationSec: 86_400 }, 5);
     expect(calls.map((c) => c.body.side)).toEqual(["BUY", "BUY"]);
+    await expect(t.createTwap(ADA, { symbol: "ADA-USD", side: "buy", size: 100, durationSec: 86_400 }, 5)).rejects.toThrow(/Too small/);
+    expect(calls).toHaveLength(2);
   });
 
   it("lists strategies from an envelope or a bare array, and cancels by id", async () => {
@@ -515,5 +517,30 @@ describe("public stats (Strike's /stat endpoints)", () => {
       { price: 0.3, long: 0, short: 50 },
     ]);
     expect(calls[0].url.searchParams.get("range_pct")).toBe("0.85");
+  });
+});
+
+describe("position margin", () => {
+  it("uses Strike's iso_balance for isolated positions and initial margin otherwise", async () => {
+    const { positionMargin } = await import("../src/math.js");
+    expect(positionMargin({ margin_mode: "isolated", size: "0.012", entry_price: "2480.51", leverage: 5, iso_balance: "8.00816826" })).toBeCloseTo(8.008, 3);
+    expect(positionMargin({ margin_mode: "cross", size: "0.22", entry_price: "82.67", leverage: 2, iso_balance: "0" })).toBeCloseTo(9.0937, 4);
+    expect(positionMargin({ margin_mode: "isolated", size: "-1", entry_price: "100", leverage: 4 })).toBe(25);
+  });
+});
+
+describe("TWAP plan", () => {
+  it("matches Strike's arithmetic and minimum per suborder", async () => {
+    const { twapPlan } = await import("../src/trading.js");
+    const eth = { symbol: "ETH-USD", name: "ETH", baseAsset: "ETH", status: "trading", tickSize: 0.01, stepSize: 0.001, marketStepSize: 0.001, minQty: 0.001, minNotional: 10, defaultLeverage: 20, maxLeverage: 25, marginTiers: [] };
+    const p = twapPlan(eth, 0.008, 3600);
+    expect(p.orders).toBe(120);
+    expect(p.perOrder).toBeCloseTo(0.0000667, 7);
+    expect(p.minTotal).toBeCloseTo(0.12, 9);
+    expect(twapPlan(eth, 1, 1800).orders).toBe(60);
+    const q = twapPlan(eth, 0.012, 300, 2474.6);
+    expect(q.orders).toBe(10);
+    expect(q.perOrder * 2474.6).toBeCloseTo(2.97, 2);
+    expect(q.minTotal).toBe(0.041);
   });
 });

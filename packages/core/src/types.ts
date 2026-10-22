@@ -71,6 +71,7 @@ export interface Position {
   liquidation_price: string;
   bankruptcy_price: string;
   maintenance_margin: string;
+  iso_balance?: string;
   accumulated_funding_fees: string;
   create_timestamp: number;
   update_timestamp: number;

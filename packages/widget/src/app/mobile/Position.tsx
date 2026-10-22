@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { positionMargin } from "@strike-everywhere/core";
 import { priceText, qtyText, usdText, pctText } from "../markets";
 import { CloseSheet, MarginSheet, ReverseSheet, TpSlSheet, TrailSheet, exitOrders } from "../PositionTools";
 import type { PerpsState } from "../state";
@@ -31,7 +32,7 @@ export function PositionScreen({ s, nav, id, onLearn }: { s: PerpsState; nav: Na
   const value = Math.abs(size) * mark;
   const entry = Number(p.entry_price);
   const upnl = Number(p.upnl);
-  const margin = (Math.abs(size) * entry) / Math.max(1, Number(p.leverage) || 1);
+  const margin = positionMargin(p);
   const roe = margin > 0 ? (upnl / margin) * 100 : 0;
   const liq = Number(p.liquidation_price);
   const exits = exitOrders(s, p.symbol);

@@ -1266,7 +1266,7 @@ export function App({ config }: { config: WidgetConfig }) {
           onConnected={() => {
             if (client.wallet) storageSet(WALLET_KEY, client.wallet.id);
             setSheet(null);
-            notify("ok", "Connected to Strike");
+            notify("ok", "Wallet connected. Your trades run on Strike.");
           }}
         />
       )}

@@ -1,4 +1,4 @@
-import { TWAP_MAX_SEC, TWAP_MIN_SEC, executesAtMarket, maxLeverageFor, needsLimitPrice, previewOrder, roundToStep, stopOrderProblem, type MarketSpec, type PlaceOrderInput, type Side } from "@strike-everywhere/core";
+import { TWAP_MAX_SEC, TWAP_MIN_SEC, executesAtMarket, twapPlan, maxLeverageFor, needsLimitPrice, previewOrder, roundToStep, stopOrderProblem, type MarketSpec, type PlaceOrderInput, type Side } from "@strike-everywhere/core";
 
 export type AppOrderType = "market" | "limit" | "stop" | "stop_limit" | "take_profit" | "take_profit_limit" | "trailing_stop_market" | "twap";
 export type Unit = "usd" | "base";
@@ -199,6 +199,10 @@ export function sizeDraft(d: Draft, ctx: DraftCtx): Sized {
   if (d.type === "twap") {
     const sec = (d.twapMinutes ?? 0) * 60;
     if (!(sec >= TWAP_MIN_SEC && sec <= TWAP_MAX_SEC)) return fail("Duration must be 5 – 1440 minutes", "price");
+    const plan = twapPlan(spec, size, sec, px);
+    if (d.amount > 0 && plan.perOrder < plan.minPerOrder - 1e-12) {
+      return fail(`Too small for ${d.twapMinutes} min: at least ${Number(plan.minTotal.toPrecision(6))} ${spec.baseAsset} (≈ $${Math.ceil(plan.minTotal * px).toLocaleString("en-US")})`, "min");
+    }
     if (Number(d.twapLimit) > 0 && Math.abs(Number(d.twapLimit) - ctx.mark) / ctx.mark > ctx.limitBound) return fail(`Limit price must be within ${(ctx.limitBound * 100).toFixed(0)}% of the current price`, "price");
   }
   if (!reduce && notional < spec.minNotional) {

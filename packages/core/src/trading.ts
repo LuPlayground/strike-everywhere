@@ -38,6 +38,32 @@ export interface TwapInput {
 
 export const TWAP_MIN_SEC = 300;
 export const TWAP_MAX_SEC = 86_400;
+export const TWAP_INTERVAL_SEC = 30;
+
+export interface TwapPlan {
+  intervalSec: number;
+  orders: number;
+  perOrder: number;
+  minPerOrder: number;
+  minTotal: number;
+}
+
+export function twapSizeProblem(spec: MarketSpec, totalSize: number, durationSec: number, price?: number): string | null {
+  const plan = twapPlan(spec, totalSize, durationSec, price);
+  if (plan.perOrder >= plan.minPerOrder - 1e-12) return null;
+  const usd = price && price > 0 ? ` (about $${Math.ceil(plan.minTotal * price).toLocaleString("en-US")})` : "";
+  return `Too small for this duration: Strike splits a TWAP into about ${plan.orders} orders (one every ${plan.intervalSec} s) and each must meet the market minimum. Use at least ${Number(plan.minTotal.toPrecision(6))} ${spec.baseAsset}${usd}, or a shorter duration.`;
+}
+
+export function twapPlan(spec: MarketSpec, totalSize: number, durationSec: number, price?: number): TwapPlan {
+  const orders = Math.max(1, Math.floor(durationSec / TWAP_INTERVAL_SEC));
+  const bySize = Math.max(spec.minQty || 0, spec.marketStepSize ?? spec.stepSize ?? 0);
+  const byValue = price && price > 0 && spec.minNotional > 0 ? spec.minNotional / price : 0;
+  const minPerOrder = Math.max(bySize, byValue);
+  const step = spec.marketStepSize ?? spec.stepSize;
+  const minTotal = step > 0 ? Number(roundToStep(minPerOrder * orders, step, "ceil")) : minPerOrder * orders;
+  return { intervalSec: TWAP_INTERVAL_SEC, orders, perOrder: totalSize / orders, minPerOrder, minTotal };
+}
 
 const isStop = (t: PlaceOrderInput["type"]) => t === "stop" || t === "stop_limit";
 const isTp = (t: PlaceOrderInput["type"]) => t === "take_profit" || t === "take_profit_limit";
@@ -329,6 +355,8 @@ export class Trading {
     if (!(duration >= TWAP_MIN_SEC && duration <= TWAP_MAX_SEC)) throw new Error("TWAP duration must be between 5 minutes and 24 hours.");
     const size = roundToStep(input.size, spec.marketStepSize ?? spec.stepSize, "floor");
     if (!(Number(size) > 0)) throw new Error("Order size is below this market's minimum step.");
+    const tooSmall = twapSizeProblem(spec, Number(size), duration);
+    if (tooSmall) throw new Error(tooSmall);
     const body: Record<string, unknown> = {
       symbol: input.symbol,
       side: input.side === "buy" ? "BUY" : "SELL",

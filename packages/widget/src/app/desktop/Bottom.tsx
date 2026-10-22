@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { fillDirection, type ClosedPositionRow, type FillRow, type FundingRow, type GridBot, type OrderHistoryEntry, type Position, type TwapStrategy } from "@strike-everywhere/core";
+import { fillDirection, positionMargin, type ClosedPositionRow, type FillRow, type FundingRow, type GridBot, type OrderHistoryEntry, type Position, type TwapStrategy } from "@strike-everywhere/core";
 import { pageHidden } from "../../parts";
 import { dateText, priceText, pctText, qtyText, timeText, usdText } from "../markets";
 import { CloseAllSheet, CloseSheet, EditOrderSheet, MarginSheet, ReverseSheet, TpSlSheet, TrailSheet, exitOrders } from "../PositionTools";
@@ -129,7 +129,7 @@ function Positions({ s, onPick }: { s: PerpsState; onPick: (sym: string) => void
             const size = Number(p.size);
             const mark = m?.mark || Number(p.entry_price);
             const tick = m?.spec.tickSize;
-            const margin = (Math.abs(size) * Number(p.entry_price)) / Math.max(1, Number(p.leverage) || 1);
+            const margin = positionMargin(p);
             const upnl = Number(p.upnl);
             const exits = exitOrders(s, p.symbol);
             const tp = exits.find((o) => String(o.type).startsWith("take_profit"));
