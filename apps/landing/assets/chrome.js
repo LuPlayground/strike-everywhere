@@ -103,7 +103,7 @@
     v = String(v || "").trim().toLowerCase();
     return v === "mainnet" || v === "testnet" ? v : fallback;
   }
-  var BUILDERS = { testnet: ["Playground101"], mainnet: [] };
+  var BUILDERS = { testnet: ["Playground101"], mainnet: ["StrikeOn"] };
   function builder(v, net) {
     var list = BUILDERS[net] || [];
     v = String(v || "").trim();
