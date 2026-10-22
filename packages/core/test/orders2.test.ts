@@ -71,6 +71,13 @@ describe("grid bots", () => {
     const b = parseGridBot({ id: "g1", symbol: "SOL-USD", status: "running", mode: "LONG", lower_price: "90", upper_price: "110", grid_count: 10, leverage: 3, collateral: "50", grid_profit: "1.2", orders: [{ filled: true }, { filled: false }], created_at_ms: 5 });
     expect(b).toMatchObject({ id: "g1", status: "RUNNING", lower: 90, upper: 110, grids: 10, profit: 1.2, levels: 2, filledLevels: 1 });
   });
+  it("stops bots with Strike's free-form ids but refuses path tricks", async () => {
+    const http: any = { request: vi.fn().mockResolvedValue({}) };
+    const t = new Trading(http, {} as any);
+    await t.stopGrid("grid_c8f2:1792677600.5");
+    expect(http.request.mock.calls[0]).toEqual(["DELETE", "/v2/grid/bot/grid_c8f2%3A1792677600.5", { body: { cancel_orders: true } }]);
+    for (const bad of ["", "..", "a/b", "a?x", "a#b", "a b", "a\\b"]) await expect(t.stopGrid(bad)).rejects.toThrow(/Invalid grid bot id/);
+  });
 });
 
 describe("replace / margin requests", () => {

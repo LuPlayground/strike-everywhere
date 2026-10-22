@@ -275,7 +275,7 @@ export class Trading {
   }
 
   async stopGrid(id: string, cancelOrders = true): Promise<void> {
-    if (!/^[0-9a-zA-Z-]{1,64}$/.test(id)) throw new Error("Invalid grid bot id");
+    if (!/^[\x21-\x7e]{1,128}$/.test(id) || /[\/\\?#]/.test(id) || /^\.+$/.test(id)) throw new Error("Invalid grid bot id");
     await this.http.request("DELETE", `/v2/grid/bot/${encodeURIComponent(id)}`, { body: { cancel_orders: cancelOrders } });
   }
 
