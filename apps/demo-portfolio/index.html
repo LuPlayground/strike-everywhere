@@ -178,6 +178,7 @@
   document.getElementById("goHedge").addEventListener("click", function () {
     el.setAttribute("market", "ADA-USD");
     el.setAttribute("side", "sell");
+    el.setAttribute("leverage", "3");
     if (hedgeMargin > 0) el.setAttribute("amount", String(hedgeMargin));
     document.getElementById("panel").scrollIntoView({ behavior: "smooth", block: "center" });
   });

@@ -91,6 +91,7 @@ npm run deploy:api            # Cloudflare Worker (partner API)
 | `partner-id` | — | Sub-attribution label shown in the dashboard |
 | `partner-api` | — | Attribution endpoint (omit to disable) |
 | `referral-code` | — | Strike referral code passed at connect (must belong to the builder owner) |
+| `leverage` | — | App layout: starting leverage (capped by `max-leverage` and the market), so a pre-filled `amount` gives a known position size |
 | `network-badge` | `on` | `off` hides the "Testnet" label, for hosts that already show their network |
 | `persist` | `memory` | `session` keeps the session across reloads in this tab (up to 12 h). Only the browser-held key handle is stored, never the key itself |
 | `width` | `380px` | Widget width |

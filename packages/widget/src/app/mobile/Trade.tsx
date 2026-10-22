@@ -24,7 +24,7 @@ export function Trade({ s, nav, sym, side: side0, onLearn, onDisclosures }: { s:
   const [unit, setUnit] = useState<Unit>("usd");
   const [amt, setAmt] = useState("");
   const [lev, setLev] = useState(() => {
-    const saved = Number(pref("default-leverage"));
+    const saved = s.config.leverage ?? Number(pref("default-leverage"));
     return Math.max(1, Math.min(m?.maxLev ?? 2, saved >= 1 ? saved : 2));
   });
   const [limitStr, setLimitStr] = useState("");

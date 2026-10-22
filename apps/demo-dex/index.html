@@ -426,7 +426,7 @@
     var chev = '<svg viewBox="0 0 10 10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
     $("pairName").innerHTML = (flipped ? "USDM <span>/ " + esc(b.sym) + "</span>" : esc(b.sym) + " <span>/ USDM</span>") + chev;
     $("pSrc").textContent = "Prices from Strike (" + b.strike + " mark)";
-    $("histSub").textContent = "Live " + b.strike + " fills on Strike, the market behind the Perps tab";
+    $("histSub").textContent = network === "mainnet" ? "Live " + b.strike + " fills on Strike, the market behind the Perps tab" : "Live " + b.strike + " fills on Strike mainnet; the Perps tab trades it on testnet";
     $("pPrice").textContent = m ? (flipped ? pxFmt(1 / m) : pxFmt(m)) : "—";
     if (c !== undefined) { var cc = flipped ? -c : c; $("pChg").textContent = (cc >= 0 ? "+" : "") + cc.toFixed(2) + "%"; $("pChg").className = cc >= 0 ? "up" : "down"; } else { $("pChg").textContent = "—"; $("pChg").className = ""; }
     var r = $("recent"); if (m) r.innerHTML = img(b) + esc(b.sym) + " " + pxFmt(m) + ' <span style="color:' + ((c || 0) >= 0 ? "var(--k-up)" : "var(--k-down)") + '">' + ((c || 0) >= 0 ? "+" : "") + (c || 0).toFixed(2) + "%</span>";
