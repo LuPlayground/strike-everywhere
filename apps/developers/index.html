@@ -65,6 +65,7 @@
   .range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 10px rgba(0, 0, 0, .6), 0 0 0 4px rgba(var(--mint-rgb), .18); }
   .earn { font-size: 14px; color: var(--grey); line-height: 1.5; padding: 12px 14px; border-radius: 12px; background: rgba(var(--mint-rgb), .05); border: 1px solid rgba(var(--mint-rgb), .16); font-variant-numeric: tabular-nums; }
   .earn b { color: var(--mint); font-weight: 600; }
+  .fnote { margin: 8px 2px 0; font-size: 12.5px; line-height: 1.45; color: var(--grey); }
 
   .prev { border-radius: 20px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .1); background: #050605; box-shadow: 0 60px 160px rgba(0, 0, 0, .8), 0 0 120px rgba(var(--mint-rgb), .05); min-width: 0; }
   .prev .bar { display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 16px; border-bottom: 1px solid rgba(255, 255, 255, .07); background: linear-gradient(180deg, #0f1311, #0a0c0b); }
@@ -159,8 +160,9 @@
         <div class="fld" id="sideFld"><span class="lbl">Default side</span><div class="sg" id="c-side"><button type="button" data-v="buy" class="on">Long</button><button type="button" data-v="sell">Short (hedge)</button></div></div>
         <div class="fld">
           <label for="c-fee">Builder fee <span class="feev" id="feeLbl">5 bps · 0.05%</span></label>
-          <input class="range" type="range" id="c-fee" min="0" max="25" step="1" value="5" />
+          <input class="range" type="range" id="c-fee" min="0" max="100" step="1" value="5" />
           <div class="earn">On a <b>$1,000</b> trade your app earns <b id="earn">$0.50</b>, credited by Strike on fill.</div>
+          <p class="fnote">Strike allows up to 100 bps (1%). Your fee can't be higher than the fee share you chose when you registered your builder code.</p>
         </div>
         <div class="fld"><span class="lbl">Max leverage for your users</span><div class="sg" id="c-lev"><button type="button" data-v="3">3x</button><button type="button" data-v="5" class="on">5x</button><button type="button" data-v="10">10x</button><button type="button" data-v="">Strike max</button></div></div>
         <div class="fld" id="widthFld"><span class="lbl">Width</span><div class="sg" id="c-width"><button type="button" data-v="340">Compact</button><button type="button" data-v="380" class="on">Standard</button><button type="button" data-v="420">Wide</button></div></div>
@@ -360,7 +362,7 @@
   var t = null, lastPreview = "";
   function update() {
     var fee = Number($("c-fee").value);
-    $("c-fee").style.setProperty("--p", (fee / 25 * 100) + "%");
+    $("c-fee").style.setProperty("--p", (fee / 100 * 100) + "%");
     $("feeLbl").textContent = fee + " bps · " + (fee / 100).toFixed(2) + "%";
     $("earn").textContent = "$" + (1000 * fee / 10000).toFixed(2);
     var name = $("c-partner").value.trim() || "my-app";
