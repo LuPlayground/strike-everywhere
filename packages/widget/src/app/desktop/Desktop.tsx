@@ -80,7 +80,7 @@ export function Desktop({ s, width }: { s: PerpsState; width: number }) {
               </span>
               {!showList && <Icon n="down" size={16} />}
             </button>
-            {s.testnet && <span class="pa-net">Testnet</span>}
+            {s.testnet && s.config.networkBadge !== false && <span class="pa-net">Testnet</span>}
             <div class="pd-stats">
             <Stat k="Mark" v={priceText(m.mark, tickSize)} />
             <Stat k="Index" v={priceText(m.index, tickSize)} title="Index price: average spot price on major external exchanges" />

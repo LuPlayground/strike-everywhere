@@ -49,6 +49,7 @@ export interface WidgetConfig extends StrikeEverywhereOptions {
   side?: "buy" | "sell";
   amount?: number;
   chart?: boolean;
+  networkBadge?: boolean;
 }
 
 interface Live {
