@@ -28,6 +28,10 @@
   .fld .help { font-size: 13px; color: #6b7371; font-weight: 400; line-height: 1.45; }
   .fld a { color: var(--mint); text-decoration: none; font-size: 13px; font-weight: 500; }
   .fld a:hover { text-decoration: underline; }
+  .fld > label a { font-size: inherit; font-weight: inherit; }
+  .cfg-copy { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+  .cfg-copy .help { font-size: 13px; color: #6b7371; }
+  .cfg-copy .help a { color: var(--mint); text-decoration: none; }
   .in { height: 44px; width: 100%; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .03); color: #fff; font: 15px var(--font); outline: none; transition: border-color .15s, background .15s; }
   .in:focus { border-color: rgba(var(--mint-rgb), .55); background: rgba(255, 255, 255, .05); }
   select.in { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23a1a4a5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 12px; padding-right: 36px; }
@@ -142,8 +146,8 @@
     <div class="studio">
       <aside class="cfg" aria-label="Configuration">
         <div class="fld">
-          <label for="c-code">Builder code <a id="regLink" target="_blank" rel="noopener">Register one</a></label>
-          <input class="in" id="c-code" value="Playground101" spellcheck="false" autocomplete="off" />
+          <label for="c-code">Builder code <a id="regLink" target="_blank" rel="noopener">Register yours</a></label>
+          <input class="in" id="c-code" value="" placeholder="Your builder code" spellcheck="false" autocomplete="off" />
         </div>
         <div class="fld"><span class="lbl">Layout</span><div class="sg" id="c-variant"><button type="button" data-v="ticket" class="on">Trade ticket</button><button type="button" data-v="app">Full app</button></div><span class="help" id="variantHelp">A compact panel for a sidebar, a modal or a page.</span></div>
         <div class="fld"><span class="lbl">Network</span><div class="sg" id="c-net"><button type="button" data-v="testnet" class="on">Testnet</button><button type="button" data-v="mainnet">Mainnet</button></div></div>
@@ -167,6 +171,7 @@
         <div class="fld"><span class="lbl">Max leverage for your users</span><div class="sg" id="c-lev"><button type="button" data-v="3">3x</button><button type="button" data-v="5" class="on">5x</button><button type="button" data-v="10">10x</button><button type="button" data-v="">Strike max</button></div></div>
         <div class="fld" id="widthFld"><span class="lbl">Width</span><div class="sg" id="c-width"><button type="button" data-v="340">Compact</button><button type="button" data-v="380" class="on">Standard</button><button type="button" data-v="420">Wide</button></div></div>
         <div class="fld"><label for="c-partner">App name <span class="help">shown on your dashboard</span></label><input class="in" id="c-partner" value="my-wallet" spellcheck="false" /></div>
+        <div class="cfg-copy"><button type="button" class="bx bx-dark bx-sm" id="copy2">Copy snippet</button><span class="help">or <a href="#code">see the code</a></span></div>
       </aside>
 
       <div class="prev" aria-label="Live preview">
@@ -370,6 +375,7 @@
     var reg = cfg.net === "mainnet" ? "https://app.strikefinance.org/builder-codes" : "https://testnet.strikefinance.org/builder-codes";
     $("regLink").href = reg; $("regLink2").href = reg;
     var code = attrs().filter(function (p) { return p[0] === "builder-code"; })[0][1];
+    if (code === "YOUR_CODE") code = cfg.net === "mainnet" ? "StrikeOn" : "Playground101";
     var dash = "../dashboard/?builder=" + encodeURIComponent(code) + "&network=" + cfg.net;
     $("dashLink").href = dash; $("dashLink2").href = dash;
     $("snippet").innerHTML = SEChrome.highlight(snippet());
@@ -387,7 +393,7 @@
     a.forEach(function (p) { el.setAttribute(p[0], p[1]); });
     if (cfg.variant === "app") el.setAttribute("height", "640");
     else if (!el.getAttribute("width")) el.setAttribute("width", cfg.width);
-    if (el.getAttribute("builder-code") === "YOUR_CODE") el.setAttribute("builder-code", "Playground101");
+    if (el.getAttribute("builder-code") === "YOUR_CODE") el.setAttribute("builder-code", cfg.net === "mainnet" ? "StrikeOn" : "Playground101");
     el.removeAttribute("partner-api");
     mount.appendChild(el);
   }
@@ -400,6 +406,7 @@
     $("snippet").innerHTML = SEChrome.highlight(snippet());
   });
   $("copy").addEventListener("click", function () { SEChrome.copy(snippet(), $("copy"), "Copy snippet"); });
+  $("copy2").addEventListener("click", function () { SEChrome.copy(snippet(), $("copy2"), "Copy snippet"); });
   $("copyIcon").addEventListener("click", function () {
     var b = $("copyIcon");
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(snippet()).then(function () { b.classList.add("done"); setTimeout(function () { b.classList.remove("done"); }, 1200); }).catch(function () {});
