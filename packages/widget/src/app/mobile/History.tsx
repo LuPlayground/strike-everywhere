@@ -21,7 +21,8 @@ export function toActivity(tx: TransactionRow[], fills: FillRow[]): Activity[] {
     const ty = t.type.toLowerCase();
     if (ty !== "deposit" && ty !== "withdraw" && ty !== "withdrawal") continue;
     const dep = ty === "deposit";
-    const pending = /pending|processing|submitted/i.test(t.status) && !/settled|completed/i.test(t.status);
+    const credited = dep && /pending_settlement/i.test(t.status);
+    const pending = !credited && /pending|processing|submitted/i.test(t.status) && !/settled|completed/i.test(t.status);
     out.push({
       id: `t${t.id}`,
       time: t.time,
