@@ -12,6 +12,7 @@ export { AccountApi, normalizeOrder, marginModeOf, parseFill, parseFunding, pars
 export {
   Trading,
   OrderRejectedError,
+  OrderUnconfirmedError,
   humanizeRejection,
   stopOrderProblem,
   roundStopPrice,

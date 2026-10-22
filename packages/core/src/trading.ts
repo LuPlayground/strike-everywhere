@@ -132,6 +132,17 @@ export class OrderRejectedError extends Error {
   }
 }
 
+export class OrderUnconfirmedError extends Error {
+  settled: Promise<OrderHistoryEntry | null> = Promise.resolve(null);
+  constructor(public symbol: string, public clientOrderId: string, public lastError: unknown = null) {
+    super("Sent to Strike. It hasn't confirmed the result yet, so check Positions and Open Orders before sending it again.");
+    this.name = "OrderUnconfirmedError";
+  }
+}
+
+const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T> =>
+  Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`no answer within ${ms / 1000} s`)), ms))]);
+
 export function humanizeRejection(code: string): string {
   const map: Record<string, string> = {
     order_price_out_of_limit: "Price is too far from the market. Limit prices must stay within 5% of the current price.",
@@ -318,21 +329,37 @@ export class Trading {
     return { clientOrderId };
   }
 
-  async waitForOrder(symbol: string, clientOrderId: string, timeoutMs = 10_000): Promise<OrderHistoryEntry> {
+  async waitForOrder(symbol: string, clientOrderId: string, timeoutMs = 20_000): Promise<OrderHistoryEntry> {
     const deadline = Date.now() + timeoutMs;
-    let delay = 400;
-    while (Date.now() < deadline) {
+    let delay = 300;
+    let lastError: unknown = null;
+    let seen: OrderHistoryEntry | undefined;
+    const failed = (what: string) => (e: unknown) => {
+      lastError = e;
+      console.warn(`[strike-everywhere] confirming order ${clientOrderId}: ${what} failed`, (e as any)?.status ?? "", (e as any)?.message ?? e);
+      return null;
+    };
+    for (let poll = 0; Date.now() < deadline; poll++) {
       await new Promise((r) => setTimeout(r, delay));
-      const orders = await this.account.orderHistory({ symbol, limit: 50 }).catch(() => null);
-      if (!orders) continue;
-      const o = orders.find((x) => x.client_order_id === clientOrderId);
+      delay = Math.min(delay * 1.5, 1500);
+      const [orders, fills] = await Promise.all([
+        withTimeout(this.account.orderHistory({ symbol: poll % 3 === 2 ? undefined : symbol, limit: 50 }), 5000).catch(failed("order history")),
+        withTimeout(this.account.fills({ symbol, limit: 50 }), 5000).catch(failed("fills")),
+      ]);
+      const o = orders?.find((x) => x.client_order_id === clientOrderId);
+      if (o) seen = o;
       if (o && o.status !== "pending") {
         if (o.status === "rejected") throw new OrderRejectedError(o);
         return o;
       }
-      delay = Math.min(delay * 1.5, 1500);
+      const mine = (fills ?? []).filter((f) => f.client_order_id === clientOrderId);
+      if (mine.length) {
+        const filled = mine.reduce((s, f) => s + Number(f.size), 0);
+        const f = mine[0];
+        return { ...(seen ?? { id: f.order_id, client_order_id: clientOrderId, account_id: f.account_id, symbol, side: f.side, type: "market", size: String(filled), price: f.price, stop_price: "0", reduce_only: false, close_reason: null, create_timestamp: f.timestamp }), status: "filled", filled: String(filled) };
+      }
     }
-    throw new Error("Order is still pending. Check your open orders shortly.");
+    throw new OrderUnconfirmedError(symbol, clientOrderId, lastError);
   }
 
   async cancelOrder(symbol: string, orderId: number): Promise<void> {

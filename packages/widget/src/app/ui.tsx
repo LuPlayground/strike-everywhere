@@ -264,11 +264,11 @@ export function Banner({ toast, onDismiss }: { toast: Toast | null; onDismiss: (
   if (!toast) return null;
   return (
     <div class={`pa-banner ${toast.kind}`} role={toast.kind === "err" ? "alert" : "status"}>
-      <span class="ic">{toast.kind === "progress" ? <Spin size={18} /> : toast.kind === "ok" ? <Icon n="check" size={16} /> : <Icon n="warn" size={15} />}</span>
+      <span class="ic">{toast.kind === "progress" ? <Spin size={18} /> : toast.kind === "ok" ? <Icon n="check" size={16} /> : toast.kind === "info" ? <Icon n="info" size={15} /> : <Icon n="warn" size={15} />}</span>
       <span class="tx">
         <b>{toast.title}</b>
         {toast.text && <span>{toast.text}</span>}
-        {toast.kind === "err" && (
+        {(toast.kind === "err" || toast.kind === "info") && (
           <button class="ok" onClick={onDismiss}>
             OK
           </button>

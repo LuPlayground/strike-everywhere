@@ -7,7 +7,7 @@ import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
 import { MarketData, toMarketSpec, type RawMarket } from "./market.js";
 import { SessionStore, type PersistMode } from "./session.js";
-import { OrderRejectedError, Trading, closeSizeFor, gridProblem, twapSizeProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
+import { OrderRejectedError, OrderUnconfirmedError, Trading, closeSizeFor, gridProblem, twapSizeProblem, isTriggered, needsLimitPrice, stopOrderProblem, type GridInput, type PlacedOrder, type PlaceOrderInput, type TwapInput } from "./trading.js";
 import type { MarginMode, MarketSpec, OrderHistoryEntry, Position, Side } from "./types.js";
 import { uuid } from "./bytes.js";
 import { roundToStep } from "./format.js";
@@ -383,8 +383,23 @@ export class StrikeEverywhere {
     const size = Math.abs(Number(position.size)) * Math.min(1, Math.max(0, exits.fraction ?? 1));
     const side: Side = Number(position.size) > 0 ? "sell" : "buy";
     const out: OrderHistoryEntry[] = [];
-    if (exits.takeProfit) out.push(await this.placeOrder({ symbol: position.symbol, side, type: "take_profit", size, stopPrice: exits.takeProfit, reduceOnly: true, closePosition: (exits.fraction ?? 1) >= 1, workingType: exits.workingType }));
-    if (exits.stopLoss) out.push(await this.placeOrder({ symbol: position.symbol, side, type: "stop", size, stopPrice: exits.stopLoss, reduceOnly: true, closePosition: (exits.fraction ?? 1) >= 1, workingType: exits.workingType }));
+    let late: OrderUnconfirmedError | null = null;
+    const legs: PlaceOrderInput[] = [];
+    if (exits.takeProfit) legs.push({ symbol: position.symbol, side, type: "take_profit", size, stopPrice: exits.takeProfit, reduceOnly: true, closePosition: (exits.fraction ?? 1) >= 1, workingType: exits.workingType });
+    if (exits.stopLoss) legs.push({ symbol: position.symbol, side, type: "stop", size, stopPrice: exits.stopLoss, reduceOnly: true, closePosition: (exits.fraction ?? 1) >= 1, workingType: exits.workingType });
+    for (const leg of legs) {
+      try {
+        out.push(await this.placeOrder(leg));
+      } catch (e) {
+        if (!(e instanceof OrderUnconfirmedError)) throw e;
+        if (late) {
+          const [a, b] = [late.settled, e.settled];
+          e.settled = Promise.all([a, b]).then(([x, y]) => (x && y ? y : null));
+        }
+        late = e;
+      }
+    }
+    if (late) throw late;
     return out;
   }
 
@@ -413,7 +428,8 @@ export class StrikeEverywhere {
         const o = await this.closePosition(p);
         results.push({ symbol: p.symbol, ok: o.status === "filled", status: o.status });
       } catch (e: any) {
-        results.push({ symbol: p.symbol, ok: false, error: e?.message || String(e) });
+        if (e instanceof OrderUnconfirmedError) results.push({ symbol: p.symbol, ok: true, status: "unconfirmed" });
+        else results.push({ symbol: p.symbol, ok: false, error: e?.message || String(e) });
       }
     }
     return results;
@@ -472,6 +488,22 @@ export class StrikeEverywhere {
       return order;
     } catch (e) {
       void this.beacon({ type: "order", ...base, status: e instanceof OrderRejectedError ? "rejected" : "pending" });
+      if (e instanceof OrderUnconfirmedError) {
+        e.settled = this.trading.waitForOrder(symbol, placed.clientOrderId, 180_000).then(
+          (order) => {
+            void this.beacon({ type: "order", ...base, orderId: order.id, status: order.status });
+            this.emit({ type: "order", order });
+            return order;
+          },
+          (later) => {
+            if (later instanceof OrderRejectedError) {
+              void this.beacon({ type: "order", ...base, status: "rejected" });
+              throw later;
+            }
+            return null;
+          },
+        );
+      }
       throw e;
     }
   }

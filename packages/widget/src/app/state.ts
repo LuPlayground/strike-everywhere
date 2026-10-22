@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   OrderRejectedError,
+  OrderUnconfirmedError,
   StrikeEverywhere,
   type Account,
   type MarketSpec,
@@ -51,7 +52,7 @@ interface Live {
   low: number;
 }
 
-export type ToastKind = "progress" | "ok" | "err";
+export type ToastKind = "progress" | "ok" | "info" | "err";
 export interface Toast {
   id: number;
   kind: ToastKind;
@@ -318,6 +319,19 @@ export function usePerps(config: AppConfig) {
     notify("ok", "Wallet connected", "Your trades run on Strike.");
   };
 
+  const confirmLater = (e: OrderUnconfirmedError, ok: (o: OrderHistoryEntry) => [string, string?], cancelled: [string, string]) => {
+    notify("progress", "Sent to Strike, confirming", "Strike is taking longer than usual to confirm. Don't send it again.");
+    e.settled.then(
+      (o) => {
+        refresh();
+        if (!o) notify("info", "Not confirmed yet", "Strike hasn't reported this order's result. Check Positions and Open Orders before trying again.");
+        else if (/cancel|expire/i.test(o.status)) notify("err", ...cancelled);
+        else notify("ok", ...ok(o));
+      },
+      (err) => (refresh(), notify("err", cancelled[0], err?.message || String(err))),
+    );
+  };
+
   const placeDraft = async (d: Draft, s: Sized, base: string, estPrice?: number): Promise<"filled" | "resting" | "failed"> => {
     const dir = d.side === "buy" ? "long" : "short";
     const label = ORDER_TYPES.find((t) => t.type === d.type)?.label ?? "Order";
@@ -352,6 +366,15 @@ export function usePerps(config: AppConfig) {
       notify("err", "Position opening failed", `Strike: order ${o.status}`);
       return "failed";
     } catch (e: any) {
+      if (e instanceof OrderUnconfirmedError) {
+        const px = d.type === "market" && estPrice && estPrice > 0 ? estPrice : s.px;
+        confirmLater(
+          e,
+          (o) => (o.status === "filled" ? [`Opened ${qty(s.size)} ${base} ${dir}`, `${s.lev}x · about ${usd(s.size * px)} at ~$${px.toLocaleString("en-US", { maximumFractionDigits: px >= 1 ? 2 : 5 })}`] : [`${label} placed`]),
+          ["Position opening failed", `There were no ${d.side === "buy" ? "sellers" : "buyers"} close enough to the market price, so Strike cancelled the order. Nothing was traded.`],
+        );
+        return "resting";
+      }
       notify("err", "Position opening failed", e instanceof OrderRejectedError ? e.message : e?.message || String(e));
       return "failed";
     }
@@ -376,6 +399,14 @@ export function usePerps(config: AppConfig) {
       notify("ok", `Close order ${o.status}`);
       return true;
     } catch (e: any) {
+      if (e instanceof OrderUnconfirmedError) {
+        confirmLater(
+          e,
+          (o) => [o.status === "filled" ? (fraction >= 1 ? `Closed your ${base} ${dir}` : `Closed ${Math.round(fraction * 100)}% of your ${base} ${dir}`) : `Close order ${o.status}`],
+          ["Close failed", `There were no ${Number(p.size) > 0 ? "buyers" : "sellers"} close enough to the market price, so Strike cancelled the close. Your position is still open.`],
+        );
+        return true;
+      }
       notify("err", "Close failed", e?.message || String(e));
       return false;
     }
@@ -391,6 +422,10 @@ export function usePerps(config: AppConfig) {
       else notify("ok", "Limit close placed", `It closes when the price reaches $${price.toLocaleString("en-US", { maximumFractionDigits: 8 })}. You'll find it under Open Orders.`);
       return true;
     } catch (e: any) {
+      if (e instanceof OrderUnconfirmedError) {
+        confirmLater(e, (o) => [o.status === "filled" ? `Closed ${fraction >= 1 ? "your" : `${Math.round(fraction * 100)}% of your`} ${base} position` : "Limit close placed"], ["Limit close failed", "Strike cancelled the limit close. Your position is still open."]);
+        return true;
+      }
       notify("err", "Limit close failed", e instanceof OrderRejectedError ? e.message : e?.message || String(e));
       return false;
     }
@@ -404,6 +439,10 @@ export function usePerps(config: AppConfig) {
       notify("ok", typeof ok === "function" ? ok(r) : ok);
       return true;
     } catch (e: any) {
+      if (e instanceof OrderUnconfirmedError) {
+        confirmLater(e, (o) => [typeof ok === "function" ? ok(o) : ok], [errTitle, "Strike cancelled the order."]);
+        return true;
+      }
       notify("err", errTitle, e instanceof OrderRejectedError ? e.message : e?.message || String(e));
       return false;
     }
@@ -423,7 +462,12 @@ export function usePerps(config: AppConfig) {
     act(
       "Closing all positions",
       () => client.closeAllPositions(),
-      (r: Array<{ ok: boolean }>) => (r.every((x) => x.ok) ? `Closed ${r.length} position${r.length === 1 ? "" : "s"}` : `Closed ${r.filter((x) => x.ok).length} of ${r.length}; the rest were cancelled by Strike (no liquidity near the price)`),
+      (r: Array<{ ok: boolean; status?: string }>) =>
+        r.some((x) => x.status === "unconfirmed")
+          ? `Sent ${r.filter((x) => x.ok).length} of ${r.length} closes to Strike; check Positions in a moment`
+          : r.every((x) => x.ok)
+            ? `Closed ${r.length} position${r.length === 1 ? "" : "s"}`
+            : `Closed ${r.filter((x) => x.ok).length} of ${r.length}; the rest were cancelled by Strike (no liquidity near the price)`,
       "Close all failed",
     );
   const modifyMargin = (symbol: string, amount: number, dir: "add" | "remove") =>

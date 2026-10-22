@@ -188,7 +188,7 @@ export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose
             <>
               <div class="pa-amount-sum">
                 <b class="num">{lovelaceToAda(prepared.lovelace).toLocaleString("en-US")} ADA</b>
-                <span class="num">≈ {usdText(prepared.usdValue)} credited</span>
+                <span class="num">Strike quotes ≈ {usdText(prepared.usdValue)} · Strike sets the final credit</span>
               </div>
               <Group>
                 <Row k="To" v={<span class="num">Strike · {shortAddress(prepared.destination.address, 8, 6)}</span>} />
@@ -197,7 +197,7 @@ export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose
                 <Row k="Cardano confirmations" v={String(prepared.confirmationsRequired)} />
               </Group>
               <SafetyCard>
-                <b>Checked before you sign:</b> exactly {lovelaceToAda(prepared.destination.lovelace)} ADA leaves your wallet in one output{prepared.forwardingCost > 0n ? ` (${lovelaceToAda(prepared.lovelace)} credited plus ${lovelaceToAda(prepared.forwardingCost)} for Strike's forwarding)` : ""}, no tokens move, your change comes back to you, and the deposit is tagged for your Strike account.
+                <b>Checked before you sign:</b> exactly {lovelaceToAda(prepared.destination.lovelace)} ADA leaves your wallet in one output{prepared.forwardingCost > 0n ? ` (${lovelaceToAda(prepared.lovelace)} to deposit plus ${lovelaceToAda(prepared.forwardingCost)} for Strike's forwarding)` : ""}, no tokens move, your change comes back to you, and the deposit is tagged for your Strike account.
               </SafetyCard>
               {error && <div class="pa-warn"><Icon n="warn" size={16} />{error}</div>}
               <button class="pa-btn primary big" onClick={sign}>

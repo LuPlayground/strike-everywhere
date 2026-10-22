@@ -109,6 +109,7 @@ export interface Fill {
   realized_pnl: string;
   fee: string;
   timestamp: number;
+  client_order_id?: string;
 }
 
 export interface FeeTiers {

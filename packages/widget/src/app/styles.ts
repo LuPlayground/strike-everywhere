@@ -278,6 +278,7 @@ a.pa-btn.wide { margin: 8px 0 0; }
 .pa-banner.ok .ic { background: var(--pa-accent); color: var(--pa-accent-ink); }
 .pa-banner.err .ic { background: #ff453a; color: #fff; }
 .pa-banner.progress .ic { color: var(--pa-accent); }
+.pa-banner.info .ic { background: var(--pa-line-2); color: var(--pa-text); }
 .pa-banner .tx { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 15px; line-height: 1.35; min-width: 0; }
 .pa-banner .tx b { font-weight: 500; }
 .pa-banner .tx span { color: var(--pa-soft); }

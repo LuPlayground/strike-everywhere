@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   MIN_WITHDRAW_USD,
   OrderRejectedError,
+  OrderUnconfirmedError,
   StrikeEverywhere,
   TWAP_MAX_SEC,
   TWAP_MIN_SEC,
@@ -535,7 +536,20 @@ export function App({ config }: { config: WidgetConfig }) {
       setLowerTab(resting ? "orders" : "positions");
       refresh();
     } catch (e: any) {
-      notify("err", e instanceof OrderRejectedError ? `Rejected: ${e.message}` : e?.message || String(e), true);
+      if (e instanceof OrderUnconfirmedError) {
+        const dir = `${side === "buy" ? "Long" : "Short"} ${fmtQty(baseSize)} ${base}`;
+        notify("ok", `Sent to Strike: ${dir}. Confirming the result; don't send it again.`, true);
+        setSizeUsd("");
+        e.settled.then(
+          (o) => {
+            refresh();
+            if (!o) notify("ok", "Strike hasn't confirmed this order yet. Check Positions and Open Orders before trying again.", true);
+            else if (/cancel|expire/i.test(o.status)) notify("err", `Not filled: Strike cancelled the order. Nothing was traded.`, true);
+            else notify("ok", o.status === "filled" ? `Filled: ${dir}` : `Order ${o.status}: ${dir}`, true);
+          },
+          (err) => (refresh(), notify("err", `Rejected: ${err?.message || err}`, true)),
+        );
+      } else notify("err", e instanceof OrderRejectedError ? `Rejected: ${e.message}` : e?.message || String(e), true);
     } finally {
       setPlacing(false);
     }
@@ -574,8 +588,28 @@ export function App({ config }: { config: WidgetConfig }) {
       showCloseNote(p.id, res);
       refresh();
     } catch (e: any) {
-      notify("err", e?.message || String(e));
-      showCloseNote(p.id, { kind: "err", text: e?.message || String(e) });
+      if (e instanceof OrderUnconfirmedError) {
+        const what = positionText(Number(p.size), p.symbol.split("-")[0]);
+        showCloseNote(p.id, { kind: "ok", text: `Close sent to Strike. Confirming; don't send it again.` });
+        e.settled.then(
+          (o) => {
+            refresh();
+            const res: { kind: "ok" | "err"; text: string } = !o
+              ? { kind: "ok", text: "Strike hasn't confirmed the close yet. Check Positions before trying again." }
+              : o.status === "filled"
+                ? { kind: "ok", text: `✓ Closed ${what}` }
+                : /cancel|expire/i.test(o.status)
+                  ? { kind: "err", text: `Not closed: Strike cancelled the close order. Your ${what} position is still open.` }
+                  : { kind: "ok", text: `Close order ${o.status}` };
+            notify(res.kind, res.text);
+            showCloseNote(p.id, res);
+          },
+          (err) => (refresh(), notify("err", err?.message || String(err))),
+        );
+      } else {
+        notify("err", e?.message || String(e));
+        showCloseNote(p.id, { kind: "err", text: e?.message || String(e) });
+      }
     } finally {
       markBusy(id, false);
     }

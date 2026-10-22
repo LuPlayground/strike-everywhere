@@ -124,12 +124,12 @@ export function DepositSheet({
               <KV k="You send" v={<span class="num">{lovelaceToAda(prepared.destination.lovelace).toLocaleString("en-US")} ADA</span>} />
               {prepared.forwardingCost > 0n && <KV k="Strike forwarding" v={<span class="num">{lovelaceToAda(prepared.forwardingCost).toFixed(2)} ADA</span>} />}
               <KV k="To (Strike)" v={<span class="addr">{shortAddress(prepared.destination.address, 14, 8)}</span>} hint={prepared.destination.address} />
-              <KV k="Credited as" v={<span class="num">≈ {formatUsd(prepared.usdValue)}</span>} />
+              <KV k="Strike quotes" v={<span class="num">≈ {formatUsd(prepared.usdValue)}</span>} />
               <KV k="Network fee" v={<span class="num">{lovelaceToAda(prepared.networkFee).toFixed(3)} ADA</span>} />
               <KV k="Confirmations" v={prepared.confirmationsRequired} />
             </div>
             <div class="note">
-              <b>Checked before signing:</b> exactly {lovelaceToAda(prepared.destination.lovelace)} ADA leaves your wallet in one output{prepared.forwardingCost > 0n ? ` (${lovelaceToAda(prepared.lovelace)} credited plus ${lovelaceToAda(prepared.forwardingCost)} for Strike's forwarding)` : ""}, no tokens move, the change returns to you, and the deposit is tagged for your Strike account and this request.
+              <b>Checked before signing:</b> exactly {lovelaceToAda(prepared.destination.lovelace)} ADA leaves your wallet in one output{prepared.forwardingCost > 0n ? ` (${lovelaceToAda(prepared.lovelace)} to deposit plus ${lovelaceToAda(prepared.forwardingCost)} for Strike's forwarding)` : ""}, no tokens move, the change returns to you, and the deposit is tagged for your Strike account and this request.
             </div>
             <div class="steps">
               <Step n={1} state={phase === "review" ? "todo" : phase === "signing" ? "active" : "done"}>Sign in your wallet</Step>
