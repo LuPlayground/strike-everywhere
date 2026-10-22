@@ -146,19 +146,23 @@
   function copy(src, btn, label) {
     var text = typeof src === "string" ? src : src.textContent;
     var say = function (msg, ms) { btn.textContent = msg; clearTimeout(btn._seT); btn._seT = setTimeout(function () { btn.textContent = label; }, ms); };
+    var copied = function () {
+      btn.innerHTML = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" aria-hidden="true"><path d="m3.5 8.5 3 3 6-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Copied';
+      clearTimeout(btn._seT); btn._seT = setTimeout(function () { btn.textContent = label; }, 1500);
+    };
     var fallback = function () {
       var ok = false, ta = document.createElement("textarea");
       ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0";
       document.body.appendChild(ta); ta.select();
       try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
       document.body.removeChild(ta);
-      if (ok) return say("Copied ✓", 1500);
+      if (ok) return copied();
       if (typeof src === "string") return say("Copy failed", 2000);
       try { var r = document.createRange(); r.selectNodeContents(src); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
       say(/Mac|iPhone|iPad/.test(navigator.platform || "") ? "Press ⌘C" : "Press Ctrl+C", 3000);
     };
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(function () { say("Copied ✓", 1500); }).catch(fallback);
+      navigator.clipboard.writeText(text).then(copied).catch(fallback);
     } else fallback();
   }
 
