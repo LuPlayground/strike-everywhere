@@ -557,7 +557,7 @@ export function App({ config }: { config: WidgetConfig }) {
 
   useEffect(() => {
     if (!sheet) return;
-    const t = setTimeout(() => cardRef.current?.querySelector(".sheet")?.scrollIntoView({ block: "start", behavior: "smooth" }), 30);
+    const t = setTimeout(() => cardRef.current?.querySelector(".sheet")?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 30);
     return () => clearTimeout(t);
   }, [sheet]);
 
@@ -567,7 +567,7 @@ export function App({ config }: { config: WidgetConfig }) {
     setCloseNote({ id, ...r });
     clearTimeout(closeNoteTimer.current);
     closeNoteTimer.current = setTimeout(() => setCloseNote(null), 15_000);
-    setTimeout(() => cardRef.current?.querySelector(".list .ticket-msg")?.scrollIntoView({ block: "center", behavior: "smooth" }), 50);
+    setTimeout(() => cardRef.current?.querySelector(".list .ticket-msg")?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50);
   };
 
   const closePosition = async (p: Position) => {
@@ -719,7 +719,7 @@ export function App({ config }: { config: WidgetConfig }) {
       const field = cardRef.current?.querySelector<HTMLElement>(orderType === "stop" ? "#se-trigger" : orderType === "twap" ? "#se-twap-limit" : "#se-price");
       const target = (field?.closest(".field") as HTMLElement | null) ?? field;
       if (!target) return;
-      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      target.scrollIntoView({ block: "nearest", behavior: "smooth" });
       target.classList.remove("flash");
       void target.offsetWidth;
       target.classList.add("flash");

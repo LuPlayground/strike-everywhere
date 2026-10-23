@@ -41,7 +41,7 @@ export function Markets({ s, nav, list, pick, focus }: { s: PerpsState; nav: Nav
   const [sortOpen, setSortOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (focus) setTimeout(() => input.current?.focus(), 50);
+    if (focus) setTimeout(() => input.current?.focus({ preventScroll: true }), 50);
   }, []);
 
   const rows = sortMarkets(filterMarkets(s.markets, q, listId), sort, desc);

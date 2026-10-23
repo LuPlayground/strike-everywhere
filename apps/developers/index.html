@@ -88,8 +88,13 @@
   .host .slot { position: relative; padding: 6px; border-radius: 16px; align-self: start; box-shadow: 0 0 0 1px rgba(var(--mint-rgb), .28), 0 0 60px rgba(var(--mint-rgb), .08); }
   .host.app { grid-template-columns: minmax(0, 1fr); }
   .host.app .sk { display: none; }
-  .host.app .slot { height: 640px; padding: 0; overflow: hidden; }
+  .host.app .slot { height: 780px; padding: 0; overflow: hidden; }
   .host.app .slot > div, .host.app strike-trade { display: block; height: 100%; }
+  .studio.app { grid-template-columns: minmax(0, 1fr); }
+  .studio.app .cfg { position: static; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 28px; align-items: start; }
+  .studio.app .cfg .fee { grid-row: span 2; }
+  .studio.app .cfg-copy { grid-column: 1 / -1; }
+  .studio.app .host { padding: 16px; min-height: 0; }
 
   #code .codewin { max-width: none; margin-top: 56px; }
   #code .codewin pre { min-height: 340px; }
@@ -114,6 +119,7 @@
     .prev .tag { display: none; }
     .top { padding-top: calc(var(--nav-h) + 80px); }
   }
+  @media (max-width: 860px) { .studio.app .cfg { grid-template-columns: minmax(0, 1fr); } .studio.app .cfg .fee { grid-row: auto; } }
   @media (max-width: 560px) { .cfg { padding: 20px; } .host .slot { padding: 4px; } }
 </style>
 </head>
@@ -162,7 +168,7 @@
           </div>
         </div>
         <div class="fld" id="sideFld"><span class="lbl">Default side</span><div class="sg" id="c-side"><button type="button" data-v="buy" class="on">Long</button><button type="button" data-v="sell">Short (hedge)</button></div></div>
-        <div class="fld">
+        <div class="fld fee">
           <label for="c-fee">Builder fee <span class="feev" id="feeLbl">5 bps · 0.05%</span></label>
           <input class="range" type="range" id="c-fee" min="0" max="100" step="1" value="5" />
           <div class="earn">On a <b>$1,000</b> trade your app earns <b id="earn">$0.50</b>, credited by Strike on fill.</div>
@@ -270,6 +276,7 @@
   function layout() {
     var app = cfg.variant === "app";
     $("host").classList.toggle("app", app);
+    document.querySelector(".studio").classList.toggle("app", app);
     $("widthFld").style.display = app ? "none" : "";
     $("sideFld").style.display = app ? "none" : "";
     $("variantHelp").textContent = app ? "A complete perps app for a whole screen, like a wallet's Perps tab. It adapts to phone screens on its own." : "A compact panel for a sidebar, a modal or a page.";
@@ -391,7 +398,7 @@
     mount.innerHTML = "";
     var el = document.createElement("strike-trade");
     a.forEach(function (p) { el.setAttribute(p[0], p[1]); });
-    if (cfg.variant === "app") el.setAttribute("height", "640");
+    if (cfg.variant === "app") el.setAttribute("height", "780");
     else if (!el.getAttribute("width")) el.setAttribute("width", cfg.width);
     var demo = el.getAttribute("builder-code") === "YOUR_CODE";
     if (demo) {

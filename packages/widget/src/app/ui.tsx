@@ -127,6 +127,17 @@ export function Spin({ size = 16 }: { size?: number }) {
   return <span class="pa-spin" style={{ width: `${size}px`, height: `${size}px` }} aria-label="Loading" />;
 }
 
+export function revealSheet(get: () => Element | null | undefined) {
+  const t = setTimeout(() => {
+    const r = get()?.getBoundingClientRect();
+    if (!r) return;
+    const below = r.bottom - innerHeight + 12;
+    const dy = r.top < 0 ? r.top - 12 : below > 0 ? Math.min(below, r.top - 12) : 0;
+    if (dy) scrollBy({ top: dy, behavior: "smooth" });
+  }, 240);
+  return () => clearTimeout(t);
+}
+
 export function Sheet({
   title,
   onClose,
@@ -146,7 +157,8 @@ export function Sheet({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
+    return revealSheet(() => ref.current);
   }, []);
   return (
     <div class="pa-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>

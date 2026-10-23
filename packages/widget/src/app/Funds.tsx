@@ -1,5 +1,5 @@
 import type { ComponentChildren } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   DepositRegistrationError,
   DepositSafetyError,
@@ -66,11 +66,13 @@ function SafetyCard({ children }: { children: ComponentChildren }) {
 }
 
 function BigInput({ value, onInput, unit, label, sub }: { value: string; onInput: (v: string) => void; unit: string; label: string; sub?: ComponentChildren }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => ref.current?.focus({ preventScroll: true }), []);
   return (
     <label class="pa-bigin">
       <span class="pa-bigrow">
         {unit === "$" && <span class="u">$</span>}
-        <input inputMode="decimal" placeholder="0" value={value} aria-label={label} onInput={(e) => onInput(cleanDecimal(e))} autoFocus style={{ width: `${Math.max(1, value.length) * 0.62 + 0.3}em` }} />
+        <input inputMode="decimal" placeholder="0" value={value} aria-label={label} onInput={(e) => onInput(cleanDecimal(e))} ref={ref} style={{ width: `${Math.max(1, value.length) * 0.62 + 0.3}em` }} />
         {unit !== "$" && <span class="u">{unit}</span>}
       </span>
       {sub && <span class="sub">{sub}</span>}

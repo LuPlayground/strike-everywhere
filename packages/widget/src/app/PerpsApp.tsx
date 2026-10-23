@@ -5,7 +5,7 @@ import { Desktop } from "./desktop/Desktop";
 import { Panel } from "./desktop/Panel";
 import { Mobile, type Screen } from "./mobile/Mobile";
 import { usePerps, type AppConfig } from "./state";
-import { Banner } from "./ui";
+import { Banner, revealSheet } from "./ui";
 
 export function PerpsApp({ config, host, screen }: { config: AppConfig; host: HTMLElement; screen?: string }) {
   const s = usePerps(config);
@@ -24,6 +24,8 @@ export function PerpsApp({ config, host, screen }: { config: AppConfig; host: HT
   useEffect(() => {
     host.dispatchEvent(new CustomEvent("strike-session", { bubbles: true, composed: true, detail: s.session ? { connected: true, address: s.session.address, accountId: s.session.accountId } : { connected: false } }));
   }, [s.session?.accountId]);
+
+  useEffect(() => (s.sheet === "connect" ? revealSheet(() => box.current?.querySelector(".sheet")) : undefined), [s.sheet]);
 
   const onClose = config.closable ? () => host.dispatchEvent(new CustomEvent("strike-close", { bubbles: true, composed: true })) : undefined;
   const start: Screen | undefined = screen === "market" ? { k: "market", sym: config.market } : screen === "trade" ? { k: "trade", sym: config.market, side: config.side ?? "buy" } : undefined;
