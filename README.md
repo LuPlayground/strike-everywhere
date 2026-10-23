@@ -11,13 +11,13 @@
 > - Your own builder code: [developers page](https://strike-everywhere.pages.dev/developers/) (type it, trade in the preview, open your dashboard)
 
 ```html
-<script src="https://strike-everywhere.pages.dev/widget/v0.1.9/strike-everywhere.iife.js"
-  integrity="sha384-wZ1+2KYwWQ6Uxh4XVetfFATLMuVLex47WC0cyDvJV+xbafmmNf84BBBWbGPtuzwV"
+<script src="https://strike-everywhere.pages.dev/widget/v0.1.10/strike-everywhere.iife.js"
+  integrity="sha384-g8rQeLn9TGvSj+UKmY5GzDRvKUwrlwFYPeWkIhwCKkZAxzBocU6Marq0Ed/rk6T+"
   crossorigin="anonymous" defer></script>
 <strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD"></strike-trade>
 ```
 
-The snippet pins release `v0.1.9` with an integrity hash, so the code your users run can't change without you choosing to update (the current version and hash are always in [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json)). `/widget/strike-everywhere.iife.js` always serves the latest build instead. See [SECURITY.md](docs/SECURITY.md#what-we-the-authors-can-and-cant-do).
+The snippet pins release `v0.1.10` with an integrity hash, so the code your users run can't change without you choosing to update (the current version and hash are always in [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json)). `/widget/strike-everywhere.iife.js` always serves the latest build instead. See [SECURITY.md](docs/SECURITY.md#what-we-the-authors-can-and-cant-do).
 
 | | |
 |---|---|
