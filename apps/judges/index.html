@@ -156,8 +156,7 @@
   <h2 class="sec">Good to know while testing</h2>
   <ul class="limits">
     <li><b>Our demos use our builder codes.</b> A <code>?builder=</code> in a demo link is ignored, so nobody can route a demo's fees to another code. Use the developers page for your own code.</li>
-    <li><b>Testnet markets:</b> use <b>ETH-USD</b>. ADA-USD can't trade on testnet (a Strike testnet price limit), BTC-USD needs a $100 order, and SOL's book sits far from its price.</li>
-    <li><b>Deposits</b> are credited by Strike after Cardano confirmations, usually a few minutes. Strike adds 2 ADA forwarding and credits at its own rate, slightly below the quote on small amounts.</li>
+    <li><b>Deposits</b> are credited by Strike after Cardano confirmations, usually a few minutes.</li>
     <li><b>Withdrawals</b> cost Strike's $1 fee plus a small funding transaction (about 2 ADA) that Strike asks for on every Cardano payout.</li>
     <li><b>A builder can't trade through its own code</b> (Strike refuses it). Connect a different wallet from the one that registered the code.</li>
     <li><b>Safety:</b> the widget never holds funds; every deposit and withdrawal is signed in your wallet after our checks. Details in <a href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/SECURITY.md">SECURITY.md</a>.</li>
