@@ -5,7 +5,7 @@ client_order_id for our builder after the fact. The partner API must NOT credit 
 registered after Strike created the order.
 
 The positive path (register, then place, then credited) needs a real mainnet order and is covered by the
-mainnet test run in docs/DEMO_SCRIPT.md.
+mainnet test run (see docs/TESTING.md).
 
 usage: python -I scripts/attribution_selftest.py https://strike-everywhere-api.strike-everywhere.workers.dev
 Clean up afterwards (removes only the throwaway label's rows):
