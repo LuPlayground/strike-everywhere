@@ -25,6 +25,7 @@ export const appCss =  `:host([variant="app"]) {
   --pa-gold: #ffb719;
   --pa-font: var(--strike-font, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
   position: relative;
+  contain: layout;
   height: 100%;
   min-height: inherit;
   display: flex;
@@ -51,7 +52,8 @@ export const appCss =  `:host([variant="app"]) {
 .pa input:focus-visible { outline: none; }
 .pa-search:focus-within { box-shadow: inset 0 0 0 1.5px rgba(var(--pa-accent-rgb), .45); }
 
-.pa-mobile { position: relative; flex: 1; min-height: 0; display: flex; }
+.pa-mobile { position: relative; flex: 1; min-height: 0; display: flex; width: 100%; max-width: 520px; margin-inline: auto; }
+.pa-mobile .pa-scrim { position: fixed; }
 .pa-stage { flex: 1; min-width: 0; display: flex; animation: pa-in .2s ease-out; }
 @keyframes pa-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
 .pa-screen { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }

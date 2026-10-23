@@ -175,7 +175,7 @@
       </aside>
 
       <div class="prev" aria-label="Live preview">
-        <div class="bar"><i></i><i></i><i></i><div class="url"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.5"/></svg><span id="urlApp">my-wallet.app</span></div><span class="tag">Live preview</span></div>
+        <div class="bar"><i></i><i></i><i></i><div class="url"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.5"/></svg><span id="urlApp">my-wallet.app</span></div><span class="tag" id="prevTag">Live preview</span></div>
         <div class="host" id="host">
           <div class="appnav"><span class="applogo"></span><span class="appname" id="appName">my-wallet</span><span class="appsub">Your app</span></div>
           <div class="sk"><div style="height:130px"></div><div style="height:76px"></div><div style="height:76px"></div><div style="height:200px"></div></div>
@@ -393,8 +393,12 @@
     a.forEach(function (p) { el.setAttribute(p[0], p[1]); });
     if (cfg.variant === "app") el.setAttribute("height", "640");
     else if (!el.getAttribute("width")) el.setAttribute("width", cfg.width);
-    if (el.getAttribute("builder-code") === "YOUR_CODE") el.setAttribute("builder-code", cfg.net === "mainnet" ? "StrikeOn" : "Playground101");
-    el.removeAttribute("partner-api");
+    var demo = el.getAttribute("builder-code") === "YOUR_CODE";
+    if (demo) {
+      el.setAttribute("builder-code", cfg.net === "mainnet" ? "StrikeOn" : "Playground101");
+      el.removeAttribute("partner-api");
+    }
+    $("prevTag").textContent = demo ? "Live preview · demo code " + el.getAttribute("builder-code") : "Live preview · your code";
     mount.appendChild(el);
   }
 
