@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<title>For judges · Strike On</title>
+<meta name="description" content="How to try Strike On in two minutes, and the on-chain proof of the mainnet run: deposits, withdrawals, trades and builder fees." />
+<link rel="stylesheet" href="../assets/theme.css" />
+<link rel="stylesheet" href="../assets/site.css" />
+<style>
+  .top { position: relative; margin-top: calc(-1 * var(--nav-h)); padding: calc(var(--nav-h) + 72px) 0 0; }
+  .top::before { content: ""; position: absolute; inset: 0 0 -160px; z-index: -1; pointer-events: none; background: radial-gradient(900px 520px at 85% 0%, rgba(var(--mint-rgb), .12), transparent 66%); }
+  .top h1 { font-size: clamp(40px, 5vw, 64px); line-height: 1.04; background: linear-gradient(180deg, #fff 40%, #b9c7c0); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 4px; }
+  .top .lead { max-width: 680px; font-size: 16.5px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .fact { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--hair); background: rgba(255, 255, 255, .03); font-size: 13.5px; color: var(--grey); }
+  .fact b { color: #fff; font-weight: 500; font-family: var(--mono); font-size: 13px; }
+
+  h2.sec { margin: 72px 0 6px; font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.02em; }
+  .sec-lead { color: var(--grey); font-size: 15.5px; max-width: 700px; margin: 0 0 22px; line-height: 1.55; }
+
+  .paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .path { display: flex; flex-direction: column; padding: 24px; border-radius: 20px; border: 1px solid var(--hair); background: var(--card); min-width: 0; }
+  .path .k { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: #7d8281; }
+  .path .k .t { color: var(--mint); font-weight: 500; }
+  .path h3 { margin: 10px 0 14px; font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+  .path ol { margin: 0 0 20px; padding-left: 20px; color: #cfd3d2; font-size: 14.5px; line-height: 1.6; }
+  .path ol li + li { margin-top: 6px; }
+  .path ol a, .note a, .tbl a, .limits a { color: var(--mint); text-decoration: none; }
+  .path ol a:hover, .note a:hover, .tbl a:hover, .limits a:hover { text-decoration: underline; }
+  .path .go { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .card { border-radius: 20px; border: 1px solid var(--hair); background: var(--card); overflow: hidden; }
+  .card + .card { margin-top: 16px; }
+  .card-h { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 18px 22px; border-bottom: 1px solid var(--hair); }
+  .card-h h3 { margin: 0; font-size: 17px; font-weight: 500; }
+  .card-h .sub { font-size: 13px; color: #7d8281; }
+  .scroll { overflow-x: auto; }
+  .tbl { font-size: 14px; min-width: 760px; }
+  .tbl th { font-size: 12.5px; font-weight: 500; color: #7d8281; padding: 12px 22px; border-bottom-color: var(--hair); }
+  .tbl td { padding: 14px 22px; border-bottom-color: var(--hair); font-variant-numeric: tabular-nums; vertical-align: top; }
+  .tbl td .s { display: block; margin-top: 2px; font-size: 12.5px; color: #7d8281; }
+  .tbl .tx { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+  .tbl .tx a + a { margin-left: 12px; }
+  .via { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; color: #04120c; background: var(--mint); white-space: nowrap; }
+  .via.app { color: #cfd3d2; background: rgba(255, 255, 255, .08); }
+  .note { margin: 14px 2px 0; color: #7d8281; font-size: 13.5px; line-height: 1.6; }
+
+  .limits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; margin: 0; padding: 0; list-style: none; }
+  .limits li { padding: 16px 18px; border-radius: 16px; border: 1px solid var(--hair); color: #cfd3d2; font-size: 14.5px; line-height: 1.55; }
+  .limits li b { color: #fff; font-weight: 500; }
+  .foot2 { margin-top: 110px; }
+
+  @media (max-width: 980px) { .paths { grid-template-columns: minmax(0, 1fr); } .limits { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<nav class="se-nav" id="nav">
+  <a class="se-brand" href="../"><img class="se-logo" src="../assets/logo-mark.svg" alt="" width="28" height="28" /><span class="se-name">Strike <b>On</b></span></a>
+  <div class="se-links"><a href="../#embed">Product</a><a href="../#demos">Demos</a><a href="../developers/">Developers</a><a href="../dashboard/">Dashboard</a><a href="https://github.com/LuPlayground/strike-everywhere#readme">Docs</a></div>
+  <span class="sp"></span>
+  <a class="btn btn-ghost btn-sm" href="https://github.com/LuPlayground/strike-everywhere">GitHub</a>
+  <a class="btn btn-mint btn-sm" href="../developers/">Get embed code</a>
+</nav>
+
+<header class="top">
+  <div class="wrap">
+    <h1>For judges</h1>
+    <p class="lead">How to try Strike On in a few minutes, and the on-chain proof that it already ran on Strike mainnet with real funds: deposits, trades, builder fees and withdrawals.</p>
+    <div class="facts">
+      <span class="fact">Mainnet builder code <b>StrikeOn</b></span>
+      <span class="fact">Testnet builder code <b>Playground101</b></span>
+      <span class="fact">Widget <b>v%%WIDGET_VERSION%%</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <h2 class="sec">Three ways to try it</h2>
+  <p class="sec-lead">Pick by how much time you have. Testnet is the default everywhere; add <code>?network=mainnet</code> to any demo link for mainnet.</p>
+  <div class="paths">
+    <section class="path">
+      <div class="k"><span class="t">No wallet</span><span>2 minutes</span></div>
+      <h3>Look around</h3>
+      <ol>
+        <li>Open <a href="../demo/wallet/?market=ETH-USD">Halo</a>, a wallet with Strike perps built in: live prices, order book and charts from Strike.</li>
+        <li>Try the other two hosts: <a href="../demo/dex/?pair=ETH&amp;tab=perps">Kairo</a> (a DEX) and <a href="../demo/portfolio/">Tessera</a> (a portfolio tracker).</li>
+        <li>Open the <a href="../dashboard/?builder=StrikeOn&amp;network=mainnet">mainnet dashboard for StrikeOn</a> to see real fills and builder fees.</li>
+        <li>Check the transactions below on Cardanoscan.</li>
+      </ol>
+      <div class="go"><a class="bx bx-dark bx-sm" href="../demo/wallet/?market=ETH-USD">Open Halo</a><a class="bx bx-dark bx-sm" href="#proof">See the proof</a></div>
+    </section>
+    <section class="path">
+      <div class="k"><span class="t">Preprod wallet</span><span>10 minutes</span></div>
+      <h3>Trade on testnet</h3>
+      <ol>
+        <li>Switch your Cardano wallet (we tested Eternl and Lace) to <b>Preprod</b> and get test ADA from the <a href="https://docs.cardano.org/cardano-testnets/tools/faucet" target="_blank" rel="noopener">Cardano faucet</a>.</li>
+        <li>Open <a href="../demo/wallet/?market=ETH-USD">Halo on ETH-USD</a> and click <b>Connect wallet</b>: one signature, no funds move.</li>
+        <li><b>Deposit</b> about 500 tADA (a new Strike account's first deposit must be at least $100). Credit takes a few minutes.</li>
+        <li>Open and close a small ETH trade, try TP/SL, a limit order, then <b>Withdraw</b>.</li>
+      </ol>
+      <div class="go"><a class="bx bx-dark bx-sm" href="../demo/wallet/?market=ETH-USD">Open Halo on testnet</a></div>
+    </section>
+    <section class="path">
+      <div class="k"><span class="t">Your builder code</span><span>5 minutes</span></div>
+      <h3>Plug in your own code</h3>
+      <ol>
+        <li>Open the <a href="../developers/">developers page</a> and type your builder code; pick Testnet or Mainnet.</li>
+        <li>Trade in the live preview: with your code it reports like a real integration.</li>
+        <li>Click <b>Copy snippet</b> to get the one-tag install for any site.</li>
+        <li>Click <b>Open your dashboard</b>, then <b>Sync fills</b>, to see your trades and builder fees.</li>
+      </ol>
+      <div class="go"><a class="bx bx-dark bx-sm" href="../developers/">Open the configurator</a></div>
+    </section>
+  </div>
+
+  <h2 class="sec" id="proof">Proof: it already ran on mainnet</h2>
+  <p class="sec-lead">On 22 October 2026 (UTC) we ran the full flow on Strike mainnet with two fresh wallets and small amounts: one as the builder (StrikeOn), one as a trader. Every deposit and withdrawal is on-chain; trades and builder fees happen on Strike's exchange, so they're checked against Strike's public history instead.</p>
+
+  <div class="card">
+    <div class="card-h"><h3>Mainnet</h3><span class="sub">Cardano mainnet · cardanoscan.io</span></div>
+    <div class="scroll">
+      <table class="tbl">
+        <thead><tr><th>What</th><th>Through</th><th>Amount</th><th>Result</th><th>Transactions</th></tr></thead>
+        <tbody>
+          <tr><td>Builder's first deposit<span class="s">needed to register StrikeOn</span></td><td><span class="via app">Strike's app</span></td><td>500 ADA<span class="s">+ 2 ADA Strike forwarding</span></td><td>Credited $103.49</td><td class="tx"><a href="https://cardanoscan.io/transaction/028220fcd6a3da4272552716bd8de898ca1b78eb52ab1f6f95629a735557865d" target="_blank" rel="noopener">028220fc…</a></td></tr>
+          <tr><td>Trader's first deposit</td><td><span class="via app">Strike's app</span></td><td>500 ADA<span class="s">+ 2 ADA Strike forwarding</span></td><td>Credited $103.93</td><td class="tx"><a href="https://cardanoscan.io/transaction/0959d25f42019f519d7703bde4d4599b723532090340cb24ea2fb03a3665cbce" target="_blank" rel="noopener">0959d25f…</a></td></tr>
+          <tr><td>Trader deposit<span class="s">our pre-sign check passed on a real mainnet transaction</span></td><td><span class="via">Strike On widget</span></td><td>29 ADA<span class="s">+ 2 ADA Strike forwarding</span></td><td>Credited $5.90</td><td class="tx"><a href="https://cardanoscan.io/transaction/0ebe6b3c4b3b97384c439df628b71edec2b157f96332f071fc46765f802b47bb" target="_blank" rel="noopener">deposit 0ebe6b3c…</a><a href="https://cardanoscan.io/transaction/10ecd9ed64c0901169c5e593010ea1e6f619b1033c35d0e4d5cb432c34fb5e25" target="_blank" rel="noopener">vault hop 10ecd9ed…</a></td></tr>
+          <tr><td>Trades and builder fees<span class="s">ETH-USD, opened and closed through the widget</span></td><td><span class="via">Strike On widget</span></td><td>6 fills, $85.96 volume</td><td>Builder fees $0.06, credited to StrikeOn</td><td class="tx"><a href="../dashboard/?builder=StrikeOn&amp;network=mainnet">Dashboard</a><a href="https://api.strikefinance.org/v2/history/fill?account_id=01a1656a-5ab0-7999-bb98-e95bbbcc213c" target="_blank" rel="noopener">Strike's fill history</a></td></tr>
+          <tr><td>Trader withdrawal</td><td><span class="via">Strike On widget</span></td><td>$5<span class="s">Strike fee $1</span></td><td>18.89 ADA paid out</td><td class="tx"><a href="https://cardanoscan.io/transaction/a4732672799a14a10bb129977498a876c4236723fdf482f9a65a3733d2f3193e" target="_blank" rel="noopener">funding a4732672…</a><a href="https://cardanoscan.io/transaction/5b845803a9f604b64a2bc78083af188101ba59c5fda99c33d896431878d9387f" target="_blank" rel="noopener">payout 5b845803…</a></td></tr>
+          <tr><td>Trader withdrawal (rest of the balance)</td><td><span class="via">Strike On widget</span></td><td>$104.73<span class="s">Strike fee $1</span></td><td>490.91 ADA paid out</td><td class="tx"><a href="https://cardanoscan.io/transaction/ff74581e087894f581a1db9dba1f06ad1f85b38e0ada98f7aa4fff34619defd8" target="_blank" rel="noopener">funding ff74581e…</a><a href="https://cardanoscan.io/transaction/63bd8a52b66d5f63a48c454d57616c7fc8a8a76a55883ff8e3154e7395d01944" target="_blank" rel="noopener">payout 63bd8a52…</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h3>Testnet</h3><span class="sub">Cardano Preprod · preprod.cardanoscan.io</span></div>
+    <div class="scroll">
+      <table class="tbl">
+        <thead><tr><th>What</th><th>Through</th><th>Amount</th><th>Result</th><th>Transactions</th></tr></thead>
+        <tbody>
+          <tr><td>Deposit<span class="s">the first builder-API deposit Strike credited on testnet</span></td><td><span class="via">Strike On widget</span></td><td>465 tADA</td><td>Credited $105.87</td><td class="tx"><a href="https://preprod.cardanoscan.io/transaction/607f16fce327b994b92f25231a36aeef73aadb95cb2888be687e0b1dc4a96352" target="_blank" rel="noopener">607f16fc…</a></td></tr>
+          <tr><td>Deposit</td><td><span class="via">Strike On widget</span></td><td>120 tADA</td><td>Credited $25.74</td><td class="tx"><a href="https://preprod.cardanoscan.io/transaction/4d497ca9c24808dc7d72d3fad72716569ec7467330aa6d6ccd1e60912eb30dcb" target="_blank" rel="noopener">4d497ca9…</a></td></tr>
+          <tr><td>Withdrawal</td><td><span class="via">Strike On widget</span></td><td>$5</td><td>18.10 tADA paid out</td><td class="tx"><a href="https://preprod.cardanoscan.io/transaction/d0ab2c852ea93b24adfabb2eaad8ba7cf7d81345f27b6dda8cdf5407fe78c16a" target="_blank" rel="noopener">d0ab2c85…</a></td></tr>
+          <tr><td>Withdrawal</td><td><span class="via">Strike On widget</span></td><td>$5</td><td>17.70 tADA paid out</td><td class="tx"><a href="https://preprod.cardanoscan.io/transaction/e5def0855caa7532f512e1774231e6170dffd3f2ae8cb783be616d2280548ae4" target="_blank" rel="noopener">e5def085…</a></td></tr>
+          <tr><td>For comparison: a deposit made in Strike's own app</td><td><span class="via app">Strike's app</span></td><td>500 tADA</td><td>Credited $106.93</td><td class="tx"><a href="https://preprod.cardanoscan.io/transaction/e22116511e1ca0472ba3d085413c4ee51bc5e5edd1ec1c20deb121ae87da8b6f" target="_blank" rel="noopener">e2211651…</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="note">Testnet deposits link to the transaction Strike records for the credit (its hop into the vault); the wallet's own deposit is that transaction's input. Strike's fill history and the dashboard are public reads; no account access is needed to check them.</p>
+
+  <h2 class="sec">Good to know while testing</h2>
+  <ul class="limits">
+    <li><b>Our demos use our builder codes.</b> A <code>?builder=</code> in a demo link is ignored, so nobody can route a demo's fees to another code. Use the developers page for your own code.</li>
+    <li><b>Testnet markets:</b> use <b>ETH-USD</b>. ADA-USD can't trade on testnet (a Strike testnet price limit), BTC-USD needs a $100 order, and SOL's book sits far from its price.</li>
+    <li><b>Deposits</b> are credited by Strike after Cardano confirmations, usually a few minutes. Strike adds 2 ADA forwarding and credits at its own rate, slightly below the quote on small amounts.</li>
+    <li><b>Withdrawals</b> cost Strike's $1 fee plus a small funding transaction (about 2 ADA) that Strike asks for on every Cardano payout.</li>
+    <li><b>A builder can't trade through its own code</b> (Strike refuses it). Connect a different wallet from the one that registered the code.</li>
+    <li><b>Safety:</b> the widget never holds funds; every deposit and withdrawal is signed in your wallet after our checks. Details in <a href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/SECURITY.md">SECURITY.md</a>.</li>
+  </ul>
+</main>
+
+<footer class="foot2">
+  <div class="wrap cols">
+    <div class="brandcol">
+      <a class="se-brand" href="../"><img class="se-logo" src="../assets/logo-mark.svg" alt="" width="28" height="28" /><span class="se-name">Strike <b>On</b></span></a>
+      <p>An independent hackathon project built on Strike's public Builder API. Not affiliated with or endorsed by Strike Finance.</p>
+    </div>
+    <div><h4>Product</h4><a class="f" href="../#embed">Trade ticket</a><a class="f" href="../#app">App layout</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere#sdk-only">TypeScript SDK</a><a class="f" href="../dashboard/">Partner dashboard</a></div>
+    <div><h4>Demos</h4><a class="f" href="../demo/wallet/">Wallet</a><a class="f" href="../demo/dex/">DEX</a><a class="f" href="../demo/portfolio/">Portfolio tracker</a></div>
+    <div><h4>Developers</h4><a class="f" href="../developers/">Configurator</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/INTEGRATION.md">Integration guide</a><a class="f" href="https://github.com/LuPlayground/strike-everywhere/blob/main/docs/SECURITY.md">Security</a></div>
+    <div><h4>Project</h4><a class="f" href="https://github.com/LuPlayground/strike-everywhere">GitHub</a><a class="f" href="./">For judges</a><a class="f" href="https://docs.strikefinance.org">Strike docs</a></div>
+  </div>
+</footer>
+
+<script src="../assets/chrome.js"></script>
+<script>SEChrome.navGlass(document.getElementById("nav"));</script>
+</body>
+</html>

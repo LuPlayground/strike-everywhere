@@ -5,6 +5,11 @@
 - The host site earns **Strike builder fees** on every fill.
 - A **partner dashboard** shows what each site brought in: volume, fees, funded and trading accounts verified against Strike's public history.
 
+> **Try it in 2 minutes.** Open **[the judges page](https://strike-everywhere.pages.dev/judges/)**: three ways to test (no wallet, a Preprod wallet, or your own builder code) and the on-chain proof of our mainnet run, with Cardanoscan links for every deposit and withdrawal.
+>
+> - No wallet: [Halo demo](https://strike-everywhere.pages.dev/demo/wallet/?market=ETH-USD) · [mainnet dashboard for StrikeOn](https://strike-everywhere.pages.dev/dashboard/?builder=StrikeOn&network=mainnet)
+> - Your own builder code: [developers page](https://strike-everywhere.pages.dev/developers/) (type it, trade in the preview, open your dashboard)
+
 ```html
 <script src="https://strike-everywhere.pages.dev/widget/v0.1.7/strike-everywhere.iife.js"
   integrity="sha384-9ip2QorPbG1Y8MNjdywLH+sYfn8Q0nUEJVRgk1tevP1zR0e+yWhA9uT0jhLyK+uO"
@@ -17,6 +22,7 @@ The snippet pins release `v0.1.7` with an integrity hash, so the code your users
 | | |
 |---|---|
 | Live landing + demos | https://strike-everywhere.pages.dev |
+| For judges: how to test + mainnet proof | https://strike-everywhere.pages.dev/judges/ |
 | Demo host: concept wallet with a Perps tab | https://strike-everywhere.pages.dev/demo/wallet/ |
 | Demo host: DEX with a Perps tab | https://strike-everywhere.pages.dev/demo/dex/ |
 | Demo host: portfolio tracker (hedge ADA) | https://strike-everywhere.pages.dev/demo/portfolio/ |

@@ -61,6 +61,7 @@ cpSync(join(root, "apps", "demo-wallet"), join(out, "demo", "wallet"), { recursi
 cpSync(join(root, "apps", "demo-dex"), join(out, "demo", "dex"), { recursive: true });
 cpSync(join(root, "apps", "dashboard"), join(out, "dashboard"), { recursive: true });
 cpSync(join(root, "apps", "developers"), join(out, "developers"), { recursive: true });
+cpSync(join(root, "apps", "judges"), join(out, "judges"), { recursive: true });
 
 const fill = (dir) => {
   for (const name of readdirSync(dir)) {
