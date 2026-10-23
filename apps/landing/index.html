@@ -24,13 +24,6 @@
   .hero h1 .nw { white-space: nowrap; }
   .hero .lead { max-width: 500px; }
   .ctas { display: flex; gap: 14px; align-items: center; margin-top: 40px; flex-wrap: wrap; }
-  .judge-cta { display: flex; align-items: center; gap: 14px; width: fit-content; max-width: 100%; margin-top: 22px; padding: 14px 18px 14px 16px; border-radius: 18px; border: 1px solid rgba(var(--mint-rgb), .35); background: rgba(var(--mint-rgb), .07); color: #fff; text-decoration: none; transition: background .15s, border-color .15s; }
-  .judge-cta:hover { background: rgba(var(--mint-rgb), .13); border-color: rgba(var(--mint-rgb), .6); }
-  .judge-cta .ic { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--mint); color: #04120c; }
-  .judge-cta .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .judge-cta b { font-size: 16px; font-weight: 600; }
-  .judge-cta span.s { font-size: 13.5px; color: var(--grey); }
-  .judge-cta .go { flex: none; color: var(--mint); }
 
   .stage { position: relative; height: 560px; perspective: 1400px; display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .stage .bloom { position: absolute; width: 520px; height: 360px; max-width: 100%; border-radius: 50%; background: radial-gradient(closest-side, rgba(var(--mint-rgb), .34), rgba(var(--mint-rgb), .06) 60%, transparent); filter: blur(30px); opacity: 0; transition: opacity 1.2s ease .2s; }
@@ -210,11 +203,7 @@
         <a class="bx bx-primary" href="developers/">Get started</a>
         <a class="bx bx-link" href="#demos">See the demos <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
-      <a class="judge-cta" href="judges/">
-        <span class="ic"><svg viewBox="0 0 20 20" width="20" height="20" fill="none"><path d="M5 10.5 8.5 14 15 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        <span class="tx"><b>Judging Strike On? Start here</b><span class="s">Try it in 2 minutes, and see the mainnet run on Cardanoscan</span></span>
-        <svg class="go" viewBox="0 0 12 12" width="14" height="14" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </a>
+      <div class="ctas" style="margin-top:14px"><a class="bx bx-dark" href="judges/">For judges: try it in 2 minutes <svg viewBox="0 0 12 12" fill="none"><path d="m4.5 2.5 3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
     </div>
     <div class="stage" id="stage" aria-hidden="true" title="Switch it">
       <div class="bloom"></div>
