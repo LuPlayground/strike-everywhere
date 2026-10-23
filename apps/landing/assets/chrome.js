@@ -129,6 +129,35 @@
     if (!nav) return;
     var on = function () { nav.classList.toggle("scrolled", window.scrollY > 24); };
     window.addEventListener("scroll", on, { passive: true }); on();
+    navMenus(nav);
+    toTop();
+  }
+
+  function navMenus(nav) {
+    var dds = nav.querySelectorAll(".se-dd");
+    var close = function (except) {
+      dds.forEach(function (d) { if (d !== except) { d.classList.remove("open"); d.querySelector(".se-dd-btn").setAttribute("aria-expanded", "false"); } });
+    };
+    dds.forEach(function (d) {
+      d.querySelector(".se-dd-btn").addEventListener("click", function () {
+        var open = !d.classList.contains("open");
+        close(d); d.classList.toggle("open", open); this.setAttribute("aria-expanded", String(open));
+      });
+    });
+    document.addEventListener("click", function (e) { if (!e.target.closest(".se-dd")) close(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  }
+
+  function toTop() {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "icon-btn totop"; b.setAttribute("aria-label", "Back to top"); b.title = "Back to top";
+    b.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M8 13V3.5M3.5 8 8 3.5 12.5 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    b.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+    document.body.appendChild(b);
+    var on = function () { b.classList.toggle("show", window.scrollY > window.innerHeight); };
+    window.addEventListener("scroll", on, { passive: true }); on();
   }
 
   function reveal() {
