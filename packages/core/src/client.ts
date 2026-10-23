@@ -1,7 +1,7 @@
 import { AccountApi } from "./account.js";
 import { builderConnect, type BuilderSession } from "./builderConnect.js";
 import { CardanoWallet, detectWallets, type WalletInfo } from "./cardano/wallet.js";
-import { MAX_BUILDER_FEE_BPS, NETWORKS, NEW_ACCOUNT_MIN_DEPOSIT_USD, type Network, type NetworkConfig } from "./config.js";
+import { MAX_BUILDER_FEE_BPS, MIN_DEPOSIT_USD, NETWORKS, type Network, type NetworkConfig } from "./config.js";
 import { DepositRegistrationError, Deposits, type PreparedDeposit } from "./deposit.js";
 import { Withdrawals, type PreparedWithdrawal } from "./withdraw.js";
 import { StrikeHttp } from "./http.js";
@@ -175,8 +175,8 @@ export class StrikeEverywhere {
       hasStrikeAccount,
       walletAda,
       walletUsd,
-      minFirstDepositUsd: NEW_ACCOUNT_MIN_DEPOSIT_USD,
-      canAffordFirstDeposit: hasStrikeAccount !== false || walletUsd >= NEW_ACCOUNT_MIN_DEPOSIT_USD * 1.02,
+      minFirstDepositUsd: MIN_DEPOSIT_USD,
+      canAffordFirstDeposit: hasStrikeAccount !== false || walletUsd >= MIN_DEPOSIT_USD * 1.02,
     };
   }
 

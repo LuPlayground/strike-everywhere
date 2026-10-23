@@ -1,5 +1,4 @@
 import { useState } from "preact/hooks";
-import { NEW_ACCOUNT_MIN_DEPOSIT_USD } from "@strike-everywhere/core";
 import type { PerpsState } from "../state";
 import { Icon, RoundBtn, pref } from "../ui";
 import type { Nav } from "./Mobile";
@@ -107,7 +106,7 @@ export function Onboarding({ s, nav, onLearn }: { s: PerpsState; nav: Nav; onLea
             ))}
           </div>
           {!s.session && (
-            <p class="pa-p sm c">Next you'll connect a Cardano wallet. New Strike accounts start with a ${NEW_ACCOUNT_MIN_DEPOSIT_USD} first deposit.</p>
+            <p class="pa-p sm c">Next you'll connect a Cardano wallet. Deposits start at $5.</p>
           )}
           <button class="pa-btn primary big" disabled={!risk} onClick={finish}>
             Start Trading

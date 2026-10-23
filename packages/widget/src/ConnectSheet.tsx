@@ -100,7 +100,7 @@ export function ConnectSheet({ client, onClose, onConnected }: { client: StrikeE
             <div class="addr">{shortAddress(check.address, 18, 10)}</div>
             {check.hasStrikeAccount === null ? (
               <div class="note">
-                <b>Strike couldn't look up this wallet right now.</b> You can still connect. If it's new to Strike, its first deposit needs to be at least {formatUsd(check.minFirstDepositUsd, { decimals: 0 })} (Strike's rule).
+                <b>Strike couldn't look up this wallet right now.</b> You can still connect.
               </div>
             ) : check.hasStrikeAccount ? (
               <div class="note">
@@ -108,7 +108,7 @@ export function ConnectSheet({ client, onClose, onConnected }: { client: StrikeE
               </div>
             ) : (
               <div class={check.canAffordFirstDeposit ? "note" : "warn"}>
-                <b>New to Strike.</b> Signing creates your Strike account. Strike asks for a first deposit of at least <b>{formatUsd(check.minFirstDepositUsd, { decimals: 0 })}</b> (later deposits from $5). This wallet holds ≈ {formatUsd(check.walletUsd)} ({check.walletAda.toFixed(1)} ADA).
+                <b>New to Strike.</b> Signing creates your Strike account. Deposits start at <b>{formatUsd(check.minFirstDepositUsd, { decimals: 0 })}</b>. This wallet holds ≈ {formatUsd(check.walletUsd)} ({check.walletAda.toFixed(1)} ADA).
                 {!check.canAffordFirstDeposit && " You can connect now and deposit later."}
               </div>
             )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { DepositRegistrationError, DepositSafetyError, NEW_ACCOUNT_MIN_DEPOSIT_USD, StrikeEverywhere, walletErrorMessage, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
+import { DepositRegistrationError, DepositSafetyError, MIN_DEPOSIT_USD, StrikeEverywhere, walletErrorMessage, formatUsd, lovelaceToAda, shortAddress, type PreparedDeposit } from "@strike-everywhere/core";
 import { KV, Spinner, Step, decimalInput, cleanDecimal } from "./parts";
 
 type Phase = "amount" | "preparing" | "review" | "signing" | "registering" | "crediting" | "done";
@@ -7,20 +7,18 @@ type Phase = "amount" | "preparing" | "review" | "signing" | "registering" | "cr
 export function DepositSheet({
   client,
   adaPrice,
-  isNewAccount,
   startBalance,
   onClose,
   onCredited,
 }: {
   client: StrikeEverywhere;
   adaPrice: number;
-  isNewAccount: boolean;
   startBalance: number;
   onClose: () => void;
   onCredited: () => void;
 }) {
-  const minUsd = isNewAccount ? NEW_ACCOUNT_MIN_DEPOSIT_USD : 5;
-  const suggested = adaPrice > 0 ? Math.ceil(((isNewAccount ? NEW_ACCOUNT_MIN_DEPOSIT_USD * 1.05 : 25) / adaPrice) / 5) * 5 : 0;
+  const minUsd = MIN_DEPOSIT_USD;
+  const suggested = adaPrice > 0 ? Math.ceil((25 / adaPrice) / 5) * 5 : 0;
   const [ada, setAda] = useState(suggested ? String(suggested) : "");
   const [phase, setPhase] = useState<Phase>("amount");
   const [prepared, setPrepared] = useState<PreparedDeposit | null>(null);
@@ -110,7 +108,7 @@ export function DepositSheet({
             <KV k="Value" v={<span class="num">≈ {formatUsd(usd)}</span>} />
             <p>
               Your ADA is converted to USD margin on Strike.{" "}
-              {isNewAccount ? <>Strike asks for at least <b>{formatUsd(NEW_ACCOUNT_MIN_DEPOSIT_USD, { decimals: 0 })}</b> on a new account's first deposit; after that the minimum is $5.</> : <>Minimum deposit $5.</>}
+              Minimum deposit {formatUsd(minUsd, { decimals: 0 })}.
             </p>
             <button class="cta" disabled={!(usd >= minUsd) || phase === "preparing"} onClick={review}>
               {phase === "preparing" ? <><Spinner /> Building transaction…</> : usd >= minUsd ? "Review deposit" : `Minimum ${formatUsd(minUsd, { decimals: 0 })}`}

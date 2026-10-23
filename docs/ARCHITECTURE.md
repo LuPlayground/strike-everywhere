@@ -37,7 +37,7 @@ Host page (any origin)
 | The docs' mainnet user WebSocket host does not connect | `wss://api.strikefinance.org/ws/user-api` |
 | `/v2/openOrders` is PascalCase; history is snake_case | `normalizeOrder` |
 | Builder API wallets never expire | Widget-enforced session lifetime |
-| New accounts: Strike's app requires a $100 first deposit (the API quotes smaller ones; crediting unverified) | Detected via `GET /v2/account?blockchain_address=` (404) and explained before connecting and depositing |
+| New accounts: no Strike account until the wallet connects; first deposit from $5, like any deposit | Detected via `GET /v2/account?blockchain_address=` (404) and explained before connecting and depositing |
 | Reference repo field `max_fee_bps` | Docs field `fee_share_bps` |
 | Cloudflare blocks default script user agents | The Worker sends a descriptive User-Agent |
 

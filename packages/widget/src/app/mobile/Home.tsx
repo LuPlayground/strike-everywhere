@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
 import type { Side } from "@strike-everywhere/core";
-import { MIN_WITHDRAW_USD, NEW_ACCOUNT_MIN_DEPOSIT_USD } from "@strike-everywhere/core";
+import { MIN_DEPOSIT_USD, MIN_WITHDRAW_USD } from "@strike-everywhere/core";
 import { LISTS, compactUsd, pctText, priceText, qtyText, usdText } from "../markets";
 import type { PerpsState } from "../state";
 import { Coin, Group, Icon, RoundBtn, Row, pref } from "../ui";
@@ -50,7 +50,7 @@ export function Home({ s, nav, onClose, onLearn, onDisclosures }: { s: PerpsStat
           )}
           {s.session && s.accountLoaded && s.isNewAccount && (
             <div class="pa-hint">
-              New to Strike: your first deposit needs to be at least {usdText(NEW_ACCOUNT_MIN_DEPOSIT_USD, { decimals: 0 })} of ADA (Strike's rule). After that, from $5.
+              New to Strike: add funds to start trading. Deposits start at {usdText(MIN_DEPOSIT_USD, { decimals: 0 })} of ADA.
             </div>
           )}
         </div>

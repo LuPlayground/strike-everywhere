@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   DepositRegistrationError,
   DepositSafetyError,
+  MIN_DEPOSIT_USD,
   MIN_WITHDRAW_USD,
-  NEW_ACCOUNT_MIN_DEPOSIT_USD,
   StrikeEverywhere,
   WithdrawalSafetyError,
   DEPOSIT_EXTRA_ADA,
@@ -85,8 +85,8 @@ const explorerTx = (client: StrikeEverywhere) => (client.net.network === "mainne
 
 type DepPhase = "amount" | "preparing" | "review" | "signing" | "registering" | "crediting" | "done";
 
-export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose, onCredited }: { client: StrikeEverywhere; adaPrice: number; isNewAccount: boolean; startBalance: number; onClose: () => void; onCredited: () => void }) {
-  const minUsd = isNewAccount ? NEW_ACCOUNT_MIN_DEPOSIT_USD : 5;
+export function AddFunds({ client, adaPrice, startBalance, onClose, onCredited }: { client: StrikeEverywhere; adaPrice: number; startBalance: number; onClose: () => void; onCredited: () => void }) {
+  const minUsd = MIN_DEPOSIT_USD;
   const suggest = (usd: number) => (adaPrice > 0 ? String(Math.ceil(usd / adaPrice / 5) * 5) : "");
   const [ada, setAda] = useState("");
   const [phase, setPhase] = useState<DepPhase>("amount");
@@ -162,7 +162,7 @@ export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose
   }, [phase]);
 
   const busy = phase === "signing" || phase === "registering";
-  const presets = [25, 50, 100, 250].filter((v) => v >= minUsd || v === 100);
+  const presets = [25, 50, 100, 250];
   const maxAda = walletAda !== null ? maxDepositAda(walletAda) : null;
   const tooMuch = maxAda !== null && Number(ada) > maxAda;
   return (
@@ -179,7 +179,7 @@ export function AddFunds({ client, adaPrice, isNewAccount, startBalance, onClose
           </div>
           <p class="pa-p sm">
             Your ADA goes to Strike and is credited as USD margin.{" "}
-            {isNewAccount ? `Strike asks new accounts for a first deposit of at least $${NEW_ACCOUNT_MIN_DEPOSIT_USD}; after that, from $5.` : "Minimum $5."}
+            Minimum {usdText(minUsd, { decimals: 0 })}.
           </p>
           {error && <div class="pa-warn"><Icon n="warn" size={16} />{error}</div>}
           {maxAda !== null && adaPrice > 0 && maxAda * adaPrice < minUsd && (

@@ -11,13 +11,13 @@
 > - Your own builder code: [developers page](https://strike-everywhere.pages.dev/developers/) (type it, trade in the preview, open your dashboard)
 
 ```html
-<script src="https://strike-everywhere.pages.dev/widget/v0.1.8/strike-everywhere.iife.js"
-  integrity="sha384-jd8+HlIawn00xrc8OUD+iBPoW3h9Ivu24yX6JMOYUoJGK/LpixmPXwkGW6HrLVj0"
+<script src="https://strike-everywhere.pages.dev/widget/v0.1.9/strike-everywhere.iife.js"
+  integrity="sha384-wZ1+2KYwWQ6Uxh4XVetfFATLMuVLex47WC0cyDvJV+xbafmmNf84BBBWbGPtuzwV"
   crossorigin="anonymous" defer></script>
 <strike-trade builder-code="YOUR_CODE" fee-bps="5" market="ADA-USD"></strike-trade>
 ```
 
-The snippet pins release `v0.1.8` with an integrity hash, so the code your users run can't change without you choosing to update (the current version and hash are always in [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json)). `/widget/strike-everywhere.iife.js` always serves the latest build instead. See [SECURITY.md](docs/SECURITY.md#what-we-the-authors-can-and-cant-do).
+The snippet pins release `v0.1.9` with an integrity hash, so the code your users run can't change without you choosing to update (the current version and hash are always in [`/widget/release.json`](https://strike-everywhere.pages.dev/widget/release.json)). `/widget/strike-everywhere.iife.js` always serves the latest build instead. See [SECURITY.md](docs/SECURITY.md#what-we-the-authors-can-and-cant-do).
 
 | | |
 |---|---|
@@ -69,7 +69,7 @@ Every call goes directly from the user's browser to Strike. Strike's API allows 
 | Step | Strike endpoint |
 |---|---|
 | Onboard (one signature) | `POST /auth/builder/request-signature` → wallet `signData` (CIP-30, `"{coseSign1}:{coseKey}"`) → `POST /auth/builder/verify-signature` |
-| Detect new users | `GET /v2/account?blockchain_address=` (404 = new account; the widget applies Strike's app rule of a $100 first deposit for new accounts) |
+| Detect new users | `GET /v2/account?blockchain_address=` (404 = new account; its first deposit starts at $5, like any deposit) |
 | Markets & prices | `GET /v2/markets`, `/price/v2/ticker/24hr`, `/price/v2/premiumIndex`, `/price/v2/klines`; WebSocket `!markprice@arr`, `!miniticker@arr` |
 | Account | `GET /v2/account`, `/v2/positions`, `/v2/openOrders`, `/v2/history/order`; user WebSocket `session.logon` + `userstream` |
 | Trade | `POST /v2/leverage`, `POST /v2/order` / `POST /v2/order/strategy` (TP/SL) with header **`X-Builder-Fee-Bps`**, `DELETE /v2/order/cancel` |

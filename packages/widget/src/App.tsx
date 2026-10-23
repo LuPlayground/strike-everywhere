@@ -418,7 +418,6 @@ export function App({ config }: { config: WidgetConfig }) {
           reduceOnly,
         })
       : null;
-  const isNewAccount = !account || (Number(account.wallet_balance) <= 0 && positions.length === 0);
   const bound = Number(raw?.order_limit_price_bound ?? 0.05) || 0.05;
   const marginMode = marginModeOf(account, symbol) ?? "cross";
 
@@ -1310,7 +1309,6 @@ export function App({ config }: { config: WidgetConfig }) {
         <DepositSheet
           client={client}
           adaPrice={live["ADA-USD"]?.mark ?? 0}
-          isNewAccount={isNewAccount}
           startBalance={Number(account?.wallet_balance ?? 0)}
           onClose={() => setSheet(null)}
           onCredited={() => (refresh(), notify("ok", "Deposit credited"))}

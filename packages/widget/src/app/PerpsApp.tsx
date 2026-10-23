@@ -39,7 +39,6 @@ export function PerpsApp({ config, host, screen }: { config: AppConfig; host: HT
         <AddFunds
           client={s.client}
           adaPrice={s.bySymbol["ADA-USD"]?.mark ?? 0}
-          isNewAccount={s.isNewAccount}
           startBalance={Number(s.account?.wallet_balance ?? 0)}
           onClose={() => s.setSheet(null)}
           onCredited={() => (s.refresh(), s.notify("ok", "Deposit credited", "Your Perps balance is updated."))}

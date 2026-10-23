@@ -1,5 +1,5 @@
 import type { ComponentChildren } from "preact";
-import { NEW_ACCOUNT_MIN_DEPOSIT_USD } from "@strike-everywhere/core";
+import { MIN_DEPOSIT_USD } from "@strike-everywhere/core";
 import type { PerpsState } from "./state";
 
 export function learnTopic(topic: string, s: PerpsState): { title: string; body: ComponentChildren } {
@@ -57,7 +57,7 @@ export function learnTopic(topic: string, s: PerpsState): { title: string; body:
         body: (
           <>
             <p>Your Perps balance on Strike that isn't being used as margin. Add funds by depositing ADA from your wallet; Strike converts it to USD margin.</p>
-            <p>Strike asks new accounts for a first deposit of at least ${NEW_ACCOUNT_MIN_DEPOSIT_USD}; after that, deposits from $5. Withdrawals (from $5) go back to the same wallet.</p>
+            <p>Deposits start at ${MIN_DEPOSIT_USD}. Withdrawals (from $5) go back to the same wallet.</p>
           </>
         ),
       };

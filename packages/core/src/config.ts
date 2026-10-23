@@ -37,7 +37,6 @@ export const NETWORKS: Record<Network, NetworkConfig> = {
   },
 };
 
-export const NEW_ACCOUNT_MIN_DEPOSIT_USD = 100;
 export const BUILDER_REGISTRATION_MIN_USD = 100;
 export const MIN_DEPOSIT_USD = 5;
 export const MAX_BUILDER_FEE_BPS = 100;
